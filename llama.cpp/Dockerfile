@@ -1,6 +1,7 @@
-ARG VERSION=11.6
+ARG BASE=ubuntu
+ARG VERSION=latest
 
-FROM debian:{$VERSION} as build
+FROM ${BASE}:${VERSION} as build
 
 RUN apt-get update && \
     apt-get install -y build-essential
@@ -11,7 +12,7 @@ COPY . .
 
 RUN make
 
-FROM debian:${VERSION} as runtime
+FROM ${BASE}:${VERSION} as runtime
 
 COPY --from=build /app/main /main
 

@@ -1,0 +1,21 @@
+ARG VERSION=latest
+
+FROM alpine:$VERSION as build
+
+# RUN apk update && \
+#     apk --no-cache --update add build-base libgcc libstdc++
+
+RUN apk upgrade --no-cache && \
+    apk add --no-cache build-base postgresql-client bash openssl libgcc libstdc++ ncurses-libs libstdc++6
+
+WORKDIR /app
+
+COPY . .
+
+RUN make
+
+FROM alpine:$VERSION as runtime
+
+COPY --from=build /app/main /main
+
+ENTRYPOINT [ "/main" ]
