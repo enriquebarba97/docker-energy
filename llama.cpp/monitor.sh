@@ -25,10 +25,15 @@ fi
 # Build the Docker image
 docker build -t llama.cpp -f $DOCKERFILE --build-arg BASE=$BASE .
 
+# Warm up workload (prime number test)
+sysbench cpu --cpu-max-prime=100000 --threads=2 run
+
 # Run and monitor the workload for the specified number of times
 for ((i=1; i<=$NUMBER; i++))
 do
-  perf stat -o result.txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ docker run --rm -v $PWD/models:/models llama.cpp -m /models/7B/ggml-model-q4_0.bin -p "The capital of The Netherlands:" -n 20
+  perf stat -o result.txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ docker run --rm \
+  -v $PWD/models:/models llama.cpp -m /models/7B/ggml-model-q4_0.bin -p "The capital of The Netherlands:" -n 20 --seed 12345678
+  sleep 10
 done
 
 docker rmi llama.cpp
