@@ -33,9 +33,9 @@ sysbench cpu --cpu-max-prime=100000 --threads=2 run
 # Run and monitor the workload for the specified number of times
 for ((i=1; i<=$NUMBER; i++))
 do
+  sleep 10
   perf stat -o result.txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ docker run --rm \
   -v $PWD/models:/models llama.cpp -m /models/7B/ggml-model-q4_0.bin -p "$INFERENCE" -n 20 --seed 12345678
-  sleep 10
 done
 
 docker rmi llama.cpp
