@@ -9,14 +9,14 @@ RUN cd /etc/yum.repos.d/ && \
     yum update -y && \
     yum install -y gcc gcc-c++ make 
 
-WORKDIR /app
+# WORKDIR /app
 
 COPY . .
 
 RUN make
 
-FROM ${BASE}:${VERSION} as runtime
+# FROM ${BASE}:${VERSION} as runtime
 
-COPY --from=build /app/main /main
+# COPY --from=build /app/main /main
 
 ENTRYPOINT [ "/main" ]
