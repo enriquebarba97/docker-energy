@@ -12,7 +12,6 @@ done
 echo -e "### experiment ${RUNID} ###\n" | tee -a logs/llama.cpp_warmup.txt logs/llama.cpp_"${BASE}".txt results/llama.cpp_"${BASE}".txt
 date +"# started on %c %n" >> logs/llama.cpp_warmup.txt
 
-
 for i in "${BASE[@]}"; do
   # If alpine is selected, use the alpine Dockerfile;
   if [[ "$i" == "alpine" ]]; then 

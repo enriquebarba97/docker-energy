@@ -1,13 +1,14 @@
 #!/bin/bash
 
 # Get the arguments
-while getopts "b:n:i:t:u:" arg; do
+while getopts "b:n:i:t:u:a" arg; do
   case $arg in
-    b) BASE=$OPTARG;;
+    b) BASE+=("$OPTARG");;
     n) NUMBER=$OPTARG;;
     i) INFERENCE=$OPTARG;;
     t) TOKENS=$OPTARG;;
     u) RUNID=$OPTARG;;
+    a) BASE=("ubuntu" "debian" "alpine" "centos");;
     *) ;;
   esac
 done
@@ -39,4 +40,6 @@ for ((i=1; i<=NUMBER; i++)); do
 done
 
 # Remove the docker images of this experiment
-docker rmi llama.cpp-"${BASE}"
+for i in "${BASE[@]}"; do
+  docker rmi llama.cpp-"${i}"
+done
