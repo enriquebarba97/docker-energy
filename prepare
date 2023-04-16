@@ -1,18 +1,19 @@
 #!/bin/bash
 # Get the arguments
-while getopts "b:au:" arg; do
+while getopts "b:ax:" arg; do
   case $arg in
     b) BASE+=("$OPTARG");;
-    a) BASE=("ubuntu" "debian" "alpine" "centos");;
-    u) RUNID=$OPTARG;;
+    x) EXPID=$OPTARG;;
+    *) ;;
   esac
 done
 
 # Setup the log files
-echo -e "### experiment ${RUNID} ###\n" | tee -a logs/llama.cpp_warmup.txt logs/llama.cpp_"${BASE}".txt results/llama.cpp_"${BASE}".txt
+echo -e "### experiment ${EXPID} ###\n" >> logs/llama.cpp_warmup.txt
 date +"# started on %c %n" >> logs/llama.cpp_warmup.txt
 
 for i in "${BASE[@]}"; do
+  echo -e "### experiment ${EXPID} ###\n" | tee -a logs/llama.cpp_"${i}".txt results/llama.cpp_"${i}".txt
   # If alpine is selected, use the alpine Dockerfile;
   if [[ "$i" == "alpine" ]]; then 
     DOCKERFILE=DockerfileAlpine; 
@@ -33,5 +34,5 @@ docker image ls >> logs/llama.cpp_warmup.txt
 
 # Start the warm up procedure
 echo -e "\n# warmup\n" >> logs/llama.cpp_warmup.txt
-sysbench cpu --time=10 --cpu-max-prime=100000 --threads=2 run >> logs/llama.cpp_warmup.txt
+sysbench cpu --time=10 --cpu-max-prime=100000 --threads=2 run | tee -a logs/llama.cpp_warmup.txt
 echo -e "\n\n" >> logs/llama.cpp_warmup.txt

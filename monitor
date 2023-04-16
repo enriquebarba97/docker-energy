@@ -1,13 +1,14 @@
 #!/bin/bash
 
 # Get the arguments
-while getopts "b:n:i:t:u:a" arg; do
+while getopts "b:n:i:t:x:r:a" arg; do
   case $arg in
     b) BASE+=("$OPTARG");;
     n) NUMBER=$OPTARG;;
     i) INFERENCE=$OPTARG;;
     t) TOKENS=$OPTARG;;
-    u) RUNID=$OPTARG;;
+    x) EXPID=$OPTARG;;
+    r) RUN=$OPTARG;;
     a) BASE=("ubuntu" "debian" "alpine" "centos");;
     *) ;;
   esac
@@ -18,28 +19,28 @@ BASE=${BASE:-ubuntu}
 NUMBER=${NUMBER:-1}
 INFERENCE=${INFERENCE:-"Building a website can be done in 10 simple steps:"}
 TOKENS=${TOKENS:-512}
-RUNID=${RUNID:--1}
+EXPID=${EXPID:--1}
 
 # Start the prepare procedure: building images and warming up the machine
-. prepare -u "${RUNID}" -b "${BASE}"
+# . prepare -u "${RUNID}" -b "${BASE}"
 
 # Run and monitor the workload for the specified number of times
-for ((i=1; i<=NUMBER; i++)); do
-  sleep 10
-  echo -e "# run ${i}" >> results/llama.cpp_"${BASE}".txt
+# for ((i=1; i<=NUMBER; i++)); do
+sleep 10
+echo -e "# run ${RUN}: ${BASE}" | tee -a results/llama.cpp_"${BASE}".txt
 
-  # Run the monitoring tool on the docker run command
-  perf stat -o results/llama.cpp_"${BASE}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
-  docker run --name llama.cpp-"${BASE}" -v "${PWD}"/llama.cpp/models:/models llama.cpp-"${BASE}" -m /models/7B/ggml-model-q4_0.bin -p "${INFERENCE}" -n "${TOKENS}" --seed 12345678
+# Run the monitoring tool on the docker run command
+perf stat -o results/llama.cpp_"${BASE}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
+docker run --name llama.cpp-"${BASE}" -v "${PWD}"/llama.cpp/models:/models llama.cpp-"${BASE}" -m /models/7B/ggml-model-q4_0.bin -p "${INFERENCE}" -n "${TOKENS}" --seed 12345678
   
-  # Log the output of the run
-  date +"# run ${i}%n# started on %c %n" >> logs/llama.cpp_"${BASE}".txt
-  docker logs -f llama.cpp-"${BASE}" &>> logs/llama.cpp_"${BASE}".txt
-  echo -e "\n\n" | tee -a logs/llama.cpp_"${BASE}".txt results/llama.cpp_"${BASE}".txt
-  docker rm llama.cpp-"${BASE}"
-done
+# Log the output of the run
+date +"# run ${RUN}%n# started on %c %n" >> logs/llama.cpp_"${BASE}".txt
+docker logs -f llama.cpp-"${BASE}" &>> logs/llama.cpp_"${BASE}".txt
+echo -e "\n\n" | tee -a logs/llama.cpp_"${BASE}".txt results/llama.cpp_"${BASE}".txt
+docker rm llama.cpp-"${BASE}"
+# done
 
 # Remove the docker images of this experiment
-for i in "${BASE[@]}"; do
-  docker rmi llama.cpp-"${i}"
-done
+# for i in "${BASE[@]}"; do
+#   docker rmi llama.cpp-"${i}"
+# done
