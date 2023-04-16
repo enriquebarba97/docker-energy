@@ -1,0 +1,26 @@
+#!/bin/bash
+# 
+# Builds the images from the given Dockerfiles
+
+# Get the arguments
+while getopts "b:a" arg; do
+  case $arg in
+    b) BASE+=("$OPTARG");;
+    a) BASE=("ubuntu" "debian" "alpine" "centos");;
+  esac
+done
+
+for i in "${BASE[@]}"; do
+  # If alpine is selected, use the alpine Dockerfile;
+  if [[ "$i" == "alpine" ]]; then 
+    DOCKERFILE=DockerfileAlpine; 
+  # If centos is selected, use the centos Dockerfile
+  elif [[ "$i" == "centos" ]]; then
+    DOCKERFILE=DockerfileCentos;
+  else 
+    DOCKERFILE=Dockerfile; 
+  fi
+
+  # Build the Docker image
+  docker build -t llama.cpp-"${i}" -f llama.cpp/${DOCKERFILE} --build-arg BASE="${i}" llama.cpp
+done

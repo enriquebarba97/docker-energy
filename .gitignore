@@ -2,4 +2,5 @@ llama.cpp/*
 !llama.cpp/Dockerfile
 !llama.cpp/DockerfileAlpine
 !llama.cpp/DockerfileCentos
-!llama.cpp/monitor
+logs/
+results/
