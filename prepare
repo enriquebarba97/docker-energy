@@ -1,14 +1,16 @@
 #!/bin/bash
-# 
-# Builds the images from the given Dockerfiles
-
 # Get the arguments
-while getopts "b:a" arg; do
+while getopts "b:au:" arg; do
   case $arg in
     b) BASE+=("$OPTARG");;
     a) BASE=("ubuntu" "debian" "alpine" "centos");;
+    u) RUNID=$OPTARG;;
   esac
 done
+
+echo -e "### experiment ${RUNID} ###\n" | tee -a logs/llama.cpp_warmup.txt logs/llama.cpp_"${BASE}".txt results/llama.cpp_"${BASE}".txt
+date +"# started on %c %n" >> logs/llama.cpp_warmup.txt
+
 
 for i in "${BASE[@]}"; do
   # If alpine is selected, use the alpine Dockerfile;
@@ -24,3 +26,9 @@ for i in "${BASE[@]}"; do
   # Build the Docker image
   docker build -t llama.cpp-"${i}" -f llama.cpp/${DOCKERFILE} --build-arg BASE="${i}" llama.cpp
 done
+
+echo -e "# docker images\n" >> logs/llama.cpp_warmup.txt
+docker image ls >> logs/llama.cpp_warmup.txt
+echo -e "\n# warmup\n" >> logs/llama.cpp_warmup.txt
+sysbench cpu --time=10 --cpu-max-prime=100000 --threads=2 run | tee -a logs/llama.cpp_warmup.txt
+echo -e "\n\n" >> logs/llama.cpp_warmup.txt
