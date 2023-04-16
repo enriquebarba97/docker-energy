@@ -10,11 +10,11 @@ def prepare(command):
 def run(command, queue):
     # Monitor the selected images for the selected number of times in regular order
     for image in queue:
-        run_command = command + ["-b", image]
         for x in range(len(queue)):
             # Execute the monitoring script
-            print(run_command)
-            # subprocess.call(run_command)
+            run_command = command + ["-b", image, "-r", str(x+1)]
+            # print(run_command)
+            subprocess.call(run_command)
 
 def shuffle_mode(command, queue):
     number = list(queue.values())[0]+1
