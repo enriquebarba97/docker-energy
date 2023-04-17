@@ -1,10 +1,9 @@
-import sys, getopt, subprocess, uuid, random
+import os, sys, getopt, subprocess, uuid, random
 
 
 
-def prepare(command):
-    # Initiate the preparation phase: building the images and warming up the machine
-    # print(command)
+def execute(command):
+    # Execute the given command
     subprocess.call(command)
 
 def run(command, queue):
@@ -13,10 +12,9 @@ def run(command, queue):
         for x in range(len(queue)):
             # Execute the monitoring script
             run_command = command + ["-b", image, "-r", str(x+1)]
-            # print(run_command)
-            subprocess.call(run_command)
+            execute(run_command)
 
-def shuffle_mode(command, queue):
+def shuffle(command, queue):
     number = list(queue.values())[0]+1
     # Monitor the selected images for the selected number of times in random order
     while len(queue) > 0:
@@ -24,14 +22,26 @@ def shuffle_mode(command, queue):
         run_command = command + ["-b", image, "-r", str(number-queue[image])]
 
         # Execute the monitoring script
-        # print(run_command)
-        subprocess.call(run_command)
+        execute(run_command)
 
         # Subtract one value of the queue value of the image
         queue[image] -= 1
         # If the queue value of the image is 0, remove it from the dictionary
         if queue[image] == 0:
             queue.pop(image, None)
+
+def help():
+    print(
+        "A tool for measuring energy consumption for specific workloads using different base images.\n",
+        "Options:",
+        "   -b              Base image to monitor; can be used for multiple base images (e.g. -b ubuntu -b alpine) (default \"ubuntu\")",
+        "   -n              Number of monitoring runs per base image (e.g. -n 30) (default 1)",
+        "   -i              Change the inference input for llama.cpp (default \"Building a website can be done in 10 simple steps:\")",
+        "   -t              Change the numbmer of tokens for the llama.cpp inference (default 512)",
+        "   -a              Monitor all compatible base images (i.e. ubuntu, debian, alpine, centos)",
+        "   --shuffle       Enables shuffle mode; random order of monitoring base images",
+        sep=os.linesep
+    )
 
 def parse_args(argv):
     # Create an ID for the experiment
@@ -41,44 +51,60 @@ def parse_args(argv):
     prepare_command = ['bash', 'prepare', '-x', exp_id]
     monitor_command = ['bash', 'monitor', '-x', exp_id]
 
-    images = []
+    images = set()
     number = 1
-    shuffle = False
+    shuffle_mode = False
+    help_mode = False
 
     # Get the arguments provided by the user
-    opts, args = getopt.getopt(argv, "b:n:i:t:a", ["shuffle"])
+    opts, args = getopt.getopt(argv, "b:n:i:t:ah", ["shuffle", "help"])
     for opt, arg in opts:
         # Set shuffle mode to true
         if opt == "--shuffle":
-            shuffle = True
+            shuffle_mode = True
         # Add the images to the list and the preparation command
         elif opt == "-b":
-            images.append(arg)
-            prepare_command += [opt, arg]
+            images.add(arg)
+            # prepare_command += [opt, arg]
+        elif opt == "-a":
+            images |= {"ubuntu", "alpine", "debian", "centos"}
         # Set the number of runs
         elif opt == "-n":
             number = arg
         # Add the additional arguments to the monitoring command
-        elif opt in ["-i", "-t", "-a"]:
+        elif opt in ["-i", "-t"]:
             monitor_command += [opt, arg]
+        elif opt in ["-h", "--help"]:
+            help_mode = True
     
+    for image in images:
+        prepare_command += ["-b", image]
+
     # The queue is a dictionary with the image as key and number of runs as value
     queue = {x: int(number) for x in images}
-    return prepare_command, monitor_command, queue, shuffle
+    return prepare_command, monitor_command, queue, shuffle_mode, help_mode
 
 def main(argv):
-    prepare_command, monitor_command, queue, shuffle = parse_args(argv)
+    prepare_command, monitor_command, queue, shuffle_mode, help_mode = parse_args(argv)
 
-    # Start the preparation phase
-    prepare(prepare_command)
+    if help_mode:
+        help()
+        return
+    
+    # Initiate the preparation phase: building the images and warming up the machine
+    execute(prepare_command)
 
     # If shuffle mode is set to true, monitor in random order
-    if shuffle:
-        shuffle_mode(monitor_command, queue)
+    if shuffle_mode:
+        shuffle(monitor_command, queue)
     # Monitor in regular order
     else:
         run(monitor_command, queue)
 
+    # Remove the base images used in the experiment
+    remove_command = prepare_command.copy()
+    remove_command[1] = "remove"
+    execute(remove_command)
+
 if __name__ == '__main__':
-    # build(sys.argv[1:])
     main(sys.argv[1:])
