@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Get the arguments
+while getopts "b:n:i:t:x:r:a" arg; do
+  case $arg in
+    b) BASE+=("$OPTARG");;
+    *) ;;
+  esac
+done
+
+# Default values
+BASE=${BASE:-ubuntu}
+
+# Remove the docker images of this experiment
+for i in "${BASE[@]}"; do
+  docker rmi llama.cpp-"${i}"
+done
