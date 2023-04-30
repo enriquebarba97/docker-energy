@@ -4,3 +4,6 @@ llama.cpp/*
 !llama.cpp/DockerfileCentos
 logs/
 results/
+.idea/
+venv/
+cleanup
