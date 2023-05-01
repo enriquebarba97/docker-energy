@@ -1,10 +1,10 @@
 import os, sys, getopt, subprocess, uuid, random
 
 
-
 def execute(command):
     # Execute the given command
     subprocess.call(command)
+
 
 def run(command, queue):
     # Monitor the selected images for the selected number of times in regular order
@@ -13,6 +13,7 @@ def run(command, queue):
             # Execute the monitoring script
             run_command = command + ["-b", image, "-r", str(x+1)]
             execute(run_command)
+
 
 def shuffle(command, queue):
     number = list(queue.values())[0]+1
@@ -30,6 +31,7 @@ def shuffle(command, queue):
         if queue[image] == 0:
             queue.pop(image, None)
 
+
 def help():
     print(
         "A tool for measuring energy consumption for specific workloads using different base images.\n",
@@ -42,6 +44,7 @@ def help():
         "   --shuffle       Enables shuffle mode; random order of monitoring base images",
         sep=os.linesep
     )
+
 
 def parse_args(argv):
     # Create an ID for the experiment
@@ -84,6 +87,7 @@ def parse_args(argv):
     queue = {x: int(number) for x in images}
     return prepare_command, monitor_command, queue, shuffle_mode, help_mode
 
+
 def main(argv):
     prepare_command, monitor_command, queue, shuffle_mode, help_mode = parse_args(argv)
 
@@ -105,6 +109,7 @@ def main(argv):
     remove_command = prepare_command.copy()
     remove_command[1] = "remove"
     execute(remove_command)
+
 
 if __name__ == '__main__':
     main(sys.argv[1:])
