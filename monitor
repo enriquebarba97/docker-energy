@@ -29,7 +29,7 @@ done
 
 if [[ "$WORKLOAD" == "llama.cpp" ]]; then
   OPTIONS=(-v "${PWD}"/llama.cpp/models:/models)
-  COMMAND=(-m /models/7B/ggml-model-q4_0.bin -p "${INFERENCE}" -n "${TOKENS}" --seed 12345678)
+  COMMAND=(-m /models/7B/ggml-model-q4_0.bin -p "${INFERENCE}" -n "${TOKENS}" --seed 12345678 --mlock)
 elif [[ "$WORKLOAD" == "video-stream" ]]; then
   OPTIONS=(-p 8080:8080 --add-host=host.docker.internal:host-gateway)
 fi
