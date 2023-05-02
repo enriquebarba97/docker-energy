@@ -1,9 +1,10 @@
 #!/bin/bash
 
 # Get the arguments
-while getopts "b:n:i:t:x:r:a" arg; do
+while getopts "b:w:x:" arg; do
   case $arg in
     b) BASE+=("$OPTARG");;
+    w) WORKLOAD=$OPTARG;;
     *) ;;
   esac
 done
@@ -13,5 +14,5 @@ BASE=${BASE:-ubuntu}
 
 # Remove the docker images of this experiment
 for i in "${BASE[@]}"; do
-  docker rmi llama.cpp-"${i}"
+  docker rmi "${WORKLOAD}"-"${i}"
 done

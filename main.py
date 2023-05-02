@@ -50,21 +50,27 @@ def parse_args(argv):
     # Create an ID for the experiment
     exp_id = str(uuid.uuid4())
 
-    # Setup the commands for the scripts
+    # Set up the commands for the scripts
     prepare_command = ['bash', 'prepare', '-x', exp_id]
     monitor_command = ['bash', 'monitor', '-x', exp_id]
 
+    workload = "llama.cpp"
     images = set()
     number = 1
     shuffle_mode = False
     help_mode = False
 
     # Get the arguments provided by the user
-    opts, args = getopt.getopt(argv, "b:n:i:t:ah", ["shuffle", "help"])
+    opts, args = getopt.getopt(argv, "b:n:i:t:ahw:", ["shuffle", "help"])
     for opt, arg in opts:
         # Set shuffle mode to true
         if opt == "--shuffle":
             shuffle_mode = True
+        # Add the images to the list and the preparation command
+        elif opt == "-w":
+            # workload = arg
+            prepare_command += [opt, arg]
+            monitor_command += [opt, arg]
         # Add the images to the list and the preparation command
         elif opt == "-b":
             images.add(arg)
@@ -107,6 +113,7 @@ def main(argv):
 
     # Remove the base images used in the experiment
     remove_command = prepare_command.copy()
+    print(remove_command)
     remove_command[1] = "remove"
     execute(remove_command)
 

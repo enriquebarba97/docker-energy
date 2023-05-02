@@ -1,19 +1,20 @@
 #!/bin/bash
 # Get the arguments
-while getopts "b:ax:" arg; do
+while getopts "b:w:x:" arg; do
   case $arg in
     b) BASE+=("$OPTARG");;
+    w) WORKLOAD=$OPTARG;;
     x) EXPID=$OPTARG;;
     *) ;;
   esac
 done
 
 # Setup the log files
-echo -e "### experiment ${EXPID} ###\n" >> logs/llama.cpp_warmup.txt
-date +"# started on %c %n" >> logs/llama.cpp_warmup.txt
+echo -e "### experiment ${EXPID} ###\n" >> logs/"${WORKLOAD}"_warmup.txt
+date +"# started on %c %n" >> logs/"${WORKLOAD}"_warmup.txt
 
 for i in "${BASE[@]}"; do
-  echo -e "### experiment ${EXPID} ###\n" | tee -a logs/llama.cpp_"${i}".txt results/llama.cpp_"${i}".txt
+  echo -e "### experiment ${EXPID} ###\n" | tee -a logs/"${WORKLOAD}"_"${i}".txt results/"${WORKLOAD}"_"${i}".txt
   # If alpine is selected, use the alpine Dockerfile;
   if [[ "$i" == "alpine" ]]; then 
     DOCKERFILE=DockerfileAlpine; 
@@ -25,14 +26,14 @@ for i in "${BASE[@]}"; do
   fi
 
   # Build the Docker image
-  docker build -t llama.cpp-"${i}" -f llama.cpp/${DOCKERFILE} --build-arg BASE="${i}" llama.cpp
+  docker build -t "${WORKLOAD}"-"${i}" -f "${WORKLOAD}"/${DOCKERFILE} --build-arg BASE="${i}" "${WORKLOAD}"
 done
 
 # Log the docker images information
-echo -e "# docker images\n" >> logs/llama.cpp_warmup.txt
-docker image ls >> logs/llama.cpp_warmup.txt
+echo -e "# docker images\n" >> logs/"${WORKLOAD}"_warmup.txt
+docker image ls >> logs/"${WORKLOAD}"_warmup.txt
 
 # Start the warm up procedure
-echo -e "\n# warmup\n" >> logs/llama.cpp_warmup.txt
-sysbench cpu --time=10 --cpu-max-prime=100000 --threads=2 run | tee -a logs/llama.cpp_warmup.txt
-echo -e "\n\n" >> logs/llama.cpp_warmup.txt
+echo -e "\n# warmup\n" >> logs/"${WORKLOAD}"_warmup.txt
+sysbench cpu --time=10 --cpu-max-prime=100000 --threads=2 run | tee -a logs/"${WORKLOAD}"_warmup.txt
+echo -e "\n\n" >> logs/"${WORKLOAD}"_warmup.txt

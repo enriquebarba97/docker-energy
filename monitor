@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Get the arguments
-while getopts "b:n:i:t:x:r:a" arg; do
+while getopts "b:n:i:t:x:r:w:a" arg; do
   case $arg in
     b) BASE+=("$OPTARG");;
     n) NUMBER=$OPTARG;;
@@ -9,6 +9,7 @@ while getopts "b:n:i:t:x:r:a" arg; do
     t) TOKENS=$OPTARG;;
     x) EXPID=$OPTARG;;
     r) RUN=$OPTARG;;
+    w) WORKLOAD=$OPTARG;;
     a) BASE=("ubuntu" "debian" "alpine" "centos");;
     *) ;;
   esac
@@ -27,17 +28,19 @@ EXPID=${EXPID:--1}
 # Run and monitor the workload for the specified number of times
 # for ((i=1; i<=NUMBER; i++)); do
 sleep 10
-echo -e "# run ${RUN}: ${BASE}" | tee -a results/llama.cpp_"${BASE}".txt
+echo -e "# run ${RUN}: ${BASE}" | tee -a results/"${WORKLOAD}"_"${BASE}".txt
 
 # Run the monitoring tool on the docker run command
-perf stat -o results/llama.cpp_"${BASE}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
-docker run --name llama.cpp-"${BASE}" -v "${PWD}"/llama.cpp/models:/models llama.cpp-"${BASE}" -m /models/7B/ggml-model-q4_0.bin -p "${INFERENCE}" -n "${TOKENS}" --seed 12345678
-  
+perf stat -o results/"${WORKLOAD}"_"${BASE}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
+docker run --name "${WORKLOAD}"-"${BASE}" -p 8080:8080 --add-host=host.docker.internal:host-gateway "${WORKLOAD}"-"${BASE}"
+#docker run --name llama.cpp-"${BASE}" -v "${PWD}"/llama.cpp/models:/models llama.cpp-"${BASE}" -m /models/7B/ggml-model-q4_0.bin -p "${INFERENCE}" -n "${TOKENS}" --seed 12345678
+
+
 # Log the output of the run
-date +"# run ${RUN}%n# started on %c %n" >> logs/llama.cpp_"${BASE}".txt
-docker logs -f llama.cpp-"${BASE}" &>> logs/llama.cpp_"${BASE}".txt
-echo -e "\n\n" | tee -a logs/llama.cpp_"${BASE}".txt results/llama.cpp_"${BASE}".txt
-docker rm llama.cpp-"${BASE}"
+date +"# run ${RUN}%n# started on %c %n" >> logs/"${WORKLOAD}"_"${BASE}".txt
+docker logs -f "${WORKLOAD}"-"${BASE}" &>> logs/"${WORKLOAD}"_"${BASE}".txt
+echo -e "\n\n" | tee -a logs/"${WORKLOAD}"_"${BASE}".txt results/"${WORKLOAD}"_"${BASE}".txt
+docker rm "${WORKLOAD}"-"${BASE}"
 # done
 
 # Remove the docker images of this experiment

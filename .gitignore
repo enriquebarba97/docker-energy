@@ -7,3 +7,5 @@ results/
 .idea/
 venv/
 cleanup
+*.mp4
+video-transcoding/
