@@ -1,26 +1,38 @@
 #!/bin/bash
 
+# Default values
+BASE="ubuntu"
+NUMBER=1
+INFERENCE="Building a website can be done in 10 simple steps:"
+TOKENS=512
+EXPID=-1
+OPTIONS=()
+COMMAND=()
+
 # Get the arguments
-while getopts "b:n:i:t:x:r:w:a" arg; do
+while getopts "b:n:i:t:x:r:w:ao:c:" arg; do
   case $arg in
-    b) BASE+=("$OPTARG");;
+    b) BASE=$OPTARG;;
     n) NUMBER=$OPTARG;;
     i) INFERENCE=$OPTARG;;
     t) TOKENS=$OPTARG;;
     x) EXPID=$OPTARG;;
     r) RUN=$OPTARG;;
     w) WORKLOAD=$OPTARG;;
-    a) BASE=("ubuntu" "debian" "alpine" "centos");;
+    o) OPTIONS+=("$OPTARG");;
+    c) COMMAND+=("$OPTARG");;
+#    a) BASE=("ubuntu" "debian" "alpine" "centos");;
     *) ;;
   esac
 done
 
-# Default values
-BASE=${BASE:-ubuntu}
-NUMBER=${NUMBER:-1}
-INFERENCE=${INFERENCE:-"Building a website can be done in 10 simple steps:"}
-TOKENS=${TOKENS:-512}
-EXPID=${EXPID:--1}
+
+if [[ "$WORKLOAD" == "llama.cpp" ]]; then
+  OPTIONS=(-v "${PWD}"/llama.cpp/models:/models)
+  COMMAND=(-m /models/7B/ggml-model-q4_0.bin -p "${INFERENCE}" -n "${TOKENS}" --seed 12345678)
+elif [[ "$WORKLOAD" == "video-stream" ]]; then
+  OPTIONS=(-p 8080:8080 --add-host=host.docker.internal:host-gateway)
+fi
 
 # Start the prepare procedure: building images and warming up the machine
 # . prepare -u "${RUNID}" -b "${BASE}"
@@ -32,9 +44,7 @@ echo -e "# run ${RUN}: ${BASE}" | tee -a results/"${WORKLOAD}"_"${BASE}".txt
 
 # Run the monitoring tool on the docker run command
 perf stat -o results/"${WORKLOAD}"_"${BASE}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
-docker run --name "${WORKLOAD}"-"${BASE}" -p 8080:8080 --add-host=host.docker.internal:host-gateway "${WORKLOAD}"-"${BASE}"
-#docker run --name llama.cpp-"${BASE}" -v "${PWD}"/llama.cpp/models:/models llama.cpp-"${BASE}" -m /models/7B/ggml-model-q4_0.bin -p "${INFERENCE}" -n "${TOKENS}" --seed 12345678
-
+docker run --name "${WORKLOAD}"-"${BASE}" "${OPTIONS[@]}" "${WORKLOAD}"-"${BASE}" "${COMMAND[@]}"
 
 # Log the output of the run
 date +"# run ${RUN}%n# started on %c %n" >> logs/"${WORKLOAD}"_"${BASE}".txt

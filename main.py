@@ -41,6 +41,7 @@ def help():
         "   -i              Change the inference input for llama.cpp (default \"Building a website can be done in 10 simple steps:\")",
         "   -t              Change the numbmer of tokens for the llama.cpp inference (default 512)",
         "   -a              Monitor all compatible base images (i.e. ubuntu, debian, alpine, centos)",
+        "   -w              Workload to monitor (e.g. -w \"llama.cpp\" or -w \"video-stream\")",
         "   --shuffle       Enables shuffle mode; random order of monitoring base images",
         sep=os.linesep
     )
@@ -54,7 +55,7 @@ def parse_args(argv):
     prepare_command = ['bash', 'prepare', '-x', exp_id]
     monitor_command = ['bash', 'monitor', '-x', exp_id]
 
-    workload = "llama.cpp"
+    workload = ""
     images = set()
     number = 1
     shuffle_mode = False
@@ -68,7 +69,7 @@ def parse_args(argv):
             shuffle_mode = True
         # Add the images to the list and the preparation command
         elif opt == "-w":
-            # workload = arg
+            workload = arg
             prepare_command += [opt, arg]
             monitor_command += [opt, arg]
         # Add the images to the list and the preparation command
@@ -91,14 +92,18 @@ def parse_args(argv):
 
     # The queue is a dictionary with the image as key and number of runs as value
     queue = {x: int(number) for x in images}
-    return prepare_command, monitor_command, queue, shuffle_mode, help_mode
+    return prepare_command, monitor_command, queue, shuffle_mode, help_mode, workload
 
 
 def main(argv):
-    prepare_command, monitor_command, queue, shuffle_mode, help_mode = parse_args(argv)
+    prepare_command, monitor_command, queue, shuffle_mode, help_mode, workload = parse_args(argv)
 
     if help_mode:
         help()
+        return
+
+    if len(workload) == 0:
+        print("No workload provided (e.g. -w \"llama.cpp\" or -w \"video-stream\")")
         return
     
     # Initiate the preparation phase: building the images and warming up the machine
