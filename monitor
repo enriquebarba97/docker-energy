@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Default values
+WORKLOAD="llama.cpp"
 BASE="ubuntu"
 PAUSE=10
 OPTIONS=()
