@@ -1,16 +1,16 @@
 #!/bin/bash
 
+# Default values
+BASE=()
+
 # Get the arguments
-while getopts "b:w:x:" arg; do
+while getopts "x:l:b:w:" arg; do
   case $arg in
+    l) WORKLOAD=$OPTARG;;
     b) BASE+=("$OPTARG");;
-    w) WORKLOAD=$OPTARG;;
     *) ;;
   esac
 done
-
-# Default values
-BASE=${BASE:-ubuntu}
 
 # Remove the docker images of this experiment
 for i in "${BASE[@]}"; do

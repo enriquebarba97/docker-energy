@@ -1,10 +1,18 @@
 #!/bin/bash
+
+# Default values
+EXPID=-1
+WORKLOAD="llama.cpp"
+BASE=()
+WARMUP=10
+
 # Get the arguments
-while getopts "b:w:x:" arg; do
+while getopts "x:l:b:w:" arg; do
   case $arg in
-    b) BASE+=("$OPTARG");;
-    w) WORKLOAD=$OPTARG;;
     x) EXPID=$OPTARG;;
+    l) WORKLOAD=$OPTARG;;
+    b) BASE+=("$OPTARG");;
+    w) WARMUP=$OPTARG;;
     *) ;;
   esac
 done
@@ -35,5 +43,5 @@ docker image ls >> logs/"${WORKLOAD}"_warmup.txt
 
 # Start the warm up procedure
 echo -e "\n# warmup\n" >> logs/"${WORKLOAD}"_warmup.txt
-sysbench cpu --time=10 --cpu-max-prime=100000 --threads=2 run | tee -a logs/"${WORKLOAD}"_warmup.txt
+sysbench cpu --time=${WARMUP} --cpu-max-prime=100000 --threads=2 run | tee -a logs/"${WORKLOAD}"_warmup.txt
 echo -e "\n\n" >> logs/"${WORKLOAD}"_warmup.txt

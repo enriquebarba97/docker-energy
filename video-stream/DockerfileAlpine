@@ -7,13 +7,8 @@ RUN apk update && \
 
 RUN adduser -D vlcuser
 
-# WORKDIR /stream
-
 COPY fragment.mp4 .
 
-FROM alpine:${VERSION} as runtime
-
-COPY --from=build . .
 USER vlcuser
-# ENTRYPOINT /stream
+
 CMD cvlc -vvv "fragment.mp4" --play-and-exit --sout '#standard{access=http,mux=ts,dst=0.0.0.0:8080}'
