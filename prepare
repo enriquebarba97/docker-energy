@@ -22,7 +22,7 @@ echo -e "### experiment ${EXPID} ###\n" >> logs/"${WORKLOAD}"_warmup.txt
 date +"# started on %c %n" >> logs/"${WORKLOAD}"_warmup.txt
 
 for i in "${BASE[@]}"; do
-  echo -e "### experiment ${EXPID} ###\n" | tee -a logs/"${WORKLOAD}"_"${i}".txt results/"${WORKLOAD}"_"${i}".txt
+  echo -e "### experiment ${EXPID} ###\n# image: ${i}\n" | tee -a logs/"${WORKLOAD}"_"${i}".txt results/"${WORKLOAD}"_"${i}".txt
   # If alpine is selected, use the alpine Dockerfile;
   if [[ "$i" == "alpine" ]]; then 
     DOCKERFILE=DockerfileAlpine; 
