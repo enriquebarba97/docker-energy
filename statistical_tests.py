@@ -128,7 +128,7 @@ def parse_args(argv):
     statistical_test = ""
 
     # Get the arguments provided by the user
-    opts, args = getopt.getopt(argv, "f:", ["file=", "shapiro", "anova", "tukey", "cohen"])
+    opts, args = getopt.getopt(argv, "f:", ["file=", "shapiro", "anova", "tukey", "cohen", "full"])
     for opt, arg in opts:
         if opt in ["-f", "--file"]:
             file.append(arg)
@@ -140,6 +140,8 @@ def parse_args(argv):
             statistical_test = "tukey"
         elif opt == "--cohen":
             statistical_test = "cohen"
+        elif opt == "--full":
+            statistical_test = "full"
 
     return file, statistical_test
 
@@ -155,14 +157,16 @@ def main(argv):
 
     labels, parts = get_lists(images)
 
-    analyze(images, labels, parts)
-
     if statistical_test == "shapiro":
         shapiro_test(images, labels, parts)
     elif statistical_test == "anova":
         anova_test(images, labels, parts)
     elif statistical_test == "tukey":
         tukey_test(images, labels, parts)
+    elif statistical_test == "cohen":
+        cohen_d(images, labels, parts)
+    elif statistical_test == "full":
+        analyze(images, labels, parts)
 
 
 if __name__ == '__main__':
