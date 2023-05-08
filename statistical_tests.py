@@ -67,8 +67,8 @@ def tukey_test(data):
         df = pd.DataFrame({'score': scores,
                            'group': np.repeat(labels, repeats=len(scores)/len(labels))})
         t = pairwise_tukeyhsd(endog=df['score'],
-                                  groups=df['group'],
-                                  alpha=0.05)
+                              groups=df['group'],
+                              alpha=0.05)
         tukey.append(t)
         print(p)
         print(t)
