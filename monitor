@@ -3,11 +3,11 @@
 # Default values
 WORKLOAD="llama.cpp"
 BASE="ubuntu"
-PAUSE=10
+PAUSE=30
 OPTIONS=()
 COMMAND=()
 INFERENCE="Building a website can be done in 10 simple steps:"
-TOKENS=512
+TOKENS=256
 
 # Get the arguments
 while getopts "l:b:p:o:c:i:r:t:" arg; do
@@ -27,7 +27,7 @@ done
 
 if [[ "$WORKLOAD" == "llama.cpp" ]]; then
   OPTIONS=(-v "${PWD}"/llama.cpp/models:/models)
-  COMMAND=(-m /models/7B/ggml-model-q4_0.bin -p "${INFERENCE}" -n "${TOKENS}"--seed 12345678 --mlock)
+  COMMAND=(-m /models/7B/ggml-model-q4_0.bin -p "${INFERENCE}" -n "${TOKENS}" --seed 12345678)
 elif [[ "$WORKLOAD" == "video-stream" ]]; then
   OPTIONS=(-p 8080:8080 --add-host=host.docker.internal:host-gateway)
 fi

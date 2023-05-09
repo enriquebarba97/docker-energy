@@ -4,16 +4,15 @@ import sys
 import pandas as pd
 
 
-def create_file(workload, image, xid, data):
+def create_file(workload, image, xid, df):
     file_name = f"results/{workload}_{image}_{xid}.tsv"
     with open(file_name, "w") as f:
         f.write(f"{image}\n")
-    df = pd.DataFrame(data)
+    # df = pd.DataFrame(data)
     df.to_csv(f"results/{workload}_{image}_{xid}.tsv", sep="\t", mode="a", index=False)
 
 
-def parse_results(file_name):
-    maketrans = str.maketrans
+def parse_results(file_name: str):
     with open(file_name) as f:
         lines = f.readlines()
         data = {"cores (J)": [], "ram (J)": [], "gpu (J)": [], "pkg (J)": [], "time (s)": []}
@@ -54,17 +53,38 @@ def parse_results(file_name):
             else:
                 continue
 
-    create_file(workload, image, xid, data)
+    df = pd.DataFrame(data)
+    create_file(workload, image, xid, df)
+
+
+def total_order(files: list):
+    data = list()
+    for file in files:
+        with open(file) as f:
+            lines = f.readlines()
+            for line in lines:
+                line = line.split()
+                if "run" in line:
+                    data.append((int(line[4][:-2]), line[5]))
+    df = pd.DataFrame(data, columns=["run", "image"])
+    df = df.sort_values(by=["run"], ascending=True)
+    df.to_csv("total_order.tsv", sep="\t", mode="a", index=False)
+
 
 
 def main(argv):
-    file = ""
+    file = list()
     opts, args = getopt.getopt(argv, "f:", ["file="])
     for opt, arg in opts:
         if opt in ["-f", "--file"]:
-            file = arg
+            file.append(arg)
 
-    parse_results(file)
+    if len(file) == 1:
+        parse_results(file[0])
+    elif len(file) > 1:
+       total_order(file)
+    else:
+        print("No file provided.")
 
 
 if __name__ == '__main__':

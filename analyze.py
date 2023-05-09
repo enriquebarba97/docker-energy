@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
+import matplotlib.pyplot as plt
 
 
 def get_lists(images: dict):
@@ -102,13 +103,24 @@ def cohen_d(images: dict, labels: list, parts: list):
     return parts, cohen
 
 
-def read_tsv(file: str):
-    with open(file) as f:
-        # Read the first line for the base image name
-        base = f.readline().rstrip().split("\t")[0]
-        # Read the second line for the column names
-        second_line = f.readline().rstrip().split("\t")
-    return base, pd.read_csv(file, sep="\t", skiprows=2, names=second_line)
+def statistics(images: dict, labels: list, parts: list):
+    for label in labels:
+        print(f"{label} (mean; standard deviation):")
+        for part in parts:
+            print(f"\t{part}: {np.mean(images[label][part].values.astype(float))}; {np.std(images[label][part].values.astype(float))}")
+
+
+def plot(images: dict, labels: list, parts: list):
+    for part in parts:
+        compare = list()
+        for label in labels:
+            compare.append(images[label][part].values.astype(float))
+        plt.figure(figsize=(10, 7))
+        plt.boxplot(compare)
+        # plt.violinplot(compare)
+        plt.xticks(range(1, len(labels) + 1), labels)
+        plt.title(part)
+        plt.show()
 
 
 def analyze(images: dict, labels: list, parts: list):
@@ -120,7 +132,17 @@ def analyze(images: dict, labels: list, parts: list):
     tukey = tukey_test(images, labels, parts)
     print("============================== Cohen's d test =================================")
     cohen = cohen_d(images, labels, parts)
+    plot(images, labels, parts)
     return normal, significance, tukey, cohen
+
+
+def read_tsv(file: str):
+    with open(file) as f:
+        # Read the first line for the base image name
+        base = f.readline().rstrip().split("\t")[0]
+        # Read the second line for the column names
+        second_line = f.readline().rstrip().split("\t")
+    return base, pd.read_csv(file, sep="\t", skiprows=2, names=second_line)
 
 
 def parse_args(argv):
@@ -128,7 +150,8 @@ def parse_args(argv):
     statistical_test = ""
 
     # Get the arguments provided by the user
-    opts, args = getopt.getopt(argv, "f:", ["file=", "shapiro", "anova", "tukey", "cohen", "full"])
+    opts, args = getopt.getopt(argv, "f:", ["file=", "shapiro", "anova", "tukey",
+                                            "cohen", "full", "statistics", "plot"])
     for opt, arg in opts:
         if opt in ["-f", "--file"]:
             file.append(arg)
@@ -142,6 +165,10 @@ def parse_args(argv):
             statistical_test = "cohen"
         elif opt == "--full":
             statistical_test = "full"
+        elif opt == "--statistics":
+            statistical_test = "statistics"
+        elif opt == "--plot":
+            statistical_test = "plot"
 
     return file, statistical_test
 
@@ -167,6 +194,12 @@ def main(argv):
         cohen_d(images, labels, parts)
     elif statistical_test == "full":
         analyze(images, labels, parts)
+    elif statistical_test == "statistics":
+        statistics(images, labels, parts)
+    elif statistical_test == "plot":
+        plot(images, labels, parts)
+    else:
+        print("No statistical test selected.")
 
 
 if __name__ == '__main__':

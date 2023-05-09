@@ -1,12 +1,12 @@
 import os, sys, getopt, subprocess, uuid, random
 
 
-def execute(command):
+def execute(command: list):
     # Execute the given command
     subprocess.call(command)
 
 
-def run(command, queue):
+def run(command: list, queue: dict):
     # Number of runs per image
     number = list(queue.values())[0]+1
     # Current execution number in total
@@ -26,7 +26,7 @@ def run(command, queue):
             total += 1
 
 
-def shuffle(command, queue):
+def shuffle(command: list, queue: dict):
     # Number of runs per image
     number = list(queue.values())[0]+1
     # Current execution number in total
