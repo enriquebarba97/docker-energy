@@ -4,7 +4,7 @@ import sys
 import pandas as pd
 
 
-def create_file(workload, image, xid, df):
+def create_file(workload: str, image: str, xid: str, df: pd.DataFrame):
     file_name = f"results/{workload}_{image}_{xid}.tsv"
     with open(file_name, "w") as f:
         f.write(f"{image}\n")
@@ -69,7 +69,6 @@ def total_order(files: list):
     df = pd.DataFrame(data, columns=["run", "image"])
     df = df.sort_values(by=["run"], ascending=True)
     df.to_csv("total_order.tsv", sep="\t", mode="a", index=False)
-
 
 
 def main(argv):

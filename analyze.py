@@ -107,7 +107,8 @@ def statistics(images: dict, labels: list, parts: list):
     for label in labels:
         print(f"{label} (mean; standard deviation):")
         for part in parts:
-            print(f"\t{part}: {np.mean(images[label][part].values.astype(float))}; {np.std(images[label][part].values.astype(float))}")
+            print(f"\t{part}: {np.mean(images[label][part].values.astype(float))}; "
+                  f"{np.std(images[label][part].values.astype(float))}")
 
 
 def plot(images: dict, labels: list, parts: list):
