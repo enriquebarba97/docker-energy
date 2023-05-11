@@ -7,7 +7,7 @@ It takes the following arguments:
 - _-l_: the workload to measure (e.g. _-l llama.cpp_)
 - _-b_: the base image to use (e.g. _-b ubuntu_)
 - _-n_: the number of iterations to run (default: 30)
-- _-w_: the warm up time in seconds (default: 10)
+- _-w_: the warm-up time in seconds (default: 10)
 - _-p_: the pause time between the iterations in seconds (default: 10)
 - _-o_: the options for the Docker command
 - _-c_: the command for the Docker command

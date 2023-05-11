@@ -23,17 +23,18 @@ def shapiro_test(images: dict, labels: list, parts: list):
     # Perform the Shapiro-Wilk test for normality for each part of each base image
     for label in labels:
         n = list()
-        print(label + ": " + str(n))
+        print(f"{label}:")
         print("Shapiro-Wilk test for " + label + ":")
         for part in parts:
             x = images[label][part].values.astype(float)
-            shapiro = stats.shapiro(x)
+            print(list(x))
+            shapiro, p = stats.shapiro(list(x))
             r = True
             # If the p-value is less than 0.05, the null hypothesis is rejected (i.e. the data is not normal)
-            if shapiro.pvalue < 0.05:
+            if p < 0.05:
                 r = False
             n.append(r)
-            print("\t" + part + ": " + str(r))
+            print(f"\t {part}: {str(r)} - {p}")
         normal.append(n)
     return labels, normal
 
