@@ -15,7 +15,9 @@ RUN apt-get update && \
 COPY . .
 
 # Install flaskr
-RUN pip3 install .
+#RUN pip3 install .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install .
 
 # Set the environment variables
 ENV FLASK_APP=flaskr
