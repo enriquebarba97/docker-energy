@@ -65,7 +65,7 @@ def total_order(files: list):
             for line in lines:
                 line = line.split()
                 if "run" in line:
-                    data.append((int(line[4][:-2]), line[5]))
+                    data.append((int(line[2][:-2]), line[5]))
     df = pd.DataFrame(data, columns=["run", "image"])
     df = df.sort_values(by=["run"], ascending=True)
     df.to_csv("total_order.tsv", sep="\t", mode="a", index=False)

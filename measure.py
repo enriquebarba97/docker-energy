@@ -6,49 +6,18 @@ def execute(command: list):
     subprocess.call(command)
 
 
-def run(command: list, queue: dict):
-    # Number of runs per image
-    number = list(queue.values())[0]+1
+def run(command: list, queue: list):
     # Current execution number in total
     total = 1
 
     # Monitor the selected images for the selected number of times in regular order
     for image in queue:
-        while queue[image] > 0:
-            # Execute the monitoring script;
-            # -r is the current run for the image;
-            # -t is the current run in total
-            run_command = command + ["-b", image, "-r", str(number-queue[image]), "-t", str(total)]
-            execute(run_command)
-
-            # Subtract one value of the queue value of the image
-            queue[image] -= 1
-            total += 1
-
-
-def shuffle(command: list, queue: dict):
-    # Number of runs per image
-    number = list(queue.values())[0]+1
-    # Current execution number in total
-    total = 1
-
-    # Monitor the selected images for the selected number of times in random order
-    while len(queue) > 0:
-        image = random.choice(list(queue.keys()))
-
         # Execute the monitoring script;
         # -r is the current run for the image;
         # -t is the current run in total
-        run_command = command + ["-b", image, "-r", str(number-queue[image]), "-t", str(total)]
+        run_command = command + ["-b", image, "-r", str(total)]
         execute(run_command)
-
-        # Subtract one value of the queue value of the image
-        queue[image] -= 1
         total += 1
-
-        # If the queue value of the image is 0, remove it from the dictionary
-        if queue[image] == 0:
-            queue.pop(image, None)
 
 
 def help():
@@ -80,6 +49,7 @@ def parse_args(argv):
     # Default values
     workload = ""
     images = set()
+    queue = list()
     number = 1
     shuffle_mode = False
     help_mode = False
@@ -125,9 +95,12 @@ def parse_args(argv):
     # Add the images that needs to be built to the prepare command
     for image in images:
         prepare_command += ["-b", image]
+        queue += [image]*int(number)
 
     # The queue is a dictionary with the image as key and number of runs as value
-    queue = {x: int(number) for x in images}
+    # queue = {x: int(number) for x in images}
+    if shuffle_mode:
+        random.shuffle(queue)
 
     # Put the arguments in a dictionary
     arguments = {"prepare_command": prepare_command, "monitor_command": monitor_command, "queue": queue,
@@ -148,16 +121,11 @@ def main(argv):
     if len(arguments["workload"]) == 0:
         print("No workload provided (e.g. -w \"llama.cpp\" or -w \"video-stream\")")
         return
-    
+
     # Initiate the preparation phase: building the images and warming up the machine
     execute(arguments["prepare_command"])
 
-    # If shuffle mode is set to true, monitor in random order
-    if arguments["shuffle_mode"]:
-        shuffle(arguments["monitor_command"], arguments["queue"])
-    # Monitor in regular order
-    else:
-        run(arguments["monitor_command"], arguments["queue"])
+    run(arguments["monitor_command"], arguments["queue"])
 
     # Remove the base images used in the experiment
     remove_command = arguments["prepare_command"].copy()

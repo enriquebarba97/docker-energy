@@ -43,7 +43,7 @@ fi
 
 # Run and monitor the workload for the specified number of times
 sleep "${PAUSE}"
-echo -e "# run ${RUN} (total: ${TOTAL}): ${BASE}" | tee -a results/"${WORKLOAD}"_"${BASE}".txt
+echo -e "# run ${RUN}: ${BASE}" | tee -a results/"${WORKLOAD}"_"${BASE}".txt
 
 # Run the monitoring tool on the docker run command
 if ${CLIENT} ; then
@@ -56,7 +56,7 @@ else
 fi
 
 # Log the output of the run
-date +"# run ${RUN} (total: ${TOTAL})%n# started on %c %n" >> logs/"${WORKLOAD}"_"${BASE}".txt
+date +"# run ${RUN}%n# started on %c %n" >> logs/"${WORKLOAD}"_"${BASE}".txt
 docker logs -f "${WORKLOAD}"-"${BASE}" &>> logs/"${WORKLOAD}"_"${BASE}".txt
 echo -e "\n\n" | tee -a logs/"${WORKLOAD}"_"${BASE}".txt results/"${WORKLOAD}"_"${BASE}".txt
 docker rm "${WORKLOAD}"-"${BASE}"
