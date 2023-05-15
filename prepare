@@ -6,18 +6,37 @@ WORKLOAD="llama.cpp"
 BASE=()
 #WARMUP=300
 WARMUP=10
+OPTIONS=()
+COMMAND=()
+CLIENT=false
 
 
 # Get the arguments
-while getopts "x:l:b:w:" arg; do
+while getopts "x:l:b:w:o:c:" arg; do
   case $arg in
     x) EXPID=$OPTARG;;
     l) WORKLOAD=$OPTARG;;
     b) BASE+=("$OPTARG");;
     w) WARMUP=$OPTARG;;
+    o) OPTIONS+=("$OPTARG");;
+    c) COMMAND+=("$OPTARG");;
     *) ;;
   esac
 done
+
+if [[ "$WORKLOAD" == "llama.cpp" ]]; then
+  OPTIONS=(-v "${PWD}"/llama.cpp/models:/models)
+  COMMAND=(-m /models/7B/ggml-model-q4_0.bin -p "${INFERENCE}" -n "${TOKENS}" --seed 12345678)
+elif [[ "$WORKLOAD" == "video-stream" ]]; then
+  OPTIONS=(-p 8080:8080 --add-host=host.docker.internal:host-gateway)
+elif [[ "$WORKLOAD" == "vod-stream" ]]; then
+  OPTIONS=(-p 3030:80 -v "${PWD}"/vod-stream/videos:/opt/static/videos -v "${PWD}"/vod-stream/nginx.conf:/usr/local/nginx/conf/nginx.conf)
+  CLIENT=true
+elif [[ "$WORKLOAD" == "flaskr" ]]; then
+  OPTIONS=(-p 5000:5000)
+  CLIENT=true
+fi
+
 
 # Setup the log files
 echo -e "### experiment ${EXPID} ###\n" >> logs/"${WORKLOAD}"_warmup.txt
@@ -37,6 +56,16 @@ for i in "${BASE[@]}"; do
 
   # Build the Docker image
   docker build -t "${WORKLOAD}"-"${i}" -f "${WORKLOAD}"/${DOCKERFILE} --build-arg BASE="${i}" "${WORKLOAD}"
+
+  # Run the docker run command as warmup
+  if ${CLIENT} ; then
+    docker run --name "${WORKLOAD}"-"${i}" "${OPTIONS[@]}" "${WORKLOAD}"-"${i}" "${COMMAND[@]}" &
+    bash "${WORKLOAD}"/client -b "${i}"
+  else
+    docker run --name "${WORKLOAD}"-"${i}" "${OPTIONS[@]}" "${WORKLOAD}"-"${i}" "${COMMAND[@]}"
+  fi
+
+  docker rm "${WORKLOAD}"-"${i}"
 done
 
 # Log the docker images information
@@ -45,5 +74,7 @@ docker image ls >> logs/"${WORKLOAD}"_warmup.txt
 
 # Start the warm up procedure
 echo -e "\n# warmup\n" >> logs/"${WORKLOAD}"_warmup.txt
-sysbench cpu --time=${WARMUP} --cpu-max-prime=100000 --threads=2 run | tee -a logs/"${WORKLOAD}"_warmup.txt
+sysbench cpu --time="${WARMUP}" --cpu-max-prime=100000 --threads=2 run | tee -a logs/"${WORKLOAD}"_warmup.txt
 echo -e "\n\n" >> logs/"${WORKLOAD}"_warmup.txt
+
+
