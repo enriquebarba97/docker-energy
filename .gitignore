@@ -19,4 +19,10 @@ video-transcoding/
 
 flaskr/*
 !flaskr/Dockerfile
-!flaskr/client.py
+!flaskr/web.py
+
+vod-stream/*
+!vod-stream/client
+!vod-stream/Dockerfile
+!vod-stream/DockerfileAlpine
+!vod-stream/nginx.conf

@@ -85,7 +85,7 @@ def parse_args(argv):
     help_mode = False
 
     # Get the arguments provided by the user
-    opts, args = getopt.getopt(argv, "l:b:n:w:p:i:o:c:ah", ["shuffle", "help"])
+    opts, args = getopt.getopt(argv, "l:b:n:w:p:ui:o:c:ah", ["shuffle", "help"])
     for opt, arg in opts:
         # Set shuffle mode to true
         if opt == "--shuffle":
@@ -107,6 +107,8 @@ def parse_args(argv):
         # Set up the pause time (s)
         elif opt == "-p":
             monitor_command += [opt, arg]
+        elif opt == "-u":
+            monitor_command += [opt]
         # Add the additional arguments to the monitoring command
         # -i is the inference input for llama.cpp;
         # -o are the options for the Docker run command;

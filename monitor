@@ -3,14 +3,16 @@
 # Default values
 WORKLOAD="llama.cpp"
 BASE="ubuntu"
-PAUSE=30
+PAUSE=1
 OPTIONS=()
 COMMAND=()
 INFERENCE="Building a website can be done in 10 simple steps:"
-TOKENS=256
+#TOKENS=256
+TOKENS=10
+CLIENT=false
 
 # Get the arguments
-while getopts "l:b:p:o:c:i:r:t:" arg; do
+while getopts "l:b:p:o:c:i:r:t:u" arg; do
   case $arg in
     l) WORKLOAD=$OPTARG;;
     b) BASE=$OPTARG;;
@@ -20,6 +22,7 @@ while getopts "l:b:p:o:c:i:r:t:" arg; do
     i) INFERENCE=$OPTARG;;
     r) RUN=$OPTARG;;
     t) TOTAL=$OPTARG;;
+    u) CLIENT=true;;
     *) ;;
   esac
 done
@@ -30,15 +33,27 @@ if [[ "$WORKLOAD" == "llama.cpp" ]]; then
   COMMAND=(-m /models/7B/ggml-model-q4_0.bin -p "${INFERENCE}" -n "${TOKENS}" --seed 12345678)
 elif [[ "$WORKLOAD" == "video-stream" ]]; then
   OPTIONS=(-p 8080:8080 --add-host=host.docker.internal:host-gateway)
+elif [[ "$WORKLOAD" == "vod-stream" ]]; then
+  OPTIONS=(-p 3030:80 -v "${PWD}"/vod-stream/videos:/opt/static/videos -v "${PWD}"/vod-stream/nginx.conf:/usr/local/nginx/conf/nginx.conf)
+  CLIENT=true
+elif [[ "$WORKLOAD" == "flaskr" ]]; then
+  OPTIONS=(-p 5000:5000)
+  CLIENT=true
 fi
 
 # Run and monitor the workload for the specified number of times
-sleep ${PAUSE}
+sleep "${PAUSE}"
 echo -e "# run ${RUN} (total: ${TOTAL}): ${BASE}" | tee -a results/"${WORKLOAD}"_"${BASE}".txt
 
 # Run the monitoring tool on the docker run command
-perf stat -o results/"${WORKLOAD}"_"${BASE}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
-docker run --name "${WORKLOAD}"-"${BASE}" "${OPTIONS[@]}" "${WORKLOAD}"-"${BASE}" "${COMMAND[@]}"
+if ${CLIENT} ; then
+  perf stat -o results/"${WORKLOAD}"_"${BASE}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
+  docker run --name "${WORKLOAD}"-"${BASE}" "${OPTIONS[@]}" "${WORKLOAD}"-"${BASE}" "${COMMAND[@]}" &
+  bash "${WORKLOAD}"/client -b "${BASE}"
+else
+  perf stat -o results/"${WORKLOAD}"_"${BASE}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
+  docker run --name "${WORKLOAD}"-"${BASE}" "${OPTIONS[@]}" "${WORKLOAD}"-"${BASE}" "${COMMAND[@]}"
+fi
 
 # Log the output of the run
 date +"# run ${RUN} (total: ${TOTAL})%n# started on %c %n" >> logs/"${WORKLOAD}"_"${BASE}".txt

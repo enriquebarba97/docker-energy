@@ -1,16 +1,21 @@
-FROM python:3.9-slim-buster
+ARG BASE=ubuntu
+ARG VERSION=latest
 
+FROM ${BASE}:${VERSION}
+
+# Set the working directory
 WORKDIR /app
 
-# Install dependencies
-#COPY requirements.txt .
-#RUN pip install --no-cache-dir -r requirements.txt
-
+# Update packages and install dependencies
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip python3-dev sqlite3 && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy the application code
 COPY . .
 
-RUN pip install -e .
+# Install flaskr
+RUN pip3 install .
 
 # Set the environment variables
 ENV FLASK_APP=flaskr

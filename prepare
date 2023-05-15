@@ -4,7 +4,9 @@
 EXPID=-1
 WORKLOAD="llama.cpp"
 BASE=()
-WARMUP=300
+#WARMUP=300
+WARMUP=10
+
 
 # Get the arguments
 while getopts "x:l:b:w:" arg; do
