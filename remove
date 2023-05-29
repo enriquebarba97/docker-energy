@@ -13,6 +13,10 @@ while getopts "x:l:b:w:" arg; do
   esac
 done
 
+if [[ "$WORKLOAD" == "cypress-realworld-app" ]]; then
+  npx kill-port 3000
+fi
+
 # Remove the docker images of this experiment
 for i in "${BASE[@]}"; do
   docker rmi "${WORKLOAD}"-"${i}"

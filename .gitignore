@@ -26,3 +26,8 @@ vod-stream/*
 !vod-stream/Dockerfile
 !vod-stream/DockerfileAlpine
 !vod-stream/nginx.conf
+
+cypress-realworld-app/*
+!cypress-realworld-app/Dockerfile
+!cypress-realworld-app/client
+!cypress-realworld-app/.dockerignore

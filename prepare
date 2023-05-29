@@ -4,8 +4,10 @@
 EXPID=-1
 WORKLOAD="llama.cpp"
 BASE=()
-#WARMUP=300
-WARMUP=10
+WARMUP=300
+# WARMUP=10
+INFERENCE="Building a website can be done in 10 simple steps:"
+TOKENS=256
 OPTIONS=()
 COMMAND=()
 CLIENT=false
@@ -26,7 +28,7 @@ done
 
 if [[ "$WORKLOAD" == "llama.cpp" ]]; then
   OPTIONS=(-v "${PWD}"/llama.cpp/models:/models)
-  COMMAND=(-m /models/7B/ggml-model-q4_0.bin -p "${INFERENCE}" -n "${TOKENS}" --seed 12345678)
+  COMMAND=(-m /models/7B/ggml-model-q4_0.bin -p "${INFERENCE}" -n "${TOKENS}" --seed 12345678 -t 2)
 elif [[ "$WORKLOAD" == "video-stream" ]]; then
   OPTIONS=(-p 8080:8080 --add-host=host.docker.internal:host-gateway)
 elif [[ "$WORKLOAD" == "vod-stream" ]]; then
@@ -34,6 +36,10 @@ elif [[ "$WORKLOAD" == "vod-stream" ]]; then
   CLIENT=true
 elif [[ "$WORKLOAD" == "flaskr" ]]; then
   OPTIONS=(-p 5000:5000)
+  CLIENT=true
+elif [[ "$WORKLOAD" == "cypress-realworld-app" ]]; then
+  yarn --cwd "${PWD}"/cypress-realworld-app start:react &
+  OPTIONS=(-p 3001:3001)
   CLIENT=true
 fi
 
