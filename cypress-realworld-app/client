@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Get the arguments
+while getopts "b:" arg; do
+  case $arg in
+    b) BASE=$OPTARG;;
+    *) ;;
+  esac
+done
+
+until $(curl --output /dev/null --silent --head --fail localhost:3000); do
+  echo "Waiting for server to start"
+  sleep 5
+done
+
+echo "Server started, running tests"
+
+yarn --cwd $PWD/cypress-realworld-app cypress run
+
+docker stop cypress-realworld-app-"${BASE}"
