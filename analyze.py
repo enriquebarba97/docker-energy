@@ -7,6 +7,8 @@ from scipy import stats
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
 import matplotlib.pyplot as plt
 
+import seaborn as sns
+from itertools import zip_longest
 
 def get_lists(images: dict):
     # Prepare the lists for the results
@@ -118,12 +120,29 @@ def plot(images: dict, labels: list, parts: list):
         for label in labels:
             compare.append(images[label][part].values.astype(float))
         plt.figure(figsize=(10, 7))
-        plt.boxplot(compare)
+        # plt.boxplot(compare)
         # plt.violinplot(compare)
-        plt.xticks(range(1, len(labels) + 1), labels)
+        sns.boxplot(data=compare)
+        plt.xticks(range(0, len(labels)), labels)
         plt.title(part)
         plt.show()
 
+
+def plot_samples(images: dict):
+    sns.set_style("whitegrid")
+    df = pd.DataFrame()
+    for image in images:
+        if df.empty:
+            df = images[image]
+        else:
+            df = pd.concat([df, images[image]], ignore_index=True)
+
+    plt.figure(figsize=(10, 7))
+
+    sns.lineplot(x='Time', y='Watts', data=df, hue='Image')
+
+    plt.title("Power usage over time")
+    plt.show()
 
 def analyze(images: dict, labels: list, parts: list):
     print("============================== Shapiro-Wilk test ==============================")
@@ -153,7 +172,7 @@ def parse_args(argv):
 
     # Get the arguments provided by the user
     opts, args = getopt.getopt(argv, "f:", ["file=", "shapiro", "anova", "tukey",
-                                            "cohen", "full", "statistics", "plot"])
+                                            "cohen", "full", "statistics", "plot", "plot_samples"])
     for opt, arg in opts:
         if opt in ["-f", "--file"]:
             file.append(arg)
@@ -171,6 +190,8 @@ def parse_args(argv):
             statistical_test = "statistics"
         elif opt == "--plot":
             statistical_test = "plot"
+        elif opt == "--plot_samples":
+            statistical_test = "plot_samples"
 
     return file, statistical_test
 
@@ -200,6 +221,8 @@ def main(argv):
         statistics(images, labels, parts)
     elif statistical_test == "plot":
         plot(images, labels, parts)
+    elif statistical_test == "plot_samples":
+        plot_samples(images)
     else:
         print("No statistical test selected.")
 

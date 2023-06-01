@@ -7,7 +7,7 @@ PAUSE=15
 OPTIONS=()
 COMMAND=()
 INFERENCE="Building a website can be done in 10 simple steps:"
-TOKENS=256
+TOKENS=32
 CLIENT=false
 
 # Get the arguments
@@ -45,7 +45,7 @@ fi
 
 # Run and monitor the workload for the specified number of times
 sleep "${PAUSE}"
-echo -e "# run ${RUN}: ${BASE}" | tee -a results/"${WORKLOAD}"_"${BASE}".txt
+echo -e "# run ${RUN}: ${BASE}" | tee -a results/"${WORKLOAD}"_"${BASE}".txt results/"${WORKLOAD}"_"${BASE}"_samples.txt
 
 # Run the monitoring tool on the docker run command
 if ${CLIENT} ; then
@@ -53,8 +53,12 @@ if ${CLIENT} ; then
   docker run --name "${WORKLOAD}"-"${BASE}" "${OPTIONS[@]}" "${WORKLOAD}"-"${BASE}" "${COMMAND[@]}" &
   bash "${WORKLOAD}"/client -b "${BASE}"
 else
+#  stdbuf -i0 -o0 -e0 powerstat -cDHRf 1 1024 -n -d 2 &>> results/"${WORKLOAD}"_"${BASE}"_samples.txt &
+  stdbuf -i0 -o0 -e0 powerstat -R 0.5 1024 -n &>> results/"${WORKLOAD}"_"${BASE}"_samples.txt &
+  PID=$!
   perf stat -o results/"${WORKLOAD}"_"${BASE}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
   docker run --name "${WORKLOAD}"-"${BASE}" "${OPTIONS[@]}" "${WORKLOAD}"-"${BASE}" "${COMMAND[@]}"
+  kill -9 $PID
 fi
 
 # Log the output of the run

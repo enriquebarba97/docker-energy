@@ -4,10 +4,10 @@
 EXPID=-1
 WORKLOAD="llama.cpp"
 BASE=()
-WARMUP=300
+WARMUP=10
 # WARMUP=10
 INFERENCE="Building a website can be done in 10 simple steps:"
-TOKENS=256
+TOKENS=32
 OPTIONS=()
 COMMAND=()
 CLIENT=false
@@ -25,6 +25,9 @@ while getopts "x:l:b:w:o:c:" arg; do
     *) ;;
   esac
 done
+
+mkdir -p logs
+mkdir -p results
 
 if [[ "$WORKLOAD" == "llama.cpp" ]]; then
   OPTIONS=(-v "${PWD}"/llama.cpp/models:/models)
@@ -49,7 +52,8 @@ echo -e "### experiment ${EXPID} ###\n" >> logs/"${WORKLOAD}"_warmup.txt
 date +"# started on %c %n" >> logs/"${WORKLOAD}"_warmup.txt
 
 for i in "${BASE[@]}"; do
-  echo -e "### experiment ${EXPID} ###\n# image: ${i}\n" | tee -a logs/"${WORKLOAD}"_"${i}".txt results/"${WORKLOAD}"_"${i}".txt
+  echo -e "### experiment ${EXPID} ###\n# workload: ${WORKLOAD}\n# image: ${i}\n" | tee -a logs/"${WORKLOAD}"_"${i}".txt \
+  results/"${WORKLOAD}"_"${i}".txt results/"${WORKLOAD}"_"${i}"_samples.txt
   # If alpine is selected, use the alpine Dockerfile;
   if [[ "$i" == "alpine" ]]; then 
     DOCKERFILE=DockerfileAlpine; 
