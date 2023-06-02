@@ -32,8 +32,8 @@ if [[ "$WORKLOAD" == "llama.cpp" ]]; then
   COMMAND=(-m /models/7B/ggml-model-q4_0.bin -p "${INFERENCE}" -n "${TOKENS}" --seed 12345678 -t 2)
 elif [[ "$WORKLOAD" == "video-stream" ]]; then
   OPTIONS=(-p 8080:8080 --add-host=host.docker.internal:host-gateway)
-elif [[ "$WORKLOAD" == "vod-stream" ]]; then
-  OPTIONS=(-p 3030:80 -v "${PWD}"/vod-stream/videos:/opt/static/videos -v "${PWD}"/vod-stream/nginx.conf:/usr/local/nginx/conf/nginx.conf)
+elif [[ "$WORKLOAD" == "nginx-vod-module-docker" ]]; then
+  OPTIONS=(-p 3030:80 -v "${PWD}"/nginx-vod-module-docker/examples/videos:/opt/static/videos -v "${PWD}"/workloads/nginx-vod-module-docker/nginx.conf:/usr/local/nginx/conf/nginx.conf)
   CLIENT=true
 elif [[ "$WORKLOAD" == "flaskr" ]]; then
   OPTIONS=(-p 5000:5000)
@@ -49,9 +49,12 @@ echo -e "# run ${RUN}: ${BASE}" | tee -a results/"${WORKLOAD}"_"${BASE}".txt res
 
 # Run the monitoring tool on the docker run command
 if ${CLIENT} ; then
+  stdbuf -i0 -o0 -e0 powerstat -R 0.5 1024 -n &>> results/"${WORKLOAD}"_"${BASE}"_samples.txt &
+  PID=$!
   perf stat -o results/"${WORKLOAD}"_"${BASE}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
   docker run --name "${WORKLOAD}"-"${BASE}" "${OPTIONS[@]}" "${WORKLOAD}"-"${BASE}" "${COMMAND[@]}" &
-  bash "${WORKLOAD}"/client -b "${BASE}"
+  bash workloads/"${WORKLOAD}"/client -b "${BASE}"
+  kill -9 $PID
 else
 #  stdbuf -i0 -o0 -e0 powerstat -cDHRf 1 1024 -n -d 2 &>> results/"${WORKLOAD}"_"${BASE}"_samples.txt &
   stdbuf -i0 -o0 -e0 powerstat -R 0.5 1024 -n &>> results/"${WORKLOAD}"_"${BASE}"_samples.txt &

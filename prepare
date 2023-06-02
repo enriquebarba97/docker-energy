@@ -32,8 +32,8 @@ if [[ "$WORKLOAD" == "llama.cpp" ]]; then
   COMMAND=(-m /models/7B/ggml-model-q4_0.bin -p "${INFERENCE}" -n "${TOKENS}" --seed 12345678 -t 2)
 elif [[ "$WORKLOAD" == "video-stream" ]]; then
   OPTIONS=(-p 8080:8080 --add-host=host.docker.internal:host-gateway)
-elif [[ "$WORKLOAD" == "vod-stream" ]]; then
-  OPTIONS=(-p 3030:80 -v "${PWD}"/vod-stream/videos:/opt/static/videos -v "${PWD}"/vod-stream/nginx.conf:/usr/local/nginx/conf/nginx.conf)
+elif [[ "$WORKLOAD" == "nginx-vod-module-docker" ]]; then
+  OPTIONS=(-p 3030:80 -v "${PWD}"/nginx-vod-module-docker/examples/videos:/opt/static/videos -v "${PWD}"/workloads/nginx-vod-module-docker/nginx.conf:/usr/local/nginx/conf/nginx.conf)
   CLIENT=true
 elif [[ "$WORKLOAD" == "flaskr" ]]; then
   OPTIONS=(-p 5000:5000)
@@ -70,7 +70,7 @@ for i in "${BASE[@]}"; do
   # Run the docker run command as warmup
   if ${CLIENT} ; then
     docker run --name "${WORKLOAD}"-"${i}" "${OPTIONS[@]}" "${WORKLOAD}"-"${i}" "${COMMAND[@]}" &
-    bash "${WORKLOAD}"/client -b "${i}"
+    bash workloads/"${WORKLOAD}"/client -b "${i}"
   else
     docker run --name "${WORKLOAD}"-"${i}" "${OPTIONS[@]}" "${WORKLOAD}"-"${i}" "${COMMAND[@]}"
   fi

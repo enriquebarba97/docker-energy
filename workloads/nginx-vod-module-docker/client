@@ -9,6 +9,8 @@ while getopts "b:" arg; do
 done
 
 sleep 5
-#vlc http://localhost:3030/hls/devito,360p.mp4,480p.mp4,720p.mp4,.en_US.vtt,.urlset/master.m3u8 --play-and-exit > /dev/null 2>&1
-vlc http://localhost:3030/hls/video1.mp4/master.m3u8 --play-and-exit > /dev/null 2>&1
-docker stop vod-stream-"${BASE}"
+
+echo "Server started, running tests"
+su -c "vlc http://localhost:3030/hls/devito,360p.mp4,480p.mp4,720p.mp4,.en_US.vtt,.urlset/master.m3u8 --play-and-exit > /dev/null 2>&1" "${SUDO_USER}"
+
+docker stop nginx-vod-module-docker-"${BASE}"
