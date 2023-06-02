@@ -4,7 +4,6 @@ import sys
 import pandas as pd
 
 
-
 def create_file(workload: str, image: str, samples: str, df: pd.DataFrame):
     file_name = f"results/{workload}_{image}{samples}.tsv"
     with open(file_name, "w") as f:

@@ -26,8 +26,6 @@ while getopts "x:l:b:w:o:c:" arg; do
   esac
 done
 
-mkdir -p logs
-mkdir -p results
 
 if [[ "$WORKLOAD" == "llama.cpp" ]]; then
   OPTIONS=(-v "${PWD}"/llama.cpp/models:/models)
@@ -48,6 +46,8 @@ fi
 
 
 # Setup the log files
+mkdir -p logs
+mkdir -p results
 echo -e "### experiment ${EXPID} ###\n" >> logs/"${WORKLOAD}"_warmup.txt
 date +"# started on %c %n" >> logs/"${WORKLOAD}"_warmup.txt
 
