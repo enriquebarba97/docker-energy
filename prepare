@@ -65,7 +65,7 @@ for i in "${BASE[@]}"; do
   fi
 
   # Build the Docker image
-  docker build -t "${WORKLOAD}"-"${i}" -f "${WORKLOAD}"/${DOCKERFILE} --build-arg BASE="${i}" "${WORKLOAD}"
+  docker build -t "${WORKLOAD}"-"${i}" -f workloads/"${WORKLOAD}"/${DOCKERFILE} --build-arg BASE="${i}" "${WORKLOAD}"
 
   # Run the docker run command as warmup
   if ${CLIENT} ; then
