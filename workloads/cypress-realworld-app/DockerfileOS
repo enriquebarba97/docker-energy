@@ -1,0 +1,23 @@
+# FROM node:14
+FROM debian:latest
+
+RUN apt-get update && apt-get install -y curl
+RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
+RUN apt-get install -y nodejs
+RUN npm install -g yarn
+
+WORKDIR /app
+
+COPY package.json yarn.lock ./
+
+RUN yarn
+
+COPY . .
+
+ENV NODE_ENV=development
+
+EXPOSE 3000
+# EXPOSE 3001
+
+CMD [ "yarn", "dev" ]
+# CMD [ "yarn", "start:api:watch" ]
