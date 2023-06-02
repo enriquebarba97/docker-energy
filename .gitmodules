@@ -1,0 +1,9 @@
+[submodule "llama.cpp"]
+	path = llama.cpp
+	url = https://github.com/ggerganov/llama.cpp.git
+[submodule "cypress-realworld-app"]
+	path = cypress-realworld-app
+	url = https://github.com/cypress-io/cypress-realworld-app.git
+[submodule "nginx-vod-module-docker"]
+	path = nginx-vod-module-docker
+	url = https://github.com/nytimes/nginx-vod-module-docker.git
