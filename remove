@@ -5,7 +5,7 @@ WORKLOAD="llama.cpp"
 BASE=()
 
 # Get the arguments
-while getopts "l:b:" arg; do
+while getopts "l:b:x:" arg; do
   case $arg in
     l) WORKLOAD=$OPTARG;;
     b) BASE+=("$OPTARG");;
