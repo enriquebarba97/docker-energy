@@ -5,13 +5,13 @@ EXPID=-1
 WORKLOAD="llama.cpp"
 BASE=()
 WARMUP=10
-# WARMUP=10
-INFERENCE="Building a website can be done in 10 simple steps:"
-TOKENS=32
 OPTIONS=()
 COMMAND=()
 CLIENT=false
 
+# For llama.cpp
+INFERENCE="Building a website can be done in 10 simple steps:"
+TOKENS=32
 
 # Get the arguments
 while getopts "x:l:b:w:o:c:" arg; do
@@ -26,7 +26,7 @@ while getopts "x:l:b:w:o:c:" arg; do
   esac
 done
 
-
+# Setup the default options and commands for the Docker run command
 if [[ "$WORKLOAD" == "llama.cpp" ]]; then
   OPTIONS=(-v "${PWD}"/llama.cpp/models:/models)
   COMMAND=(-m /models/7B/ggml-model-q4_0.bin -p "${INFERENCE}" -n "${TOKENS}" --seed 12345678 -t 2)
@@ -40,7 +40,6 @@ elif [[ "$WORKLOAD" == "flaskr" ]]; then
   CLIENT=true
 elif [[ "$WORKLOAD" == "cypress-realworld-app" ]]; then
   yarn --cwd "${PWD}"/cypress-realworld-app start:react &
-  PID=$!
   OPTIONS=(-p 3001:3001)
   CLIENT=true
 fi
@@ -54,6 +53,7 @@ mkdir -p results/"${WORKLOAD}-${EXPID}"/samples
 echo -e "### experiment ${EXPID} ###\n workload: ${WORKLOAD}\n" >> logs/"${WORKLOAD}-${EXPID}"/warmup.txt
 date +"# started on %c %n" >> logs/"${WORKLOAD}-${EXPID}"/warmup.txt
 
+# Build the Docker images and run the workload once for each base image as warm-up
 for i in "${BASE[@]}"; do
   echo -e "### experiment ${EXPID} ###\n# workload: ${WORKLOAD}\n# image: ${i}\n" | tee -a \
   logs/"${WORKLOAD}"-"${EXPID}"/"${i}".txt \
