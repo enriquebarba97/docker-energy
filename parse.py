@@ -1,24 +1,22 @@
 import getopt
 import sys
-
+import glob
 import pandas as pd
 
 
-def create_file(workload: str, image: str, samples: str, df: pd.DataFrame):
-    file_name = f"results/{workload}_{image}{samples}.tsv"
+def create_file(image: str, df: pd.DataFrame, directory: str = "results"):
+    file_name = f"{directory}/{image}.tsv"
     with open(file_name, "w") as f:
         f.write(f"{image}\n")
     # df = pd.DataFrame(data)
-    df.to_csv(f"results/{workload}_{image}{samples}.tsv", sep="\t", mode="a", index=False)
+    df.to_csv(f"{directory}/{image}.tsv", sep="\t", mode="a", index=False)
 
 
-def parse_results(file_name: str):
+def parse_results(file_name: str, directory: str = "results"):
     with open(file_name) as f:
         lines = f.readlines()
         data = {"cores (J)": [], "ram (J)": [], "gpu (J)": [], "pkg (J)": [], "time (s)": []}
-        workload = ""
         image = ""
-        xid = ""
 
         for line in lines:
             line = line.split()
@@ -27,10 +25,11 @@ def parse_results(file_name: str):
             if "experiment" in line:
                 xid = line[2]
                 if len(data["cores (J)"]) > 0:
-                    create_file(workload, image, xid, data)
+                    df = pd.DataFrame(data)
+                    create_file(image, df, directory)
                     data = {k: [] for k in data}
-            elif "workload:" in line:
-                workload = line[2]
+            # elif "workload:" in line:
+            #     workload = line[2]
             elif "image:" in line:
                 image = line[2]
             elif "run" in line:
@@ -54,33 +53,38 @@ def parse_results(file_name: str):
                 continue
 
     df = pd.DataFrame(data)
-    create_file(workload, image, "", df)
+    create_file(image, df, directory)
 
 
-def parse_samples(file_name: str):
+def parse_samples(file_name: str, directory: str = "results"):
     with open(file_name) as f:
         lines = f.readlines()
         samples = list()
         data = list()
         headers = list()
         run = list()
-        workload = ""
-        image = list()
+        image = ""
         for line in lines:
             line = line.split()
             if len(line) == 0:
                 continue
-            elif "workload:" in line:
-                workload = line[2]
+            # elif "workload:" in line:
+            #     workload = line[2]
             elif "image:" in line:
-                image = [line[2]]
+                image = line[2]
             elif len(samples) > 0 and "###" in line[0]:
-                print("TEST")
-                samples = list()
-                df = pd.DataFrame(data, columns=headers)
-                df["Watts"] = pd.to_numeric(df["Watts"])
-                create_file(workload, image, "_samples", df)
+                last_run = pd.DataFrame(samples, columns=headers)
 
+                data.extend(pd.to_numeric(last_run["Watts"]).values.tolist())
+                run.extend([0.5 * i for i in range(len(df["Watts"]))])
+                images = [image] * len(data)
+                df = pd.DataFrame([run, data, images])
+                df = df.transpose()
+                df.columns = ["Time", "Watts", "Image"]
+
+                create_file(image, df, directory)
+
+                samples = list()
                 data = list()
                 headers = list()
             elif "run" in line and len(samples) > 0:
@@ -101,15 +105,15 @@ def parse_samples(file_name: str):
 
     data.extend(pd.to_numeric(last_run["Watts"]).values.tolist())
     run.extend([0.5*i for i in range(len(df["Watts"]))])
-    image = image * len(data)
-    df = pd.DataFrame([run, data, image])
+    images = [image] * len(data)
+    df = pd.DataFrame([run, data, images])
     df = df.transpose()
     df.columns = ["Time", "Watts", "Image"]
 
-    create_file(workload, image[0], "_samples", df)
+    create_file(image, df, directory)
 
 
-def total_order(files: list):
+def total_order(files: list, directory: str = "results"):
     data = list()
     for file in files:
         with open(file) as f:
@@ -123,22 +127,48 @@ def total_order(files: list):
     df.to_csv("total_order.tsv", sep="\t", mode="a", index=False)
 
 
+def get_files(directory: str, extension: str):
+    files = list()
+    files_samples = list()
+
+    files.extend(glob.glob(f"{directory}/" + f"{extension}"))
+    files_samples.extend(glob.glob(f"{directory}/samples/" + f"{extension}"))
+    return files, files_samples
+
+
+def parse_files(files: list, files_samples: list, directory: str):
+    for file in files:
+        parse_results(file, directory)
+    for file in files_samples:
+        parse_samples(file, directory+"/samples")
+
+
 def main(argv):
-    file = list()
-    opts, args = getopt.getopt(argv, "f:", ["file="])
+    files = list()
+    files_samples = list()
+    directory = "results"
+    opts, args = getopt.getopt(argv, "f:d:", ["file=", "directory="])
     for opt, arg in opts:
         if opt in ["-f", "--file"]:
-            file.append(arg)
-    if len(file) == 1:
-        filename = file[0]
-        if "samples" in filename:
-            parse_samples(filename)
-        else:
-            parse_results(filename)
-    elif len(file) > 1:
-        total_order(file)
-    else:
-        print("No file provided.")
+            files.append(arg)
+        if opt in ["-d", "--directory"]:
+            directory = arg
+            if directory[-1] == "/":
+                directory = directory[:-1]
+            files, files_samples = get_files(directory, "*.txt")
+
+    parse_files(files, files_samples, directory)
+
+    # if len(file) == 1:
+    #     filename = file[0]
+    #     if "samples" in filename:
+    #         parse_samples(filename)
+    #     else:
+    #         parse_results(filename)
+    # elif len(file) > 1:
+    #     total_order(file)
+    # else:
+    #     print("No file provided.")
 
 
 if __name__ == '__main__':

@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 
 import seaborn as sns
 from itertools import zip_longest
+import parse
+
 
 def get_lists(images: dict):
     # Prepare the lists for the results
@@ -144,7 +146,8 @@ def plot_samples(images: dict):
     plt.title("Power usage over time")
     plt.show()
 
-def analyze(images: dict, labels: list, parts: list):
+
+def analyze(images: dict, images_samples: dict, labels: list, parts: list):
     print("============================== Shapiro-Wilk test ==============================")
     normal = shapiro_test(images, labels, parts)
     print("============================== One-way ANOVA test =============================")
@@ -167,15 +170,21 @@ def read_tsv(file: str):
 
 
 def parse_args(argv):
-    file = list()
+    files = list()
+    files_samples = list()
     statistical_test = ""
 
     # Get the arguments provided by the user
-    opts, args = getopt.getopt(argv, "f:", ["file=", "shapiro", "anova", "tukey",
+    opts, args = getopt.getopt(argv, "f:d:", ["file=", "directory", "shapiro", "anova", "tukey",
                                             "cohen", "full", "statistics", "plot", "plot_samples"])
     for opt, arg in opts:
         if opt in ["-f", "--file"]:
-            file.append(arg)
+            files.append(arg)
+        if opt in ["-d", "--directory"]:
+            directory = arg
+            if directory[-1] == "/":
+                directory = directory[:-1]
+            files, files_samples = parse.get_files(directory, "*.tsv")
         elif opt == "--shapiro":
             statistical_test = "shapiro"
         elif opt == "--anova":
@@ -193,17 +202,22 @@ def parse_args(argv):
         elif opt == "--plot_samples":
             statistical_test = "plot_samples"
 
-    return file, statistical_test
+    return files, files_samples, statistical_test
 
 
 def main(argv):
     images = {}
-    file, statistical_test = parse_args(argv)
+    images_samples = {}
+    files, files_samples, statistical_test = parse_args(argv)
 
     # Read the TSV files
-    for f in file:
+    for f in files:
         base, df = read_tsv(f)
         images[base] = df
+
+    for f in files_samples:
+        base, df = read_tsv(f)
+        images_samples[base] = df
 
     labels, parts = get_lists(images)
 
@@ -216,13 +230,13 @@ def main(argv):
     elif statistical_test == "cohen":
         cohen_d(images, labels, parts)
     elif statistical_test == "full":
-        analyze(images, labels, parts)
+        analyze(images, images_samples, labels, parts)
     elif statistical_test == "statistics":
         statistics(images, labels, parts)
     elif statistical_test == "plot":
         plot(images, labels, parts)
     elif statistical_test == "plot_samples":
-        plot_samples(images)
+        plot_samples(images_samples)
     else:
         print("No statistical test selected.")
 

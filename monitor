@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Default values
+EXPID=-1
 WORKLOAD="llama.cpp"
 BASE="ubuntu"
 PAUSE=15
@@ -11,8 +12,9 @@ TOKENS=32
 CLIENT=false
 
 # Get the arguments
-while getopts "l:b:p:o:c:i:r:t:u" arg; do
+while getopts "x:l:b:p:o:c:i:r:t:u" arg; do
   case $arg in
+    x) EXPID=$OPTARG;;
     l) WORKLOAD=$OPTARG;;
     b) BASE=$OPTARG;;
     p) PAUSE=$OPTARG;;
@@ -45,27 +47,28 @@ fi
 
 # Run and monitor the workload for the specified number of times
 sleep "${PAUSE}"
-echo -e "# run ${RUN}: ${BASE}" | tee -a results/"${WORKLOAD}"_"${BASE}".txt results/"${WORKLOAD}"_"${BASE}"_samples.txt
+echo -e "# run ${RUN}: ${BASE}" | tee -a results/"${WORKLOAD}"-"${EXPID}"/"${BASE}".txt \
+results/"${WORKLOAD}"-"${EXPID}"/samples/"${BASE}".txt
 
 # Run the monitoring tool on the docker run command
 if ${CLIENT} ; then
-  stdbuf -i0 -o0 -e0 powerstat -R 0.5 1024 -n &>> results/"${WORKLOAD}"_"${BASE}"_samples.txt &
+  stdbuf -i0 -o0 -e0 powerstat -R 0.5 1024 -n &>> results/"${WORKLOAD}"-"${EXPID}"/samples/"${BASE}".txt &
   PID=$!
-  perf stat -o results/"${WORKLOAD}"_"${BASE}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
+  perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
   docker run --name "${WORKLOAD}"-"${BASE}" "${OPTIONS[@]}" "${WORKLOAD}"-"${BASE}" "${COMMAND[@]}" &
   bash workloads/"${WORKLOAD}"/client -b "${BASE}"
   kill -9 $PID
 else
-#  stdbuf -i0 -o0 -e0 powerstat -cDHRf 1 1024 -n -d 2 &>> results/"${WORKLOAD}"_"${BASE}"_samples.txt &
-  stdbuf -i0 -o0 -e0 powerstat -R 0.5 1024 -n &>> results/"${WORKLOAD}"_"${BASE}"_samples.txt &
+#  stdbuf -i0 -o0 -e0 powerstat -cDHRf 1 1024 -n -d 2 &>> results/"${WORKLOAD}"-"${EXPID}"/samples/"${BASE}".txt &
+  stdbuf -i0 -o0 -e0 powerstat -R 0.5 1024 -n &>> results/"${WORKLOAD}"-"${EXPID}"/samples/"${BASE}".txt &
   PID=$!
-  perf stat -o results/"${WORKLOAD}"_"${BASE}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
+  perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
   docker run --name "${WORKLOAD}"-"${BASE}" "${OPTIONS[@]}" "${WORKLOAD}"-"${BASE}" "${COMMAND[@]}"
   kill -9 $PID
 fi
 
 # Log the output of the run
-date +"# run ${RUN}%n# started on %c %n" >> logs/"${WORKLOAD}"_"${BASE}".txt
-docker logs -f "${WORKLOAD}"-"${BASE}" &>> logs/"${WORKLOAD}"_"${BASE}".txt
-echo -e "\n\n" | tee -a logs/"${WORKLOAD}"_"${BASE}".txt results/"${WORKLOAD}"_"${BASE}".txt
+date +"# run ${RUN}%n# started on %c %n" >> logs/"${WORKLOAD}"-"${EXPID}"/"${BASE}".txt
+docker logs -f "${WORKLOAD}"-"${BASE}" &>> logs/"${WORKLOAD}"-"${EXPID}"/"${BASE}".txt
+echo -e "\n\n" | tee -a logs/"${WORKLOAD}"-"${EXPID}"/"${BASE}".txt results/"${WORKLOAD}"-"${EXPID}"/"${BASE}".txt
 docker rm "${WORKLOAD}"-"${BASE}"

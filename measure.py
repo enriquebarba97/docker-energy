@@ -1,4 +1,5 @@
 import os, sys, getopt, subprocess, uuid, random
+import parse
 
 
 def execute(command: list):
@@ -44,7 +45,7 @@ def parse_args(argv):
 
     # Set up the commands for the scripts
     prepare_command = ['bash', 'prepare', '-x', exp_id]
-    monitor_command = ['bash', 'monitor']
+    monitor_command = ['bash', 'monitor', '-x', exp_id]
 
     # Default values
     workload = ""
@@ -104,7 +105,7 @@ def parse_args(argv):
 
     # Put the arguments in a dictionary
     arguments = {"prepare_command": prepare_command, "monitor_command": monitor_command, "queue": queue,
-                 "shuffle_mode": shuffle_mode, "help_mode": help_mode, "workload": workload}
+                 "shuffle_mode": shuffle_mode, "help_mode": help_mode, "workload": workload, "exp_id": exp_id}
     return arguments
 
 
@@ -131,6 +132,11 @@ def main(argv):
     remove_command = arguments["prepare_command"].copy()
     remove_command[1] = "remove"
     execute(remove_command)
+
+    # Parse the results
+    directory = f"results/{arguments['workload']}-{arguments['exp_id']}"
+    files, files_samples = parse.get_files(directory, "*.txt")
+    parse.parse_files(files, files_samples, directory)
 
 
 if __name__ == '__main__':

@@ -47,14 +47,17 @@ fi
 
 
 # Setup the log files
-mkdir -p logs
-mkdir -p results
-echo -e "### experiment ${EXPID} ###\n" >> logs/"${WORKLOAD}"_warmup.txt
-date +"# started on %c %n" >> logs/"${WORKLOAD}"_warmup.txt
+mkdir -p logs/"${WORKLOAD}-${EXPID}"
+mkdir -p results/"${WORKLOAD}-${EXPID}"
+mkdir -p results/"${WORKLOAD}-${EXPID}"/samples
+
+echo -e "### experiment ${EXPID} ###\n workload: ${WORKLOAD}\n" >> logs/"${WORKLOAD}-${EXPID}"/warmup.txt
+date +"# started on %c %n" >> logs/"${WORKLOAD}-${EXPID}"/warmup.txt
 
 for i in "${BASE[@]}"; do
-  echo -e "### experiment ${EXPID} ###\n# workload: ${WORKLOAD}\n# image: ${i}\n" | tee -a logs/"${WORKLOAD}"_"${i}".txt \
-  results/"${WORKLOAD}"_"${i}".txt results/"${WORKLOAD}"_"${i}"_samples.txt
+  echo -e "### experiment ${EXPID} ###\n# workload: ${WORKLOAD}\n# image: ${i}\n" | tee -a \
+  logs/"${WORKLOAD}"-"${EXPID}"/"${i}".txt \
+  results/"${WORKLOAD}"-"${EXPID}"/"${i}".txt results/"${WORKLOAD}"-"${EXPID}"/samples/"${i}".txt
   # If alpine is selected, use the alpine Dockerfile;
   if [[ "$i" == "alpine" ]]; then 
     DOCKERFILE=DockerfileAlpine; 
@@ -80,12 +83,12 @@ for i in "${BASE[@]}"; do
 done
 
 # Log the docker images information
-echo -e "# docker images\n" >> logs/"${WORKLOAD}"_warmup.txt
-docker image ls >> logs/"${WORKLOAD}"_warmup.txt
+echo -e "# docker images\n" >> logs/"${WORKLOAD}"-"${EXPID}"/warmup.txt
+docker image ls >> logs/"${WORKLOAD}"-"${EXPID}"/warmup.txt
 
 # Start the warm up procedure
-echo -e "\n# warmup\n" >> logs/"${WORKLOAD}"_warmup.txt
-sysbench cpu --time="${WARMUP}" --cpu-max-prime=100000 --threads=2 run | tee -a logs/"${WORKLOAD}"_warmup.txt
-echo -e "\n\n" >> logs/"${WORKLOAD}"_warmup.txt
+echo -e "\n# warmup\n" >> logs/"${WORKLOAD}"-"${EXPID}"/warmup.txt
+sysbench cpu --time="${WARMUP}" --cpu-max-prime=100000 --threads=2 run | tee -a logs/"${WORKLOAD}"-"${EXPID}"/warmup.txt
+echo -e "\n\n" >> logs/"${WORKLOAD}"-"${EXPID}"/warmup.txt
 
 
