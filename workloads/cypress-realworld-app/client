@@ -17,6 +17,6 @@ echo "Server started, running tests"
 
 echo $PWD
 
-su -c "yarn --cwd "$PWD"/cypress-realworld-app/ cypress run" "${SUDO_USER}"
+su -c "yarn --cwd "$PWD"/cypress-realworld-app/ cypress run --config video=false" "${SUDO_USER}"
 
 docker stop cypress-realworld-app-"${BASE}"

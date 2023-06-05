@@ -40,6 +40,7 @@ elif [[ "$WORKLOAD" == "flaskr" ]]; then
   CLIENT=true
 elif [[ "$WORKLOAD" == "cypress-realworld-app" ]]; then
   yarn --cwd "${PWD}"/cypress-realworld-app start:react &
+  PID=$!
   OPTIONS=(-p 3001:3001)
   CLIENT=true
 fi

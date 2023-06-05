@@ -14,7 +14,8 @@ while getopts "x:l:b:w:" arg; do
 done
 
 if [[ "$WORKLOAD" == "cypress-realworld-app" ]]; then
-  npx kill-port 3000
+#  npx kill-port 3000
+  kill "$(lsof -t -i:3000)"
 fi
 
 # Remove the docker images of this experiment
