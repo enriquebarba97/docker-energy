@@ -10,9 +10,14 @@ if [ ! -d ~/.nvm ]; then
   source ~/.profile
   source ~/.bashrc
   nvm install 16
+else
+  source ~/.nvm/nvm.sh
+  nvm use 16
 fi
 
 npm install yarn -g
+
+yarn --cwd "${PWD}"/cypress-realworld-app install
 
 if [ ! -d venv/ ]; then
   su -c "python -m venv venv" "${SUDO_USER}"
