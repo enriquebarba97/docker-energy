@@ -1,4 +1,5 @@
 linux-tools-common
 linux-tools-generic
+linux-tools-`uname -r`
 vlc
 python3.10-venv

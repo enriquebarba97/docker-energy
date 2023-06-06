@@ -21,7 +21,7 @@ def get_lists(images: dict):
 
 
 def shapiro_test(images: dict, labels: list, parts: list):
-    print("False means that the null hypothesis is rejected, i.e. the data is not normal.")
+    print("True means that the null hypothesis is rejected, i.e. the data is not normal.")
     normal = list()
     # Perform the Shapiro-Wilk test for normality for each part of each base image
     for label in labels:
@@ -32,10 +32,10 @@ def shapiro_test(images: dict, labels: list, parts: list):
             x = images[label][part].values.astype(float)
             print(list(x))
             shapiro, p = stats.shapiro(list(x))
-            r = True
+            r = False
             # If the p-value is less than 0.05, the null hypothesis is rejected (i.e. the data is not normal)
             if p < 0.05:
-                r = False
+                r = True
             n.append(r)
             print(f"\t {part}: {str(r)} - {p}")
         normal.append(n)
@@ -43,19 +43,19 @@ def shapiro_test(images: dict, labels: list, parts: list):
 
 
 def anova_test(images: dict, labels: list, parts: list):
-    print("False means that the null hypothesis is rejected, i.e. the means are not equal.")
+    print("True means that the null hypothesis is rejected, i.e. the means are not equal.")
     print(f"One-way ANOVA test between {labels}:")
     significance = list()
     # Perform the one-way ANOVA test for each part between the base images
     for part in parts:
         x = list()
-        s = True
+        s = False
         for label in labels:
             x.append(images[label][part].values.astype(float))
         anova = stats.f_oneway(*x)
         # If the p-value is less than 0.05, the null hypothesis is rejected (i.e. the means are not equal)
         if anova.pvalue < 0.05:
-            s = False
+            s = True
         significance.append(s)
         print("\t" + part + ": " + str(s))
     return parts, significance

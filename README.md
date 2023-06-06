@@ -1,70 +1,90 @@
 # docker-energy
 Measuring the impact of the base image choice for different workloads inside Docker containers
 
-## Measuring the energy consumption of Docker containers
-The _main.py_ script is used to measure the energy consumption of Docker containers for the various workloads using different base images.
+- [Setup](#setup)
+  - [Prerequisites](#prerequisites)
+  - [Installing the dependencies](#installing-the-dependencies)
+- [Usage](#usage)
+  - [Measuring the energy consumption](#measuring-the-energy-consumption)
+  - [Statistical analysis](#statistical-analysis)
+
+## Setup
+### Prerequisites
+- Ubuntu (or a similar Linux distribution)
+- Docker engine
+- Python 3
+
+### Installing the dependencies
+To install the necessary dependencies, use the `setup` script by running the following command:
+```bash
+sudo bash setup
+```
+This `setup` script installs the following dependencies:
+- The following git submodules:
+    - [llama.cpp](https://github.com/ggerganov/llama.cpp)
+    - [nginx-vod-module-docker](https://github.com/nytimes/nginx-vod-module-docker)
+    - [cypress-realworld-app](https://github.com/cypress-io/cypress-realworld-app)
+- The following Linux packages:
+  - linux-tools-common 
+  - linux-tools-generic 
+  - vlc 
+  - python3.10-venv
+- nvm, node v16, and yarn
+- The following Python packages:
+  - matplotlib 
+  - numpy 
+  - pandas 
+  - scipy
+  - statsmodels
+  - seaborn
+  - PyQt5
+
+
+## Usage
+### Measuring the energy consumption
+The `measure.py` script is used to measure the energy consumption of Docker containers for the various workloads using different base images.
 It takes the following arguments:
-- _-l_: the workload to measure (e.g. _-l llama.cpp_)
-- _-b_: the base image to use (e.g. _-b ubuntu_)
-- _-n_: the number of iterations to run (default: 30)
-- _-w_: the warm-up time in seconds (default: 10)
-- _-p_: the pause time between the iterations in seconds (default: 10)
-- _-o_: the options for the Docker command
-- _-c_: the command for the Docker command
-- _--shuffle_: enables shuffle mode, which shuffles the order of the base image iterations
+- **_-l_** or **_--workload_**: Workload to monitor (e.g. -l "llama.cpp" or -l "video-stream")
+- **_-b_** or **_--base_**: Base image to monitor; can be used for multiple base images (e.g. -b ubuntu -b alpine) (default "ubuntu")
+- **_-n_** or **_--runs_**: Number of monitoring runs per base image (e.g. -n 30) (default 1)
+- **_-w_** or **_--warmup_**: Warm up time (s) (e.g. -w 30) (default 10)
+- **_-p_** or **_--pause_**: Pause time (s) (e.g. -p 60) (default 15)
+- **_-o_** or **_--options_**: Options for the Docker run command (default "")
+- **_-c_** or **_--command_**: Command for the Docker run command (default "")
+- **_-a_** or **_--all_**: Monitor all compatible base images (i.e. ubuntu, debian, alpine, centos)
+- **_--shuffle_**: Enables shuffle mode; random order of monitoring base images
 
-For example, to obtain 30 energy consumption measurements of the _llama.cpp_ using _ubuntu_, _debian_, and _alpine_, in shuffle mode, run the following command:
+For example, to obtain 30 energy consumption measurements and power samples of the _llama.cpp_ using _ubuntu_, _debian_, and _alpine_, in shuffle mode, run the following command:
 ```bash
-sudo python measure.py -l llama.cpp -b ubuntu -b debian -b alpine -n 30 --shuffle
+sudo venv/bin/python measure.py -l llama.cpp -b ubuntu -b debian -b alpine -n 30 --shuffle
 ```
 
-This command will output the logs of the warm up and of the workload for each image in the _logs_ folder, and the energy consumption measurements for each image in the _results_ folder.
+This command will output the logs of the warm-up and the workload for each image in `logs/llama.cpp-{uuid}`. 
 
-## Determining the statistical significance of the results
-When the measurements are obtained, it is possible to determine the statistical significance of the results using the _statistical_tests.py_ script.
-This script expects a tsv file in the following format:
-```tsv
-image
-part1   part2    part3   ...
-x1      y1       z1      ...
-x2      y2       z2      ...
-x3      y3       z3      ...
-...     ...      ...     ...
-```
-where _part1_, _part2_, _part3_, ... are the different part measurements (such as cores, gpu, and ram), and _x_, _y_, and _z_ are the energy consumption measurements for parts. The first line indicates the base image of the measurements.
+The energy consumption measurements for each image can be found in `results/llama.cpp-{uuid}`, and the samples in `results/llama.cpp-{uuid}/samples`.
 
-<details>
-  <summary>Reformat perf_events output for the tests</summary>
+**NOTE:** It is important to run the script with _sudo_, since reading power statistics from RAPL domains require root privileges.
 
-  In order to use the _statistical_tests.py_ script, the output of the perf_events script needs to be reformatted. This can be done using the following command:
-  ```bash
-    python parse.py -f input_file.txt
-  ```
 
-</details>
+### Statistical analysis
+When the measurements are obtained, it is possible to determine the statistical significance of the results using the `analyze.py` script. This script takes the following arguments:
+- **_-f_** or **_--file_**: the input file(s)
+- **_-d_** or _**--directory**_: the directory containing the input file(s)
+- **_--shapiro_**: perform the Shapiro-Wilk test for normality for each part of each base image
+- **_--anova_**: perform the one-way ANOVA test for each part between the base images
+- **_--tukey_**: perform the Tukey HSD test for each part between the base images
+- **_--cohen_**: perform the Cohen's d test for each part between the base images
+- **_--plot_**: plot the data for each part
+- **_--full_**: perform all tests and plot the data
+- **_--plot_samples_**: plot the power samples over time
+- **_--statistics_**: print the mean and standard deviation for each part of each base image
 
-The _statistical_tests.py_ script takes the following arguments:
-- _-f_: the input file(s)
-- _--shapiro_: perform the Shapiro-Wilk test for normality for each part of each base image
-- _--anova_: perform the one-way ANOVA test for each part between the base images
-- _--tukey_: perform the Tukey HSD test for each part between the base images
-
-For example, to perform the Shapiro-Wilk, ANOVA, and Tukey test for each part of each base image, run the following commands, respectively:
+For example, to perform all tests for all measurements, run the following commands, respectively:
 ```bash
-python analyze.py -f llama.cpp_ubuntu.csv -f llama.cpp_debian.csv -f llama.cpp_alpine.csv --shapiro
-python analyze.py -f llama.cpp_ubuntu.csv -f llama.cpp_debian.csv -f llama.cpp_alpine.csv --anova
-python analyze.py -f llama.cpp_ubuntu.csv -f llama.cpp_debian.csv -f llama.cpp_alpine.csv --tukey
+python analyze.py -d results/llama.cpp-{uuid} --full
 ```
 
-The Shapiro-Wilk test will print _True_ if the data is normal, and _False_ if it is not.
-The ANOVA test will print _True_ if the means are not significantly different, and _False_ if they are.
+The Shapiro-Wilk test will print _False_ if the data is normal, and _True_ if it is not.
+The ANOVA test will print _True_ if the means are significantly different, and _False_ if they are not.
 The Tukey test will print the actual differences between the datasets.
-
-## Misc
-In order to run the perf_events script, the following commands need to be run:
-```
-sudo apt-get install -y linux-tools-5.19.0-43-generic linux-cloud-tools-generic
-
-sudo sh -c 'echo -1 >/proc/sys/kernel/perf_event_paranoid'
-sudo sysctl -w kernel.perf_event_paranoid=-1
-```
+The Cohen's d test will print the effect size between the datasets.
