@@ -4,6 +4,8 @@ git submodule update --init
 
 < packages.txt xargs apt-get -y install
 
+apt-get -y install linux-tools-`uname -r`
+
 if [ ! -d ~/.nvm ]; then
   wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
   source ~/.nvm/nvm.sh
