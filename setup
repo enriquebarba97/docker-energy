@@ -1,0 +1,21 @@
+#!/bin/bash
+
+git submodule update --init
+
+< packages.txt xargs apt-get -y install
+
+if [ ! -d ~/.nvm ]; then
+  wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+  source ~/.nvm/nvm.sh
+  source ~/.profile
+  source ~/.bashrc
+  nvm install 16
+fi
+
+npm install yarn -g
+
+if [ ! -d venv/ ]; then
+  su -c "python -m venv venv" "${SUDO_USER}"
+fi
+
+venv/bin/pip install -r requirements.txt

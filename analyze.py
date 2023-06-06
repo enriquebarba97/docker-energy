@@ -8,7 +8,6 @@ from statsmodels.stats.multicomp import pairwise_tukeyhsd
 import matplotlib.pyplot as plt
 
 import seaborn as sns
-from itertools import zip_longest
 import parse
 
 

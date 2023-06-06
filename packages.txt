@@ -1,0 +1,4 @@
+linux-tools-common
+linux-tools-generic
+vlc
+python3.10-venv
