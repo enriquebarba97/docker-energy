@@ -76,7 +76,7 @@ def parse_samples(file_name: str, directory: str = "results"):
                 last_run = pd.DataFrame(samples, columns=headers)
 
                 data.extend(pd.to_numeric(last_run["Watts"]).values.tolist())
-                run.extend([0.5 * i for i in range(len(df["Watts"]))])
+                run.extend([0.5 * i for i in range(len(data))])
                 images = [image] * len(data)
                 df = pd.DataFrame([run, data, images])
                 df = df.transpose()
@@ -104,7 +104,7 @@ def parse_samples(file_name: str, directory: str = "results"):
     last_run = pd.DataFrame(samples, columns=headers)
 
     data.extend(pd.to_numeric(last_run["Watts"]).values.tolist())
-    run.extend([0.5*i for i in range(len(df["Watts"]))])
+    run.extend([0.5*i for i in range(len(data))])
     images = [image] * len(data)
     df = pd.DataFrame([run, data, images])
     df = df.transpose()
