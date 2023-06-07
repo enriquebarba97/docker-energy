@@ -1,0 +1,36 @@
+ARG BASE=alpine
+ARG VERSION=latest
+
+FROM ${BASE}:${VERSION}
+
+ENV NODE_VERSION 16.20.0
+
+RUN apk update && apk add --no-cache curl libstdc++ \
+    && ARCH= && alpineArch="$(apk --print-arch)" \
+    && case "${alpineArch##*-}" in \
+      x86_64) ARCH='x64' ;; \
+      *) ;; \
+    esac \
+    && set -eu; \
+    && curl -fsSLO --compressed "https://unofficial-builds.nodejs.org/download/release/v$NODE_VERSION/node-v$NODE_VERSION-linux-$ARCH-musl.tar.xz" \
+    && tar -xJf "node-v$NODE_VERSION-linux-$ARCH-musl.tar.xz" -C /usr/local --strip-components=1 --no-same-owner \
+    && ln -s /usr/local/bin/node /usr/local/bin/nodejs;
+
+RUN npm install -g yarn
+
+WORKDIR /app
+
+COPY package.json yarn.lock ./
+
+RUN yarn install
+
+COPY . .
+
+ENV NODE_ENV=development
+
+RUN yarn db:seed:dev && \
+    yarn predev:cognito:ci
+
+EXPOSE 3001
+
+CMD [ "yarn", "start:api:watch" ]
