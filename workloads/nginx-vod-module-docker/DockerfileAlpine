@@ -1,6 +1,7 @@
+ARG BASE=alpine
 ARG VERSION=latest
 
-FROM alpine:$VERSION AS base_image
+FROM ${BASE}:${VERSION} AS base_image
 
 FROM base_image AS build
 
