@@ -57,7 +57,6 @@ def parse_args(argv):
     # Get the arguments provided by the user
     opts, args = getopt.getopt(argv, "l:"  # workload
                                      "b:"  # base image
-                                     "v:"  # version
                                      "n:"  # number of runs
                                      "w:"  # warm up time
                                      "p:"  # pause time

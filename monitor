@@ -46,16 +46,13 @@ results/"${WORKLOAD}"-"${EXPID}"/samples/"${BASE}".txt
 # Run the monitoring tool on the docker run command
 stdbuf -i0 -o0 -e0 powerstat -R 0.5 1024 -n &>> results/"${WORKLOAD}"-"${EXPID}"/samples/"${BASE}".txt &
 PID=$!
+
 if ${CLIENT} ; then
-  perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
-  docker run --name "${WORKLOAD}"-"${BASE}" "${OPTIONS[@]}" "${WORKLOAD}"-"${BASE}" "${COMMAND[@]}" &
-  bash workloads/"${WORKLOAD}"/client -b "${BASE}"
-else
-#  perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
-#  docker run --name "${WORKLOAD}"-"${BASE}" "${OPTIONS[@]}" "${WORKLOAD}"-"${BASE}" "${COMMAND[@]}"
-  perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
-  docker run --name "${WORKLOAD}"-"${BASE/:/}" "${OPTIONS[@]}" "${WORKLOAD}"-"${BASE}" "${COMMAND[@]}"
+  bash workloads/"${WORKLOAD}"/client -b "${BASE}" &
 fi
+
+perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
+docker run --name "${WORKLOAD}"-"${BASE/:/}" "${OPTIONS[@]}" "${WORKLOAD}"-"${BASE}" "${COMMAND[@]}"
 kill -9 $PID
 
 # Log the output of the run

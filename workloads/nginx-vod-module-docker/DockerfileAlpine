@@ -1,7 +1,6 @@
-ARG BASE=alpine
-ARG VERSION=latest
+ARG BASE=alpine:latest
 
-FROM ${BASE}:${VERSION} AS base_image
+FROM ${BASE} AS base_image
 
 FROM base_image AS build
 
@@ -18,11 +17,11 @@ RUN curl -sL https://github.com/kaltura/nginx-vod-module/archive/${VOD_MODULE_VE
 
 WORKDIR /nginx
 RUN ./configure --prefix=/usr/local/nginx \
-	--add-module=../nginx-vod-module \
-	--with-http_ssl_module \
-	--with-file-aio \
-	--with-threads \
-	--with-cc-opt="-O3"
+--add-module=../nginx-vod-module \
+--with-http_ssl_module \
+--with-file-aio \
+--with-threads \
+--with-cc-opt="-O3"
 RUN make
 RUN make install
 RUN rm -rf /usr/local/nginx/html /usr/local/nginx/conf/*.default

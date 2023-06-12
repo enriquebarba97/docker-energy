@@ -54,10 +54,10 @@ for i in "${BASE[@]}"; do
   logs/"${WORKLOAD}"-"${EXPID}"/"${i}".txt \
   results/"${WORKLOAD}"-"${EXPID}"/"${i}".txt results/"${WORKLOAD}"-"${EXPID}"/samples/"${i}".txt
   # If alpine is selected, use the alpine Dockerfile;
-  if [[ "$i" == "alpine" ]]; then 
+  if [[ "$i" == "alpine"* ]]; then 
     DOCKERFILE=DockerfileAlpine; 
   # If centos is selected, use the centos Dockerfile
-  elif [[ "$i" == "centos" ]]; then
+  elif [[ "$i" == "centos"* ]]; then
     DOCKERFILE=DockerfileCentos;
   else 
     DOCKERFILE=Dockerfile; 
@@ -68,14 +68,10 @@ for i in "${BASE[@]}"; do
 
   # Run the docker run command as warmup
   if ${CLIENT} ; then
-    docker run --name "${WORKLOAD}"-"${i}" "${OPTIONS[@]}" "${WORKLOAD}"-"${i}" "${COMMAND[@]}" &
-    bash workloads/"${WORKLOAD}"/client -b "${i}"
-  else
-#    docker run --name "${WORKLOAD}"-"${i}" "${OPTIONS[@]}" "${WORKLOAD}"-"${i}" "${COMMAND[@]}"
-    docker run --name "${WORKLOAD}"-"${i/:/}" "${OPTIONS[@]}" "${WORKLOAD}"-"${i}" "${COMMAND[@]}"
+    bash workloads/"${WORKLOAD}"/client -b "${i}" &
   fi
+  docker run --name "${WORKLOAD}"-"${i/:/}" "${OPTIONS[@]}" "${WORKLOAD}"-"${i}" "${COMMAND[@]}"
 
-#  docker rm "${WORKLOAD}"-"${i}"
   docker rm "${WORKLOAD}"-"${i/:/}"
 done
 

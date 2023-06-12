@@ -1,7 +1,6 @@
-ARG BASE=ubuntu
-ARG VERSION=latest
+ARG BASE=ubuntu:latest
 
-FROM ${BASE}:${VERSION} AS base_image
+FROM ${BASE} AS base_image
 
 FROM base_image AS build
 
