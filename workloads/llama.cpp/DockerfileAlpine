@@ -1,9 +1,13 @@
-ARG VERSION=latest
+# ARG VERSION=latest
 
-FROM alpine:$VERSION as build
+# FROM alpine:$VERSION as build
+
+ARG BASE=alpine:latest
+
+FROM ${BASE} as build
 
 RUN apk update && \
-    apk --no-cache --update add build-base
+apk --no-cache --update add build-base
 
 COPY . .
 

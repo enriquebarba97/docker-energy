@@ -1,7 +1,12 @@
-ARG BASE=centos
-ARG VERSION=latest
+# ARG BASE=centos
+# ARG VERSION=latest
 
-FROM ${BASE}:${VERSION} as build
+# FROM ${BASE}:${VERSION} as build
+
+
+ARG BASE=centos:latest
+
+FROM ${BASE} as build
 
 RUN cd /etc/yum.repos.d/ && \
     sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-* && \
