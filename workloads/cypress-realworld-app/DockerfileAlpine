@@ -1,7 +1,11 @@
-ARG BASE=alpine
-ARG VERSION=latest
+# ARG BASE=alpine
+# ARG VERSION=latest
 
-FROM ${BASE}:${VERSION}
+# FROM ${BASE}:${VERSION}
+
+ARG BASE=alpine:latest
+
+FROM ${BASE}
 
 ENV NODE_VERSION 16.20.0
 
@@ -9,9 +13,9 @@ RUN apk update && apk add --no-cache curl libstdc++ \
     && ARCH= && alpineArch="$(apk --print-arch)" \
     && case "${alpineArch##*-}" in \
       x86_64) ARCH='x64' ;; \
-      *) ;; \
+      *) echo "unsupported architecture"; exit 1 ;; \
     esac \
-    && set -eu; \
+    && set -eu \
     && curl -fsSLO --compressed "https://unofficial-builds.nodejs.org/download/release/v$NODE_VERSION/node-v$NODE_VERSION-linux-$ARCH-musl.tar.xz" \
     && tar -xJf "node-v$NODE_VERSION-linux-$ARCH-musl.tar.xz" -C /usr/local --strip-components=1 --no-same-owner \
     && ln -s /usr/local/bin/node /usr/local/bin/nodejs;

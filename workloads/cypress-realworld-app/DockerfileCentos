@@ -1,7 +1,11 @@
-ARG BASE=centos
-ARG VERSION=latest
+# ARG BASE=centos
+# ARG VERSION=latest
 
-FROM ${BASE}:${VERSION}
+# FROM ${BASE}:${VERSION}
+
+ARG BASE=centos:latest
+
+FROM ${BASE}
 
 ENV NODE_VERSION 16.20.0
 

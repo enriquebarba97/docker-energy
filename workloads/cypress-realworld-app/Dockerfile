@@ -1,7 +1,11 @@
-ARG BASE=ubuntu
-ARG VERSION=latest
+# ARG BASE=ubuntu
+# ARG VERSION=latest
 
-FROM ${BASE}:${VERSION}
+# FROM ${BASE}:${VERSION}
+
+ARG BASE=ubuntu:latest
+
+FROM ${BASE}
 
 ENV NODE_VERSION 16.20.0
 

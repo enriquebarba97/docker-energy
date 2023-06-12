@@ -1,7 +1,3 @@
-# ARG VERSION=latest
-
-# FROM alpine:$VERSION as build
-
 ARG BASE=alpine:latest
 
 FROM ${BASE} as build
