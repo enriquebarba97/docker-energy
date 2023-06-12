@@ -1,7 +1,7 @@
 services:
     db:
         # image: mysql:5.7
-        image: db-debian
+        image: db
         # build:
         #     context: .
         #     dockerfile: DockerfileMysql
