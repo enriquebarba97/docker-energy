@@ -7,3 +7,6 @@
 [submodule "nginx-vod-module-docker"]
 	path = nginx-vod-module-docker
 	url = https://github.com/nytimes/nginx-vod-module-docker.git
+[submodule "mattermost"]
+	path = mattermost
+	url = https://github.com/mattermost/mattermost.git

@@ -51,8 +51,10 @@ if ${CLIENT} ; then
   docker run --name "${WORKLOAD}"-"${BASE}" "${OPTIONS[@]}" "${WORKLOAD}"-"${BASE}" "${COMMAND[@]}" &
   bash workloads/"${WORKLOAD}"/client -b "${BASE}"
 else
+#  perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
+#  docker run --name "${WORKLOAD}"-"${BASE}" "${OPTIONS[@]}" "${WORKLOAD}"-"${BASE}" "${COMMAND[@]}"
   perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
-  docker run --name "${WORKLOAD}"-"${BASE}" "${OPTIONS[@]}" "${WORKLOAD}"-"${BASE}" "${COMMAND[@]}"
+  docker run --name "${WORKLOAD}"-"${BASE/:/}" "${OPTIONS[@]}" "${WORKLOAD}"-"${BASE}" "${COMMAND[@]}"
 fi
 kill -9 $PID
 
@@ -60,4 +62,5 @@ kill -9 $PID
 date +"# run ${RUN}%n# started on %c %n" >> logs/"${WORKLOAD}"-"${EXPID}"/"${BASE}".txt
 docker logs -f "${WORKLOAD}"-"${BASE}" &>> logs/"${WORKLOAD}"-"${EXPID}"/"${BASE}".txt
 echo -e "\n\n" | tee -a logs/"${WORKLOAD}"-"${EXPID}"/"${BASE}".txt results/"${WORKLOAD}"-"${EXPID}"/"${BASE}".txt
-docker rm "${WORKLOAD}"-"${BASE}"
+#docker rm "${WORKLOAD}"-"${BASE}"
+docker rm "${WORKLOAD}"-"${BASE/:/}"

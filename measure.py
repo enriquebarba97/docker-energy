@@ -57,6 +57,7 @@ def parse_args(argv):
     # Get the arguments provided by the user
     opts, args = getopt.getopt(argv, "l:"  # workload
                                      "b:"  # base image
+                                     "v:"  # version
                                      "n:"  # number of runs
                                      "w:"  # warm up time
                                      "p:"  # pause time
@@ -86,6 +87,10 @@ def parse_args(argv):
             monitor_command += [opt, arg]
         # Add the images to the list and the preparation command
         elif opt in ["-b", "--base"]:
+            if ":" not in arg:  # If no version is specified, use the latest
+                arg += ":latest"
+            elif arg[-1] == ":":  # If the version is specified but empty, use the latest
+                arg += "latest"
             images.add(arg)
         # Set the number of runs
         elif opt in ["-n", "--runs"]:
@@ -123,6 +128,7 @@ def parse_args(argv):
     if shuffle_mode:
         random.shuffle(queue)
 
+
     # Put the arguments in a dictionary
     arguments = {"prepare_command": prepare_command, "monitor_command": monitor_command, "queue": queue,
                  "shuffle_mode": shuffle_mode, "help_mode": help_mode, "workload": workload, "exp_id": exp_id}
@@ -132,6 +138,7 @@ def parse_args(argv):
 def main(argv):
     # Get the arguments from the command
     arguments = parse_args(argv)
+
 
     # If help mode is enabled, do not monitor and open the help menu
     if arguments["help_mode"]:

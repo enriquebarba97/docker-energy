@@ -1,4 +1,4 @@
-ARG BASE=ubuntu
+ARG BASE=centos
 ARG VERSION=latest
 
 FROM ${BASE}:${VERSION} as build

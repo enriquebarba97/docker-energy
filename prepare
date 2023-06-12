@@ -71,10 +71,12 @@ for i in "${BASE[@]}"; do
     docker run --name "${WORKLOAD}"-"${i}" "${OPTIONS[@]}" "${WORKLOAD}"-"${i}" "${COMMAND[@]}" &
     bash workloads/"${WORKLOAD}"/client -b "${i}"
   else
-    docker run --name "${WORKLOAD}"-"${i}" "${OPTIONS[@]}" "${WORKLOAD}"-"${i}" "${COMMAND[@]}"
+#    docker run --name "${WORKLOAD}"-"${i}" "${OPTIONS[@]}" "${WORKLOAD}"-"${i}" "${COMMAND[@]}"
+    docker run --name "${WORKLOAD}"-"${i/:/}" "${OPTIONS[@]}" "${WORKLOAD}"-"${i}" "${COMMAND[@]}"
   fi
 
-  docker rm "${WORKLOAD}"-"${i}"
+#  docker rm "${WORKLOAD}"-"${i}"
+  docker rm "${WORKLOAD}"-"${i/:/}"
 done
 
 # Log the docker images information

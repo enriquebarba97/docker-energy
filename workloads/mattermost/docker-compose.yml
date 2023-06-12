@@ -1,0 +1,25 @@
+services:
+    db:
+        # image: mysql:5.7
+        image: db-debian
+        # build:
+        #     context: .
+        #     dockerfile: DockerfileMysql
+        # environment:
+        #     MYSQL_ROOT_PASSWORD: 'mostest'
+        #     MYSQL_USER: 'mmuser'
+        #     MYSQL_PASSWORD: 'mostest'
+        #     MYSQL_DATABASE: 'mattermost_test'
+        # ports:
+        #     - '3306:3306'
+        # expose:
+        #     - '3306'
+    mattermost:
+        # build:
+        #     context: .
+        #     dockerfile: Dockerfile${FILE}
+        image: mattermost-${BASE}
+        ports:
+            - '8065:8065'
+        extra_hosts:
+            - 'dockerhost:127.0.0.1'
