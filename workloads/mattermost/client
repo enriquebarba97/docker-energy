@@ -19,4 +19,4 @@ echo "Server started, running tests"
 
 su -c "npm run cypress:run --prefix ${PWD}/mattermost/e2e-tests/cypress -- --spec ${PWD}/mattermost/e2e-tests/cypress/tests/integration/channels/accessibility/accessibility_account_settings_spec.js --config video=false" "${SUDO_USER}"
 
-# docker stop mattermost-"${BASE/:/}" 
+docker stop mattermost-"${BASE/:/}" 
