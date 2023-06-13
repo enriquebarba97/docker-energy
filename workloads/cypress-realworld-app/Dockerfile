@@ -9,7 +9,7 @@ FROM ${BASE}
 
 ENV NODE_VERSION 16.20.0
 
-RUN apt-get update && apt-get install -y curl xz-utils \
+RUN apt-get update && apt-get install --no-install-recommends -y curl xz-utils \
     && ARCH= && dpkgArch="$(dpkg --print-architecture)" \
     && case "${dpkgArch##*-}" in \
       amd64) ARCH='x64';; \
@@ -24,13 +24,13 @@ RUN apt-get update && apt-get install -y curl xz-utils \
     && curl -fsSLO --compressed "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-$ARCH.tar.xz" \
     && tar -xJf "node-v$NODE_VERSION-linux-$ARCH.tar.xz" -C /usr/local --strip-components=1 --no-same-owner \
     && ln -s /usr/local/bin/node /usr/local/bin/nodejs \
-    && npm install -g yarn
+    && npm install -g yarn && rm -rf /var/lib/apt/lists/*; npm cache clean --force; rm "node-v$NODE_VERSION-linux-$ARCH.tar.xz"
 
 WORKDIR /app
 
 COPY package.json yarn.lock ./
 
-RUN yarn install
+RUN yarn install && yarn cache clean;
 
 COPY . .
 
