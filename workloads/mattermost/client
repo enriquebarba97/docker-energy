@@ -9,7 +9,8 @@ while getopts "b:" arg; do
 done
 
 # until $(curl --output /dev/null --silent --head --fail http://localhost:8065/signup_user_complete); do
-while ! echo exit | nc localhost 8065; do
+# while ! echo exit | nc localhost 8065; do
+while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:8065)" != "200" ]]; do
   echo "Waiting for server to start"
   sleep 5
 done
@@ -19,4 +20,5 @@ echo "Server started, running tests"
 
 su -c "npm run cypress:run --prefix ${PWD}/mattermost/e2e-tests/cypress -- --spec ${PWD}/mattermost/e2e-tests/cypress/tests/integration/channels/accessibility/accessibility_account_settings_spec.js --config video=false" "${SUDO_USER}"
 
-docker stop mattermost-"${BASE/:/}" 
+# docker stop mattermost-"${BASE/:/}" 
+docker compose -f ${PWD}/workloads/mattermost/docker-compose.yml down

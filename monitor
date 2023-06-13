@@ -36,28 +36,40 @@ elif [[ "$WORKLOAD" == "nginx-vod-module-docker" ]]; then
 elif [[ "$WORKLOAD" == "cypress-realworld-app" ]]; then
   OPTIONS=(-p 3001:3001)
   CLIENT=true
+elif [[ "$WORKLOAD" == "mattermost" ]]; then
+  CLIENT=true
+  COMPOSE=true
 fi
 
 # Run and monitor the workload for the specified number of times
 sleep "${PAUSE}"
-echo -e "# run ${RUN}: ${BASE}" | tee -a results/"${WORKLOAD}"-"${EXPID}"/"${BASE}".txt \
-results/"${WORKLOAD}"-"${EXPID}"/samples/"${BASE}".txt
+echo -e "# run ${RUN}: ${BASE}" | tee -a results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt \
+results/"${WORKLOAD}"-"${EXPID}"/samples/"${BASE/:/}".txt
 
 # Run the monitoring tool on the docker run command
-stdbuf -i0 -o0 -e0 powerstat -R 0.5 1024 -n &>> results/"${WORKLOAD}"-"${EXPID}"/samples/"${BASE}".txt &
+stdbuf -i0 -o0 -e0 powerstat -R 0.5 1024 -n &>> results/"${WORKLOAD}"-"${EXPID}"/samples/"${BASE/:/}".txt &
 PID=$!
 
 if ${CLIENT} ; then
   bash workloads/"${WORKLOAD}"/client -b "${BASE}" &
 fi
 
-perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
-docker run --name "${WORKLOAD}"-"${BASE/:/}" "${OPTIONS[@]}" "${WORKLOAD}"-"${BASE}" "${COMMAND[@]}"
+if ${COMPOSE} ; then
+  IMAGE="${BASE}" NAME="${BASE/:/}" FILE="Dockerfile" perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
+  docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up
+else
+  perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
+  docker run --name "${WORKLOAD}"-"${BASE/:/}" "${OPTIONS[@]}" "${WORKLOAD}"-"${BASE/:/}" "${COMMAND[@]}"
+fi
+
+
 kill -9 $PID
 
 # Log the output of the run
-date +"# run ${RUN}%n# started on %c %n" >> logs/"${WORKLOAD}"-"${EXPID}"/"${BASE}".txt
-docker logs -f "${WORKLOAD}"-"${BASE}" &>> logs/"${WORKLOAD}"-"${EXPID}"/"${BASE}".txt
-echo -e "\n\n" | tee -a logs/"${WORKLOAD}"-"${EXPID}"/"${BASE}".txt results/"${WORKLOAD}"-"${EXPID}"/"${BASE}".txt
+date +"# run ${RUN}%n# started on %c %n" >> logs/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt
+docker logs -f "${WORKLOAD}"-"${BASE/:/}" &>> logs/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt
+echo -e "\n\n" | tee -a logs/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt
 #docker rm "${WORKLOAD}"-"${BASE}"
-docker rm "${WORKLOAD}"-"${BASE/:/}"
+if ! ${COMPOSE} ; then
+  docker rm "${WORKLOAD}"-"${BASE/:/}"
+fi

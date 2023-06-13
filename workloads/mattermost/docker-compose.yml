@@ -1,7 +1,8 @@
 services:
     db:
         # image: mysql:5.7
-        image: db
+        image: mattermost-db
+        container_name: mattermost-db
         # build:
         #     context: .
         #     dockerfile: DockerfileMysql
@@ -15,10 +16,13 @@ services:
         # expose:
         #     - '3306'
     mattermost:
+        image: mattermost-${NAME}
+        container_name: mattermost-${NAME}
         # build:
         #     context: .
-        #     dockerfile: Dockerfile${FILE}
-        image: mattermost-${BASE}
+        #     dockerfile: ${FILE}
+        #     args:
+        #         - BASE=${IMAGE}
         ports:
             - '8065:8065'
         extra_hosts:

@@ -160,9 +160,9 @@ def main(argv):
     execute(remove_command)
 
     # Parse the results
-    directory = f"results/{arguments['workload']}-{arguments['exp_id']}"
-    files, files_samples = parse.get_files(directory, "*.txt")
-    parse.parse_files(files, files_samples, directory)
+    # directory = f"results/{arguments['workload']}-{arguments['exp_id']}"
+    # files, files_samples = parse.get_files(directory, "*.txt")
+    # parse.parse_files(files, files_samples, directory)
 
 
 if __name__ == '__main__':

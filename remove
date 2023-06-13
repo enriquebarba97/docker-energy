@@ -15,9 +15,11 @@ done
 
 if [[ "$WORKLOAD" == "cypress-realworld-app" ]]; then
   kill "$(lsof -t -i:3000)"
+elif [[ "$WORKLOAD" == "mattermost" ]]; then
+  docker rmi mattermost-db
 fi
 
 # Remove the docker images of this experiment
 for i in "${BASE[@]}"; do
-  docker rmi "${WORKLOAD}"-"${i}"
+  docker rmi "${WORKLOAD}"-"${i/:/}"
 done

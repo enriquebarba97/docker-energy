@@ -8,6 +8,8 @@ WARMUP=10
 OPTIONS=()
 COMMAND=()
 CLIENT=false
+COMPOSE=false
+DIRECTORY=""
 
 # For llama.cpp
 INFERENCE="Building a website can be done in 10 simple steps:"
@@ -37,6 +39,11 @@ elif [[ "$WORKLOAD" == "cypress-realworld-app" ]]; then
   yarn --cwd "${PWD}"/cypress-realworld-app start:react &
   OPTIONS=(-p 3001:3001)
   CLIENT=true
+elif [[ "$WORKLOAD" == "mattermost" ]]; then
+  DIRECTORY="workloads/"
+  CLIENT=true
+  COMPOSE=true
+  docker build -t "${WORKLOAD}"-db -f workloads/"${WORKLOAD}"/DockerfileMysql "${DIRECTORY}${WORKLOAD}"
 fi
 
 
@@ -51,8 +58,8 @@ date +"# started on %c %n" >> logs/"${WORKLOAD}-${EXPID}"/warmup.txt
 # Build the Docker images and run the workload once for each base image as warm-up
 for i in "${BASE[@]}"; do
   echo -e "### experiment ${EXPID} ###\n# workload: ${WORKLOAD}\n# image: ${i}\n" | tee -a \
-  logs/"${WORKLOAD}"-"${EXPID}"/"${i}".txt \
-  results/"${WORKLOAD}"-"${EXPID}"/"${i}".txt results/"${WORKLOAD}"-"${EXPID}"/samples/"${i}".txt
+  logs/"${WORKLOAD}"-"${EXPID}"/"${i/:/}".txt \
+  results/"${WORKLOAD}"-"${EXPID}"/"${i/:/}".txt results/"${WORKLOAD}"-"${EXPID}"/samples/"${i/:/}".txt
   # If alpine is selected, use the alpine Dockerfile;
   if [[ "$i" == "alpine"* ]]; then 
     DOCKERFILE=DockerfileAlpine; 
@@ -64,15 +71,26 @@ for i in "${BASE[@]}"; do
   fi
 
   # Build the Docker image
-  docker build -t "${WORKLOAD}"-"${i}" -f workloads/"${WORKLOAD}"/${DOCKERFILE} --build-arg BASE="${i}" "${WORKLOAD}"
+  # if ${COMPOSE} ; then
+  #   IMAGE="${i}" NAME="${i/:/}" FILE="${DOCKERFILE}" docker compose -f workloads/mattermost/docker-compose.yml build
+  # else
+  #   docker build -t "${WORKLOAD}"-"${i/:/}" -f workloads/"${WORKLOAD}"/${DOCKERFILE} --build-arg BASE="${i}" "${WORKLOAD}"
+  # fi
+  
+  docker build -t "${WORKLOAD}"-"${i/:/}" -f workloads/"${WORKLOAD}"/${DOCKERFILE} --build-arg BASE="${i}" "${DIRECTORY}${WORKLOAD}"
 
   # Run the docker run command as warmup
   if ${CLIENT} ; then
     bash workloads/"${WORKLOAD}"/client -b "${i}" &
   fi
-  docker run --name "${WORKLOAD}"-"${i/:/}" "${OPTIONS[@]}" "${WORKLOAD}"-"${i}" "${COMMAND[@]}"
+  
+  if ${COMPOSE} ; then
+    IMAGE="${i}" NAME="${i/:/}" FILE="${DOCKERFILE}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up
+  else
+    docker run --name "${WORKLOAD}"-"${i/:/}" "${OPTIONS[@]}" "${WORKLOAD}"-"${i}" "${COMMAND[@]}"
+    docker rm "${WORKLOAD}"-"${i/:/}"
+  fi
 
-  docker rm "${WORKLOAD}"-"${i/:/}"
 done
 
 # Log the docker images information
