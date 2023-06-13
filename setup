@@ -21,6 +21,8 @@ npm install yarn -g
 
 yarn --cwd "${PWD}"/cypress-realworld-app install
 
+npm install --prefix "${PWD}"/mattermost/e2e-tests/cypress/
+
 if [ ! -d venv/ ]; then
   su -c "python -m venv venv" "${SUDO_USER}"
 fi
