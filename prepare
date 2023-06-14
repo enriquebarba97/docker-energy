@@ -87,7 +87,7 @@ for i in "${BASE[@]}"; do
   if ${COMPOSE} ; then
     IMAGE="${i}" NAME="${i/:/}" FILE="${DOCKERFILE}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up
   else
-    docker run --name "${WORKLOAD}"-"${i/:/}" "${OPTIONS[@]}" "${WORKLOAD}"-"${i}" "${COMMAND[@]}"
+    docker run --name "${WORKLOAD}"-"${i/:/}" "${OPTIONS[@]}" "${WORKLOAD}"-"${i/:/}" "${COMMAND[@]}"
     docker rm "${WORKLOAD}"-"${i/:/}"
   fi
 

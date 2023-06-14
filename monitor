@@ -8,6 +8,7 @@ PAUSE=15
 OPTIONS=()
 COMMAND=()
 CLIENT=false
+COMPOSE=false
 
 # For llama.cpp
 INFERENCE="Building a website can be done in 10 simple steps:"
