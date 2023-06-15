@@ -9,6 +9,11 @@ Measuring the impact of the base image choice for different workloads inside Doc
     -   [Usage](#usage)
         -   [Measuring the energy consumption](#measuring-the-energy-consumption)
         -   [Statistical analysis](#statistical-analysis)
+    -   [Workloads](#workloads)
+        -   [llama.cpp](#llamacpp)
+        -   [nginx-vod-module-docker](#nginx-vod-module-docker)
+        -   [cypress-realworld-app](#cypress-realworld-app)
+        -   [mattermost](#mattermost)
 
 ## Setup
 
@@ -19,6 +24,32 @@ Measuring the impact of the base image choice for different workloads inside Doc
 -   Python 3
 
 ### Installing the dependencies
+
+To use perf install the following packages:
+
+```bash
+sudo apt-get -y install linux-tools-common linux-tools-generic linux-tools-`uname -r`
+```
+
+Install the Python packages to use the monitoring pipeline:
+
+```bash
+python -m venv venv
+
+venv/bin/pip install -r requirements.txt
+```
+
+To use the predefined workloads, pull the submodules with the corresponding commit:
+
+```bash
+# Pull all submodules
+git submodule update --init
+
+# Pull a specific submodule
+git submodule update --init <name of submodule>
+```
+
+For the workload specific dependencies, see [Workloads](#workloads).
 
 <details>
   <summary>Install all dependencies using the setup script</summary>
@@ -51,37 +82,6 @@ This `setup` script installs the following dependencies:
     -   PyQt5
 
 </details>
-
-Pull the submodules and install the packages
-
-```bash
-git submodule update --init
-
-< packages.txt xargs apt-get -y install
-
-apt-get -y install linux-tools-`uname -r`
-```
-
-Set up node for the web application workloads
-
-```bash
-wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
-nvm install 16
-nvm use 16
-npm install yarn -g
-
-yarn --cwd "${PWD}"/cypress-realworld-app install
-
-npm install --prefix "${PWD}"/mattermost/e2e-tests/cypress/
-```
-
-Install Python packages
-
-```bash
-python -m venv venv
-
-venv/bin/pip install -r requirements.txt
-```
 
 ## Usage
 
@@ -137,3 +137,57 @@ The Shapiro-Wilk test will print _False_ if the data is normal, and _True_ if it
 The ANOVA test will print _True_ if the means are significantly different, and _False_ if they are not.
 The Tukey test will print the actual differences between the datasets.
 The Cohen's d test will print the effect size between the datasets.
+
+## Workloads
+
+### llama.cpp
+
+For the _llama.cpp_ workload it is important that the quantized model is in `llama.cpp/models`. If you already have the model, and moved it to `llama.cpp/models`, it is possible to quantize it using the following steps (_taken from the llama.cpp README_):
+
+```bash
+# obtain the original LLaMA model weights and place them in ./models
+ls ./models
+65B 30B 13B 7B tokenizer_checklist.chk tokenizer.model
+
+# install Python dependencies
+python3 -m pip install -r requirements.txt
+
+# convert the 7B model to ggml FP16 format
+python3 convert.py models/7B/
+
+# quantize the model to 4-bits (using q4_0 method)
+./quantize ./models/7B/ggml-model-f16.bin ./models/7B/ggml-model-q4_0.bin q4_0
+```
+
+### nginx-vod-module-docker
+
+At the moment, the _nginx-vod-module-docker_ workload requires VLC to be installed on the host machine, in order to stream the video files:
+
+```bash
+sudo apt-get -y install vlc
+```
+
+### cypress-realworld-app
+
+The _cypress-realworld-app_ requires node 16, yarn and the project dependencies to be installed on the host machine, in order to run the cypress tests:
+
+```bash
+# install nvm and node 16
+wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+nvm install 16
+nvm use 16
+
+# install yarn
+npm install yarn -g
+
+# install the project dependencies
+yarn --cwd "${PWD}"/cypress-realworld-app install
+```
+
+### mattermost
+
+Similar to the other web application workload, it is recommended to also use node 16 for the _mattermost_ workload. The project dependencies can be installed using the following command:
+
+```bash
+npm install --prefix "${PWD}"/mattermost/e2e-tests/cypress/
+```
