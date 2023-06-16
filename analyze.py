@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import parse
 
+from pathlib import Path
+
 
 def get_lists(images: dict):
     # Prepare the lists for the results
@@ -21,63 +23,92 @@ def get_lists(images: dict):
 
 
 def shapiro_test(images: dict, labels: list, parts: list):
-    print("True means that the null hypothesis is rejected, i.e. the data is not normal.")
-    normal = list()
+    print(
+        "============================== Shapiro-Wilk test =============================="
+    )
+    print(
+        "True means that the null hypothesis is rejected, i.e. the data is not normal.\n"
+    )
+    # normal = list()
     # Perform the Shapiro-Wilk test for normality for each part of each base image
     for label in labels:
-        n = list()
+        header = ["part", "reject", "p-value"]
+        data = list()
         print(f"{label}:")
-        print("Shapiro-Wilk test for " + label + ":")
         for part in parts:
             x = images[label][part].values.astype(float)
-            print(list(x))
+            # print(list(x))
             shapiro, p = stats.shapiro(list(x))
             r = False
             # If the p-value is less than 0.05, the null hypothesis is rejected (i.e. the data is not normal)
             if p < 0.05:
                 r = True
-            n.append(r)
-            print(f"\t {part}: {str(r)} - {p}")
-        normal.append(n)
-    return labels, normal
+            data.append([part, r, p])
+            # print(f"\t {part}: {str(r)} - {p}")
+        # normal.append(n)
+        print(f"{pd.DataFrame(data, columns=header)}\n")
+    # return labels, normal
 
 
 def anova_test(images: dict, labels: list, parts: list):
-    print("True means that the null hypothesis is rejected, i.e. the means are not equal.")
-    print(f"One-way ANOVA test between {labels}:")
-    significance = list()
+    print(
+        "============================== One-way ANOVA test ============================="
+    )
+    print(
+        "True means that the null hypothesis is rejected, i.e. the means are not equal.\n"
+    )
+
+    print(f"One-way ANOVA test between {', '.join(labels)}:")
+    header = ["part", "reject", "p-value"]
+    data = list()
     # Perform the one-way ANOVA test for each part between the base images
     for part in parts:
         x = list()
-        s = False
+        r = False
         for label in labels:
             x.append(images[label][part].values.astype(float))
-        anova = stats.f_oneway(*x)
+        _, p = stats.f_oneway(*x)
+        # print(p)
         # If the p-value is less than 0.05, the null hypothesis is rejected (i.e. the means are not equal)
-        if anova.pvalue < 0.05:
-            s = True
-        significance.append(s)
-        print("\t" + part + ": " + str(s))
-    return parts, significance
+        if p < 0.05:
+            r = True
+        data.append([part, r, p])
+        # print("\t" + part + ": " + str(s))
+        # print(p)
+    print(pd.DataFrame(data, columns=header))
+    # return parts, significance
 
 
 def tukey_test(images: dict, labels: list, parts: list):
+    print(
+        "============================== Tukey HSD test ================================="
+    )
     print("False means that the null hypothesis is rejected, i.e. the means are equal.")
-    tukey = list()
+    # tukey = list()
     # Perform the Tukey HSD test for each part between the base images
     for part in parts:
         scores = list()
-        for label in labels:
-            scores.extend(images[label][part].values.astype(float))
-        df = pd.DataFrame({'score': scores,
-                           'group': np.repeat(labels, repeats=len(scores) / len(labels))})
-        t = pairwise_tukeyhsd(endog=df['score'],
-                              groups=df['group'],
-                              alpha=0.05)
-        tukey.append(t)
-        print(part + ":")
-        print(t)
-    return parts, tukey
+        print(f"Tukey HSD test for {part}:")
+        try:
+            for label in labels:
+                scores.extend(images[label][part].values.astype(float))
+            df = pd.DataFrame(
+                {
+                    "score": scores,
+                    "group": np.repeat(labels, repeats=len(scores) / len(labels)),
+                }
+            )
+            t = pairwise_tukeyhsd(endog=df["score"], groups=df["group"], alpha=0.05)
+            print(f"{t}\n")
+        except KeyError as e:
+            print(
+                f"{e} cannot be compared since it is not present in all the dataframes."
+            )
+            continue
+        # tukey.append(t)
+        # print(part + ":")
+        # print(t)
+    # return parts, tukey
 
 
 def calculate_d(x, y):
@@ -86,33 +117,45 @@ def calculate_d(x, y):
     ny = len(y)
     dof = nx + ny - 2
     return (np.mean(x) - np.mean(y)) / np.sqrt(
-        ((nx - 1) * np.std(x, ddof=1) ** 2 + (ny - 1) * np.std(y, ddof=1) ** 2) / dof)
+        ((nx - 1) * np.std(x, ddof=1) ** 2 + (ny - 1) * np.std(y, ddof=1) ** 2) / dof
+    )
 
 
 def cohen_d(images: dict, labels: list, parts: list):
-    print("A positive value indicates that the second image performs better than the first.")
-    cohen = list()
+    print(
+        "============================== Cohen's d test ================================="
+    )
+    print(
+        "A positive value indicates that the second image performs better than the first.\n"
+    )
+    # cohen = list()
     # Perform the Cohen's d test for each part between the base images
     for i in range(len(labels)):
         for j in range(i + 1, len(labels)):
-            c = list()
+            header = ["part", "d"]
+            data = list()
             print("Cohen's d effect size for " + labels[i] + " and " + labels[j] + ":")
             for part in parts:
-                d = calculate_d(images[labels[i]][part].values.astype(float),
-                                images[labels[j]][part].values.astype(float))
-                c.append(d)
-                print("\t" + part + ": " + str(d))
-            cohen.append(c)
+                d = calculate_d(
+                    images[labels[i]][part].values.astype(float),
+                    images[labels[j]][part].values.astype(float),
+                )
+                data.append([part, d])
+                # print("\t" + part + ": " + str(d))
+            # cohen.append(c)
+            print(f"{pd.DataFrame(data, columns=header)}\n")
 
-    return parts, cohen
+    # return parts, cohen
 
 
 def statistics(images: dict, labels: list, parts: list):
     for label in labels:
         print(f"{label} (mean; standard deviation):")
         for part in parts:
-            print(f"\t{part}: {np.mean(images[label][part].values.astype(float))}; "
-                  f"{np.std(images[label][part].values.astype(float))}")
+            print(
+                f"\t{part}: {np.mean(images[label][part].values.astype(float))}; "
+                f"{np.std(images[label][part].values.astype(float))}"
+            )
 
 
 def plot(images: dict, labels: list, parts: list):
@@ -140,42 +183,60 @@ def plot_samples(images: dict):
 
     plt.figure(figsize=(10, 7))
 
-    sns.lineplot(x='Time', y='Watts', data=df, hue='Image')
+    sns.lineplot(x="Time", y="Watts", data=df, hue="Image")
 
     plt.title("Power usage over time")
     plt.show()
 
 
 def analyze(images: dict, images_samples: dict, labels: list, parts: list):
-    print("============================== Shapiro-Wilk test ==============================")
     normal = shapiro_test(images, labels, parts)
-    print("============================== One-way ANOVA test =============================")
     significance = anova_test(images, labels, parts)
-    print("============================== Tukey HSD test =================================")
     tukey = tukey_test(images, labels, parts)
-    print("============================== Cohen's d test =================================")
     cohen = cohen_d(images, labels, parts)
     plot(images, labels, parts)
     return normal, significance, tukey, cohen
 
 
 def read_tsv(file: str):
+    base = Path(file).stem
     with open(file) as f:
         # Read the first line for the base image name
-        base = f.readline().rstrip().split("\t")[0]
+        # base = f.readline().rstrip().split("\t")[0]
         # Read the second line for the column names
-        second_line = f.readline().rstrip().split("\t")
-    return base, pd.read_csv(file, sep="\t", skiprows=2, names=second_line)
+        parts = f.readline().rstrip().split("\t")
+        data = f.readline().rstrip().split("\t")
+        if len(data) != len(parts):
+            raise ValueError(
+                "The header length in the file does not match the number of columns."
+            )
+    return base, pd.read_csv(file, sep="\t", skiprows=1, names=parts)
 
 
 def parse_args(argv):
     files = list()
     files_samples = list()
-    statistical_test = ""
+    parts = list()
+    statistical_test = list()
 
     # Get the arguments provided by the user
-    opts, args = getopt.getopt(argv, "f:d:", ["file=", "directory", "shapiro", "anova", "tukey",
-                                            "cohen", "full", "statistics", "plot", "plot_samples"])
+    opts, args = getopt.getopt(
+        argv,
+        "f:d:p:",
+        [
+            "file=",
+            "directory=",
+            "part=",
+            "shapiro",
+            "anova",
+            "tukey",
+            "cohen",
+            "full",
+            "statistics",
+            "plot",
+            "plot_samples",
+        ],
+    )
     for opt, arg in opts:
         if opt in ["-f", "--file"]:
             files.append(arg)
@@ -184,61 +245,92 @@ def parse_args(argv):
             if directory[-1] == "/":
                 directory = directory[:-1]
             files, files_samples = parse.get_files(directory, "*.tsv")
+        elif opt in ["-p", "--part"]:
+            parts.append(arg)
         elif opt == "--shapiro":
-            statistical_test = "shapiro"
+            statistical_test.append("shapiro")
         elif opt == "--anova":
-            statistical_test = "anova"
+            statistical_test.append("anova")
         elif opt == "--tukey":
-            statistical_test = "tukey"
+            statistical_test.append("tukey")
         elif opt == "--cohen":
-            statistical_test = "cohen"
+            statistical_test.append("cohen")
         elif opt == "--full":
-            statistical_test = "full"
+            statistical_test.append("full")
         elif opt == "--statistics":
-            statistical_test = "statistics"
+            statistical_test.append("statistics")
         elif opt == "--plot":
-            statistical_test = "plot"
+            statistical_test.append("plot")
         elif opt == "--plot_samples":
-            statistical_test = "plot_samples"
+            statistical_test.append("plot_samples")
 
-    return files, files_samples, statistical_test
+    return files, files_samples, parts, statistical_test
 
 
 def main(argv):
     images = {}
     images_samples = {}
-    files, files_samples, statistical_test = parse_args(argv)
+    files, files_samples, parts, statistical_test = parse_args(argv)
+
+    # if len(files) == 0:
+    #     print("No .tsv files provided")
+    #     return
 
     # Read the TSV files
     for f in files:
-        base, df = read_tsv(f)
-        images[base] = df
+        try:
+            base, df = read_tsv(f)
+            images[base] = df
+        except ValueError as e:
+            print(f"{f}: {e}")
 
-    for f in files_samples:
-        base, df = read_tsv(f)
-        images_samples[base] = df
+    if len(images) == 0:
+        print("No (correct) .tsv files provided")
+        return
 
-    labels, parts = get_lists(images)
+    print(len(images))
 
-    if statistical_test == "shapiro":
-        shapiro_test(images, labels, parts)
-    elif statistical_test == "anova":
-        anova_test(images, labels, parts)
-    elif statistical_test == "tukey":
-        tukey_test(images, labels, parts)
-    elif statistical_test == "cohen":
-        cohen_d(images, labels, parts)
-    elif statistical_test == "full":
-        analyze(images, images_samples, labels, parts)
-    elif statistical_test == "statistics":
-        statistics(images, labels, parts)
-    elif statistical_test == "plot":
-        plot(images, labels, parts)
-    elif statistical_test == "plot_samples":
-        plot_samples(images_samples)
-    else:
+    # for f in files_samples:
+    #     base, df = read_tsv(f)
+    #     images_samples[base] = df
+
+    labels, all_parts = get_lists(images)
+
+    for p in parts:
+        if p not in all_parts:
+            print(
+                f"Part {p} not found in the data; choose one from: {', '.join(all_parts)}"
+            )
+            return
+
+    if len(parts) == 0:
+        parts = all_parts
+
+    # labels = list(images.keys())
+
+    print(statistical_test)
+
+    if len(statistical_test) == 0:
         print("No statistical test selected.")
+        return
+    if "full" in statistical_test:
+        analyze(images, images_samples, labels, parts)
+        return
+    if "shapiro" in statistical_test:
+        shapiro_test(images, labels, parts)
+    if "anova" in statistical_test:
+        anova_test(images, labels, parts)
+    if "tukey" in statistical_test:
+        tukey_test(images, labels, parts)
+    if "cohen" in statistical_test:
+        cohen_d(images, labels, parts)
+    if "statistics" in statistical_test:
+        statistics(images, labels, parts)
+    if "plot" in statistical_test:
+        plot(images, labels, parts)
+    # elif statistical_test == "plot_samples":
+    #     plot_samples(images_samples)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main(sys.argv[1:])
