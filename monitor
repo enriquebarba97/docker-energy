@@ -10,9 +10,6 @@ COMMAND=()
 CLIENT=false
 COMPOSE=false
 
-# For llama.cpp
-INFERENCE="Building a website can be done in 10 simple steps:"
-TOKENS=32
 
 # Get the arguments
 while getopts "x:l:b:p:o:c:r:" arg; do
@@ -21,7 +18,12 @@ while getopts "x:l:b:p:o:c:r:" arg; do
     l) WORKLOAD=$OPTARG;;
     b) BASE=$OPTARG;;
     p) PAUSE=$OPTARG;;
-    o) OPTIONS+=("$OPTARG");;
+    o)
+      IFS=' ' read -r FLAG ARG <<< "${OPTARG}"
+      OPTIONS+=("${FLAG}" "${ARG}");;
+    c)
+      IFS=' ' read -r FLAG ARG <<< "${OPTARG}"
+      COMMAND+=("${FLAG}" "${ARG}");;
     r) RUN=$OPTARG;;
     *) ;;
   esac
@@ -29,27 +31,34 @@ done
 
 # Setup the default options and commands for the Docker run command
 if [[ "$WORKLOAD" == "llama.cpp" ]]; then
-  OPTIONS=(-v "${PWD}"/llama.cpp/models:/models)
-  COMMAND=(-m /models/7B/ggml-model-q4_0.bin -p "${INFERENCE}" -n "${TOKENS}" --seed 12345678 -t 2)
+  if [[ ${#OPTIONS[@]} -eq 0 ]]; then
+    OPTIONS=(-v "${PWD}"/llama.cpp/models:/models)
+  fi
+  if [[ ${#COMMAND[@]} -eq 0 ]]; then
+    COMMAND=(-m /models/7B/ggml-model-q4_0.bin -p "Building a website can be done in 10 simple steps:" -n 32 --seed 12345678 -t 2)
+  fi
 elif [[ "$WORKLOAD" == "nginx-vod-module-docker" ]]; then
-  OPTIONS=(-p 3030:80 -v "${PWD}"/nginx-vod-module-docker/examples/videos:/opt/static/videos -v "${PWD}"/workloads/nginx-vod-module-docker/nginx.conf:/usr/local/nginx/conf/nginx.conf)
+  if [[ ${#OPTIONS[@]} -eq 0 ]]; then
+    OPTIONS=(-p 3030:80 -v "${PWD}"/nginx-vod-module-docker/examples/videos:/opt/static/videos -v "${PWD}"/workloads/nginx-vod-module-docker/nginx.conf:/usr/local/nginx/conf/nginx.conf)
+  fi
   CLIENT=true
 elif [[ "$WORKLOAD" == "cypress-realworld-app" ]]; then
-  OPTIONS=(-p 3001:3001)
+  if [[ ${#OPTIONS[@]} -eq 0 ]]; then
+    OPTIONS=(-p 3001:3001)
+  fi
   CLIENT=true
 elif [[ "$WORKLOAD" == "mattermost" ]]; then
   CLIENT=true
   COMPOSE=true
 fi
-
 # Run and monitor the workload for the specified number of times
 sleep "${PAUSE}"
 echo -e "# run ${RUN}: ${BASE}" | tee -a results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt \
 results/"${WORKLOAD}"-"${EXPID}"/samples/"${BASE/:/}".txt
 
 # Run the monitoring tool on the docker run command
-stdbuf -i0 -o0 -e0 powerstat -R 0.5 1024 -n &>> results/"${WORKLOAD}"-"${EXPID}"/samples/"${BASE/:/}".txt &
-PID=$!
+# stdbuf -i0 -o0 -e0 powerstat -R 0.5 1024 -n &>> results/"${WORKLOAD}"-"${EXPID}"/samples/"${BASE/:/}".txt &
+# PID=$!
 
 if ${CLIENT} ; then
   bash workloads/"${WORKLOAD}"/client -b "${BASE}" &
@@ -64,7 +73,7 @@ else
 fi
 
 
-kill -9 $PID
+# kill -9 $PID
 
 # Log the output of the run
 date +"# run ${RUN}%n# started on %c %n" >> logs/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt

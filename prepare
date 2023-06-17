@@ -22,28 +22,39 @@ while getopts "x:l:b:w:o:c:" arg; do
     l) WORKLOAD=$OPTARG;;
     b) BASE+=("$OPTARG");;
     w) WARMUP=$OPTARG;;
-    o) OPTIONS+=("$OPTARG");;
-    c) COMMAND+=("$OPTARG");;
+    o)
+      IFS=' ' read -r FLAG ARG <<< "${OPTARG}"
+      OPTIONS+=("${FLAG}" "${ARG}");;
+    c)
+      IFS=' ' read -r FLAG ARG <<< "${OPTARG}"
+      COMMAND+=("${FLAG}" "${ARG}");;
     *) ;;
   esac
 done
 
+
 # Setup the default options and commands for the Docker run command
 if [[ "$WORKLOAD" == "llama.cpp" ]]; then
-  OPTIONS=(-v "${PWD}"/llama.cpp/models:/models)
-  COMMAND=(-m /models/7B/ggml-model-q4_0.bin -p "${INFERENCE}" -n "${TOKENS}" --seed 12345678 -t 2)
+  if [[ ${#OPTIONS[@]} -eq 0 ]]; then
+    OPTIONS=(-v "${PWD}"/llama.cpp/models:/models)
+  fi
+  if [[ ${#COMMAND[@]} -eq 0 ]]; then
+    COMMAND=(-m /models/7B/ggml-model-q4_0.bin -p "Building a website can be done in 10 simple steps:" -n 32 --seed 12345679 -t 2)
+  fi
 elif [[ "$WORKLOAD" == "nginx-vod-module-docker" ]]; then
-  OPTIONS=(-p 3030:80 -v "${PWD}"/nginx-vod-module-docker/examples/videos:/opt/static/videos -v "${PWD}"/workloads/nginx-vod-module-docker/nginx.conf:/usr/local/nginx/conf/nginx.conf)
+  if [[ ${#OPTIONS[@]} -eq 0 ]]; then
+    OPTIONS=(-p 3030:80 -v "${PWD}"/nginx-vod-module-docker/examples/videos:/opt/static/videos -v "${PWD}"/workloads/nginx-vod-module-docker/nginx.conf:/usr/local/nginx/conf/nginx.conf)
+  fi
   CLIENT=true
 elif [[ "$WORKLOAD" == "cypress-realworld-app" ]]; then
-  yarn --cwd "${PWD}"/cypress-realworld-app start:react &
-  OPTIONS=(-p 3001:3001)
+  if [[ ${#OPTIONS[@]} -eq 0 ]]; then
+    OPTIONS=(-p 3001:3001)
+  fi
   CLIENT=true
 elif [[ "$WORKLOAD" == "mattermost" ]]; then
-  DIRECTORY="workloads/"
+  docker build -t "${WORKLOAD}"-db -f workloads/"${WORKLOAD}"/DockerfileMysql workloads/"${WORKLOAD}"
   CLIENT=true
   COMPOSE=true
-  docker build -t "${WORKLOAD}"-db -f workloads/"${WORKLOAD}"/DockerfileMysql "${DIRECTORY}${WORKLOAD}"
 fi
 
 
