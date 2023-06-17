@@ -25,10 +25,15 @@ Measuring the impact of the base image choice for different workloads inside Doc
 
 ### Installing the dependencies
 
-To use perf install the following packages:
+To use perf run the following commands:
 
 ```bash
+# install perf
 sudo apt-get -y install linux-tools-common linux-tools-generic linux-tools-`uname -r`
+
+# allow perf to be used by non-root users
+sudo sh -c 'echo -1 >/proc/sys/kernel/perf_event_paranoid'
+sudo sysctl -w kernel.perf_event_paranoid=-1
 ```
 
 Install the Python packages to use the monitoring pipeline:
