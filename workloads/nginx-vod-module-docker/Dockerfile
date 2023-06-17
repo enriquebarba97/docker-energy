@@ -4,7 +4,7 @@ FROM ${BASE} AS base_image
 
 FROM base_image AS build
 
-RUN apt-get update && apt-get install --no-install-recommends -y curl supervisor build-essential checkinstall zlib1g-dev libpcre3-dev ffmpeg libssl-dev && rm -rf /var/lib/apt/lists/*;
+RUN apt-get update && apt-get install -y curl supervisor build-essential checkinstall zlib1g-dev libpcre3-dev ffmpeg libssl-dev && rm -rf /var/lib/apt/lists/*;
 RUN mkdir nginx nginx-vod-module
 
 ARG NGINX_VERSION=1.23.4
