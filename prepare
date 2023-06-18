@@ -11,10 +11,6 @@ CLIENT=false
 COMPOSE=false
 DIRECTORY=""
 
-# For llama.cpp
-INFERENCE="Building a website can be done in 10 simple steps:"
-TOKENS=32
-
 # Get the arguments
 while getopts "x:l:b:w:o:c:" arg; do
   case $arg in
@@ -47,16 +43,17 @@ elif [[ "$WORKLOAD" == "nginx-vod-module-docker" ]]; then
   fi
   CLIENT=true
 elif [[ "$WORKLOAD" == "cypress-realworld-app" ]]; then
+  BROWSER=none yarn --cwd "${PWD}"/cypress-realworld-app start:react &
   if [[ ${#OPTIONS[@]} -eq 0 ]]; then
     OPTIONS=(-p 3001:3001)
   fi
   CLIENT=true
 elif [[ "$WORKLOAD" == "mattermost" ]]; then
-  docker build -t "${WORKLOAD}"-db -f workloads/"${WORKLOAD}"/DockerfileMysql workloads/"${WORKLOAD}"
+  DIRECTORY="workloads/"
+  docker build -t "${WORKLOAD}"-db -f workloads/"${WORKLOAD}"/DockerfileMysql "${DIRECTORY}${WORKLOAD}"
   CLIENT=true
   COMPOSE=true
 fi
-
 
 # Setup the log files
 mkdir -p logs/"${WORKLOAD}-${EXPID}"

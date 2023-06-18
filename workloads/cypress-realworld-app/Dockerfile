@@ -9,7 +9,7 @@ FROM ${BASE}
 
 ENV NODE_VERSION 16.20.0
 
-RUN apt-get update && apt-get install --no-install-recommends -y curl xz-utils \
+RUN apt-get update && apt-get install -y curl xz-utils \
     && ARCH= && dpkgArch="$(dpkg --print-architecture)" \
     && case "${dpkgArch##*-}" in \
       amd64) ARCH='x64';; \

@@ -10,7 +10,6 @@ COMMAND=()
 CLIENT=false
 COMPOSE=false
 
-
 # Get the arguments
 while getopts "x:l:b:p:o:c:r:" arg; do
   case $arg in

@@ -5,7 +5,7 @@ ARG BASE=ubuntu:latest
 
 FROM ${BASE}
 
-RUN apt-get update && apt-get install --no-install-recommends -y ca-certificates && rm -rf /var/lib/apt/lists/*;
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*;
 
 ENV MYSQL_ROOT_PASSWORD=mostest
 ENV MYSQL_USER=mmuser

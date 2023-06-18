@@ -164,12 +164,55 @@ python3 convert.py models/7B/
 ./quantize ./models/7B/ggml-model-f16.bin ./models/7B/ggml-model-q4_0.bin q4_0
 ```
 
+```bash
+# run the workload with default Docker options/command
+python measure.py \
+    -l llama.cpp \
+    -- all \
+    -n 30 \
+    --shuffle
+```
+
+```bash
+# run the workload with custom Docker options/command
+python measure.py \
+    -l llama.cpp \
+    -b ubuntu \
+    -o "-v ${PWD}/llama.cpp/models:/models" \
+    -c "-m /models/7B/ggml-model-q4_0.bin" \
+    -c "-p \"Building a website can be done in 10 simple steps:\"" \
+    -c "-n 32" \
+    -c "--seed 12345678" \
+    -c "-t 2"
+```
+
 ### nginx-vod-module-docker
 
 At the moment, the _nginx-vod-module-docker_ workload requires VLC to be installed on the host machine, in order to stream the video files:
 
 ```bash
 sudo apt-get -y install vlc
+```
+
+```bash
+# run the workload with default Docker options/command
+python measure.py \
+    -l nginx-vod-module-docker \
+    -- all \
+    -n 30 \
+    --shuffle \
+```
+
+```bash
+# run the workload with custom Docker options/command
+python measure.py \
+    -l nginx-vod-module-docker \
+    --all \
+    -n 30 \
+    --shuffle \
+    -o "-p 3030:80" \
+    -o "-v ${PWD}/nginx-vod-module-docker/examples/videos:/opt/static/videos" \
+    -o "-v ${PWD}/workloads/nginx-vod-module-docker/nginx.conf:/usr/local/nginx/conf/nginx.conf"
 ```
 
 ### cypress-realworld-app
@@ -186,7 +229,11 @@ nvm use 16
 npm install yarn -g
 
 # install the project dependencies
-yarn --cwd "${PWD}"/cypress-realworld-app install
+yarn --cwd $PWD/cypress-realworld-app install
+
+# prepare the database
+yarn db:seed:dev
+yarn predev:cognito:ci
 ```
 
 ### mattermost
@@ -194,5 +241,5 @@ yarn --cwd "${PWD}"/cypress-realworld-app install
 Similar to the other web application workload, it is recommended to also use node 16 for the _mattermost_ workload. The project dependencies can be installed using the following command:
 
 ```bash
-npm install --prefix "${PWD}"/mattermost/e2e-tests/cypress/
+npm install --prefix $PWD/mattermost/e2e-tests/cypress/
 ```

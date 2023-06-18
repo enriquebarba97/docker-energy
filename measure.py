@@ -25,16 +25,16 @@ def help():
     print(
         "A tool for measuring energy consumption for specific workloads using different base images.\n",
         "Options:",
-        "   -l --workload       Workload to monitor (e.g. -l \"llama.cpp\" or -l \"video-stream\")",
-        "   -b --base           Base image to monitor; can be used for multiple base images (e.g. -b ubuntu -b alpine) (default \"ubuntu\")",
+        '   -l --workload       Workload to monitor (e.g. -l "llama.cpp" or -l "video-stream")',
+        '   -b --base           Base image to monitor; can be used for multiple base images (e.g. -b ubuntu -b alpine) (default "ubuntu")',
         "   -n --runs           Number of monitoring runs per base image (e.g. -n 30) (default 1)",
         "   -w --warmup         Warm up time (s) (e.g. -w 30) (default 10)",
         "   -p --pause          Pause time (s) (e.g. -p 60) (default 15)",
-        "   -o --options        Options for the Docker run command (default \"\")",
-        "   -c --command        Command for the Docker run command (default \"\")",
+        '   -o --options        Options for the Docker run command (default "")',
+        '   -c --command        Command for the Docker run command (default "")',
         "   -a --all            Monitor all compatible base images (i.e. ubuntu, debian, alpine, centos)",
         "   --shuffle           Enables shuffle mode; random order of monitoring base images",
-        sep=os.linesep
+        sep=os.linesep,
     )
 
 
@@ -43,8 +43,8 @@ def parse_args(argv):
     exp_id = str(uuid.uuid4())
 
     # Set up the commands for the scripts
-    prepare_command = ['bash', 'prepare', '-x', exp_id]
-    monitor_command = ['bash', 'monitor', '-x', exp_id]
+    prepare_command = ["bash", "prepare", "-x", exp_id]
+    monitor_command = ["bash", "monitor", "-x", exp_id]
 
     # Default values
     workload = ""
@@ -55,25 +55,30 @@ def parse_args(argv):
     help_mode = False
 
     # Get the arguments provided by the user
-    opts, args = getopt.getopt(argv, "l:"  # workload
-                                     "b:"  # base image
-                                     "n:"  # number of runs
-                                     "w:"  # warm up time
-                                     "p:"  # pause time
-                                     "o:"  # options for the Docker run command
-                                     "c:"  # command for the Docker run command
-                                     "a"   # all compatible base images
-                                     "h",  # help
-                               ["shuffle",
-                                "help",
-                                "all",
-                                "workload=",
-                                "base=",
-                                "runs=",
-                                "warmup=",
-                                "pause=",
-                                "options=",
-                                "command="])
+    opts, args = getopt.getopt(
+        argv,
+        "l:"  # workload
+        "b:"  # base image
+        "n:"  # number of runs
+        "w:"  # warm up time
+        "p:"  # pause time
+        "o:"  # options for the Docker run command
+        "c:"  # command for the Docker run command
+        "a"  # all compatible base images
+        "h",  # help
+        [
+            "shuffle",
+            "help",
+            "all",
+            "workload=",
+            "base=",
+            "runs=",
+            "warmup=",
+            "pause=",
+            "options=",
+            "command=",
+        ],
+    )
     for opt, arg in opts:
         # Set shuffle mode to true
         if opt == "--shuffle":
@@ -88,7 +93,9 @@ def parse_args(argv):
         elif opt in ["-b", "--base"]:
             if ":" not in arg:  # If no version is specified, use the latest
                 arg += ":latest"
-            elif arg[-1] == ":":  # If the version is specified but empty, use the latest
+            elif (
+                arg[-1] == ":"
+            ):  # If the version is specified but empty, use the latest
                 arg += "latest"
             images.add(arg)
         # Set the number of runs
@@ -105,17 +112,19 @@ def parse_args(argv):
         # Set the options for the Docker run command
         elif opt in ["-o", "--options"]:
             opt = "-o"
+            prepare_command += [opt, arg]
             monitor_command += [opt, arg]
         # Set the command for the Docker run command
         elif opt in ["-c", "--command"]:
             opt = "-c"
+            prepare_command += [opt, arg]
             monitor_command += [opt, arg]
         # Set help mode to true
         elif opt in ["-h", "--help"]:
             help_mode = True
         # Add all (pre-selected) images to the image set
         elif opt in ["-a", "--all"]:
-            images |= {"ubuntu", "alpine", "debian"}
+            images |= {"ubuntu", "alpine", "debian", "centos"}
 
     # Add the images that needs to be built to the prepare command
     for image in images:
@@ -127,17 +136,22 @@ def parse_args(argv):
     if shuffle_mode:
         random.shuffle(queue)
 
-
     # Put the arguments in a dictionary
-    arguments = {"prepare_command": prepare_command, "monitor_command": monitor_command, "queue": queue,
-                 "shuffle_mode": shuffle_mode, "help_mode": help_mode, "workload": workload, "exp_id": exp_id}
+    arguments = {
+        "prepare_command": prepare_command,
+        "monitor_command": monitor_command,
+        "queue": queue,
+        "shuffle_mode": shuffle_mode,
+        "help_mode": help_mode,
+        "workload": workload,
+        "exp_id": exp_id,
+    }
     return arguments
 
 
 def main(argv):
     # Get the arguments from the command
     arguments = parse_args(argv)
-
 
     # If help mode is enabled, do not monitor and open the help menu
     if arguments["help_mode"]:
@@ -146,7 +160,11 @@ def main(argv):
 
     # If no workload is specified, do not monitor
     if len(arguments["workload"]) == 0:
-        print("No workload provided (e.g. -w \"llama.cpp\" or -w \"video-stream\")")
+        print('No workload provided (e.g. -w "llama.cpp" or -w "video-stream")')
+        return
+
+    if len(arguments["queue"]) == 0:
+        print("No base images provided (e.g. -b ubuntu -b alpine)")
         return
 
     # Initiate the preparation phase: building the images and warming up the machine
@@ -165,5 +183,5 @@ def main(argv):
     # parse.parse_files(files, files_samples, directory)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main(sys.argv[1:])

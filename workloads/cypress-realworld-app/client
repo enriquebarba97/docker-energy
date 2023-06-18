@@ -8,14 +8,16 @@ while getopts "b:" arg; do
   esac
 done
 
-until $(curl --output /dev/null --silent --head --fail localhost:3000); do
-  echo "Waiting for server to start"
-  sleep 5
-done
+# until $(curl --output /dev/null --silent --head --fail localhost:3000); do
+#   echo "Waiting for server to start"
+#   sleep 5
+# done
+
+curl --head -X GET --retry 10 --retry-connrefused --retry-delay 1 localhost:3000
 
 echo "Server started, running tests"
 
 
-su -c "yarn --cwd ${PWD}/cypress-realworld-app/ cypress run --config video=false" "${SUDO_USER}"
+yarn --cwd ${PWD}/cypress-realworld-app/ cypress run --config video=false
 
 docker stop cypress-realworld-app-"${BASE/:/}"
