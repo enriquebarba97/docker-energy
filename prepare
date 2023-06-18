@@ -43,11 +43,14 @@ elif [[ "$WORKLOAD" == "nginx-vod-module-docker" ]]; then
   fi
   CLIENT=true
 elif [[ "$WORKLOAD" == "cypress-realworld-app" ]]; then
-  BROWSER=none yarn --cwd "${PWD}"/cypress-realworld-app start:react &
-  if [[ ${#OPTIONS[@]} -eq 0 ]]; then
-    OPTIONS=(-p 3001:3001)
-  fi
+  # BROWSER=none yarn --cwd "${PWD}"/cypress-realworld-app start:react &
+  # if [[ ${#OPTIONS[@]} -eq 0 ]]; then
+  #   OPTIONS=(-p 3001:3001)
+  # fi
+
+  docker build -t "${WORKLOAD}"-react -f workloads/"${WORKLOAD}"/DockerfileReact "${DIRECTORY}${WORKLOAD}"
   CLIENT=true
+  COMPOSE=true
 elif [[ "$WORKLOAD" == "mattermost" ]]; then
   DIRECTORY="workloads/"
   docker build -t "${WORKLOAD}"-db -f workloads/"${WORKLOAD}"/DockerfileMysql "${DIRECTORY}${WORKLOAD}"
@@ -93,7 +96,7 @@ for i in "${BASE[@]}"; do
   fi
   
   if ${COMPOSE} ; then
-    IMAGE="${i}" NAME="${i/:/}" FILE="${DOCKERFILE}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up
+    NAME="${i/:/}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up
   else
     docker run --name "${WORKLOAD}"-"${i/:/}" "${OPTIONS[@]}" "${WORKLOAD}"-"${i/:/}" "${COMMAND[@]}"
     docker rm "${WORKLOAD}"-"${i/:/}"

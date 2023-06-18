@@ -8,16 +8,18 @@ while getopts "b:" arg; do
   esac
 done
 
-# until $(curl --output /dev/null --silent --head --fail localhost:3000); do
-#   echo "Waiting for server to start"
-#   sleep 5
-# done
+until $(curl --output /dev/null --silent --head --fail localhost:3000); do
+  echo "Waiting for server to start"
+  sleep 5
+done
 
-curl --head -X GET --retry 10 --retry-connrefused --retry-delay 1 localhost:3000
+# curl --head -X GET --retry 10 --retry-connrefused --retry-delay 5 localhost:3000/personal
 
 echo "Server started, running tests"
 
 
 yarn --cwd ${PWD}/cypress-realworld-app/ cypress run --config video=false
 
-docker stop cypress-realworld-app-"${BASE/:/}"
+# docker stop cypress-realworld-app-"${BASE/:/}"
+
+docker compose -f ${PWD}/workloads/cypress-realworld-app/docker-compose.yml down

@@ -42,10 +42,11 @@ elif [[ "$WORKLOAD" == "nginx-vod-module-docker" ]]; then
   fi
   CLIENT=true
 elif [[ "$WORKLOAD" == "cypress-realworld-app" ]]; then
-  if [[ ${#OPTIONS[@]} -eq 0 ]]; then
-    OPTIONS=(-p 3001:3001)
-  fi
+  # if [[ ${#OPTIONS[@]} -eq 0 ]]; then
+  #   OPTIONS=(-p 3001:3001)
+  # fi
   CLIENT=true
+  COMPOSE=true
 elif [[ "$WORKLOAD" == "mattermost" ]]; then
   CLIENT=true
   COMPOSE=true
@@ -64,7 +65,7 @@ if ${CLIENT} ; then
 fi
 
 if ${COMPOSE} ; then
-  IMAGE="${BASE}" NAME="${BASE/:/}" FILE="Dockerfile" perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
+  NAME="${BASE/:/}" perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
   docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up
 else
   perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \

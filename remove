@@ -14,7 +14,8 @@ while getopts "l:b:x:o:c:" arg; do
 done
 
 if [[ "$WORKLOAD" == "cypress-realworld-app" ]]; then
-  kill "$(lsof -t -i:3000)"
+  # kill "$(lsof -t -i:3000)"
+  docker rmi cypress-realworld-app-react
 elif [[ "$WORKLOAD" == "mattermost" ]]; then
   docker rmi mattermost-db
 fi

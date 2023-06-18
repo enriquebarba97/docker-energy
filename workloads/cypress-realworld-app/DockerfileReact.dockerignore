@@ -1,0 +1,7 @@
+cypress/
+node_modules/
+.vscode/
+./github/
+.circleci/
+.husky/
+.nyc_output/

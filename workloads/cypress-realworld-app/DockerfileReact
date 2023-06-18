@@ -1,0 +1,19 @@
+FROM node:16-alpine
+
+WORKDIR /app
+
+COPY package.json yarn.lock ./
+
+RUN yarn install && yarn cache clean;
+
+COPY . .
+
+ENV NODE_ENV=development
+ENV BROWSER=none
+
+RUN yarn db:seed:dev && \
+    yarn predev:cognito:ci
+
+EXPOSE 3000
+
+CMD [ "yarn", "start:react" ]
