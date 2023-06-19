@@ -1,0 +1,27 @@
+#!/bin/bash
+
+set_cpu() {
+  systemctl set-property --runtime -- user.slice AllowedCPUs="$1"   
+  systemctl set-property --runtime -- system.slice AllowedCPUs="$2"
+}
+
+RESET=true
+
+# Get the arguments
+while getopts "sr" arg; do
+  case $arg in
+    s) RESET=false;;
+    r) RESET=true;;
+  esac
+done
+
+# Split the CPUs between the user and system slices based on total number of CPUs
+CPUS=$(($(nproc --all) - 1))
+SPLIT="$(($CPUS / 2))"
+
+
+if [[ "$RESET" == true ]]; then
+  set_cpu "0-$CPUS" "0-$CPUS"
+else
+  set_cpu "0-$SPLIT" "$(($SPLIT + 1))-$CPUS"
+fi
