@@ -67,14 +67,14 @@ results/"${WORKLOAD}"-"${EXPID}"/samples/"${BASE/:/}".txt
 # PID=$!
 
 if ${CLIENT} ; then
-  bash workloads/"${WORKLOAD}"/client -b "${BASE}" &
+  taskset -c "${BACKGROUND}" bash workloads/"${WORKLOAD}"/client -b "${BASE}" &
 fi
 
 if ${COMPOSE} ; then
   NAME="${BASE/:/}" perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
   docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up
 else
-  perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
+  perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -C "${ISOLATE}" -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
   docker run --name "${WORKLOAD}"-"${BASE/:/}" --cpuset-cpus "${ISOLATE}" "${OPTIONS[@]}" "${WORKLOAD}"-"${BASE/:/}" "${COMMAND[@]}"
 fi
 

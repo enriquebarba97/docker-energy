@@ -23,5 +23,6 @@ SPLIT="$(($CPUS / 2))"
 if [[ "$RESET" == true ]]; then
   set_cpu "0-$CPUS" "0-$CPUS"
 else
-  set_cpu "0-$SPLIT" "$(($SPLIT + 1))-$CPUS"
+#   set_cpu "0-$SPLIT" "$(($SPLIT + 1))-$CPUS"
+  set_cpu "0-$SPLIT" "0-$CPUS"
 fi
