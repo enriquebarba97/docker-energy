@@ -6,12 +6,16 @@ set_cpu() {
 }
 
 RESET=true
+ISOLATE="-1"
+BACKGROUND="-1"
 
 # Get the arguments
-while getopts "sr" arg; do
+while getopts "sri:j:" arg; do
   case $arg in
     s) RESET=false;;
     r) RESET=true;;
+    i) ISOLATE=$OPTARG;;
+    j) BACKGROUND=$OPTARG;;
   esac
 done
 
@@ -19,10 +23,17 @@ done
 CPUS=$(($(nproc --all) - 1))
 SPLIT="$(($CPUS / 2))"
 
-
 if [[ "$RESET" == true ]]; then
   set_cpu "0-$CPUS" "0-$CPUS"
 else
 #   set_cpu "0-$SPLIT" "$(($SPLIT + 1))-$CPUS"
   set_cpu "0-$SPLIT" "0-$CPUS"
 fi
+
+if [[ "$ISOLATE" != "-1" ]]; then
+  set_cpu "$ISOLATE" "$ISOLATE"
+fi
+if [[ "$BACKGROUND" != "-1" ]]; then
+  set_cpu "$BACKGROUND" "0-$CPUS"
+fi
+
