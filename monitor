@@ -7,11 +7,13 @@ BASE="ubuntu"
 PAUSE=15
 OPTIONS=()
 COMMAND=()
+ISOLATE=""
+BACKGROUND=""
 CLIENT=false
 COMPOSE=false
 
 # Get the arguments
-while getopts "x:l:b:p:o:c:r:" arg; do
+while getopts "x:l:b:p:o:c:i:j:r:" arg; do
   case $arg in
     x) EXPID=$OPTARG;;
     l) WORKLOAD=$OPTARG;;
@@ -23,6 +25,8 @@ while getopts "x:l:b:p:o:c:r:" arg; do
     c)
       IFS=' ' read -r FLAG ARG <<< "${OPTARG}"
       COMMAND+=("${FLAG}" "${ARG}");;
+    i) ISOLATE=$OPTARG;;
+    j) BACKGROUND=$OPTARG;;
     r) RUN=$OPTARG;;
     *) ;;
   esac
@@ -34,7 +38,7 @@ if [[ "$WORKLOAD" == "llama.cpp" ]]; then
     OPTIONS=(-v "${PWD}"/llama.cpp/models:/models)
   fi
   if [[ ${#COMMAND[@]} -eq 0 ]]; then
-    COMMAND=(-m /models/7B/ggml-model-q4_0.bin -p "Building a website can be done in 10 simple steps:" -n 32 --seed 12345678 -t 2)
+    COMMAND=(-m /models/7B/ggml-model-q4_0.bin -p "Building a website can be done in 10 simple steps:" -n 64 --seed 12345678 -t 2)
   fi
 elif [[ "$WORKLOAD" == "nginx-vod-module-docker" ]]; then
   if [[ ${#OPTIONS[@]} -eq 0 ]]; then
@@ -51,6 +55,8 @@ elif [[ "$WORKLOAD" == "mattermost" ]]; then
   CLIENT=true
   COMPOSE=true
 fi
+
+
 # Run and monitor the workload for the specified number of times
 sleep "${PAUSE}"
 echo -e "# run ${RUN}: ${BASE}" | tee -a results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt \
@@ -61,15 +67,15 @@ results/"${WORKLOAD}"-"${EXPID}"/samples/"${BASE/:/}".txt
 # PID=$!
 
 if ${CLIENT} ; then
-  bash workloads/"${WORKLOAD}"/client -b "${BASE}" &
+  taskset -c "${BACKGROUND}" bash workloads/"${WORKLOAD}"/client -b "${BASE}" &
 fi
 
 if ${COMPOSE} ; then
-  NAME="${BASE/:/}" perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
+  BACKGROUND_CPU="${BACKGROUND}" ISOLATE_CPU="${ISOLATE}" NAME="${BASE/:/}" perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
   docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up
 else
-  perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
-  docker run --name "${WORKLOAD}"-"${BASE/:/}" "${OPTIONS[@]}" "${WORKLOAD}"-"${BASE/:/}" "${COMMAND[@]}"
+  perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -C "${ISOLATE}" -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
+  docker run --name "${WORKLOAD}"-"${BASE/:/}" --cpuset-cpus "${ISOLATE}" "${OPTIONS[@]}" "${WORKLOAD}"-"${BASE/:/}" "${COMMAND[@]}"
 fi
 
 
