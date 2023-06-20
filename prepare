@@ -77,9 +77,6 @@ while getopts "x:l:b:w:o:c:i:j:" arg; do
   esac
 done
 
-echo "$ISOLATE"
-echo "$BACKGROUND"
-
 set_defaults "${WORKLOAD}"
 
 # Setup the log files
@@ -92,7 +89,7 @@ date +"# started on %c %n" >> logs/"${WORKLOAD}-${EXPID}"/warmup.txt
 
 # Build the Docker images and run the workload once for each base image as warm-up
 for i in "${BASE[@]}"; do
-  echo -e "### experiment ${EXPID} ###\n# workload: ${WORKLOAD}\n# image: ${i}\n" | tee -a \
+  echo -e "### experiment ${EXPID} ###\n# cpus: ${ISOLATE}\n# workload: ${WORKLOAD}\n# image: ${i}\n" | tee -a \
   logs/"${WORKLOAD}"-"${EXPID}"/"${i/:/}".txt \
   results/"${WORKLOAD}"-"${EXPID}"/"${i/:/}".txt results/"${WORKLOAD}"-"${EXPID}"/samples/"${i/:/}".txt
 
@@ -102,11 +99,11 @@ for i in "${BASE[@]}"; do
 
   # Run the docker run command as warmup
   if ${CLIENT} ; then
-    bash workloads/"${WORKLOAD}"/client -b "${i}" &
+    taskset -c "${BACKGROUND}" bash workloads/"${WORKLOAD}"/client -b "${i}" &
   fi
   
   if ${COMPOSE} ; then
-    NAME="${i/:/}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up
+    BACKGROUND_CPU="${BACKGROUND}" ISOLATE_CPU="${ISOLATE}" NAME="${i/:/}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up
   else
     docker run --name "${WORKLOAD}"-"${i/:/}" --cpuset-cpus "${ISOLATE}" "${OPTIONS[@]}" "${WORKLOAD}"-"${i/:/}" "${COMMAND[@]}"
     docker rm "${WORKLOAD}"-"${i/:/}"
@@ -116,7 +113,7 @@ done
 
 # Log the docker images information
 echo -e "# docker images\n" >> logs/"${WORKLOAD}"-"${EXPID}"/warmup.txt
-docker image ls >> logs/"${WORKLOAD}"-"${EXPID}"/warmup.txt
+docker image ls | egrep "REPOSITORY|${WORKLOAD}" >> logs/"${WORKLOAD}"-"${EXPID}"/warmup.txt
 
 # Start the warm up procedure
 warmup

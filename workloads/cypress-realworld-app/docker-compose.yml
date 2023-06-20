@@ -2,8 +2,10 @@ services:
     frontend:
         image: cypress-realworld-app-react
         container_name: cypress-realworld-app-react
+        cpuset: ${BACKGROUND_CPU}
         ports:
             - '3000:3000'
     backend:
         image: cypress-realworld-app-${NAME}
         container_name: cypress-realworld-app-${NAME}
+        cpuset: ${ISOLATE_CPU}

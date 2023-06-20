@@ -168,10 +168,8 @@ def init_queue(images, number, shuffle_mode):
 
 
 def set_cpus(cpus):
-    isolate_cpus = ",".join(
-        str(i) for i in list(range(os.cpu_count() // 2, os.cpu_count()))
-    )
-    background_cpus = ",".join(str(i) for i in list(range(os.cpu_count() // 2)))
+    isolate_cpus = list()
+    background_cpus = list(range(os.cpu_count()))
 
     if cpus == "":
         return isolate_cpus, background_cpus
@@ -179,11 +177,17 @@ def set_cpus(cpus):
     if "-" in cpus:
         print("Specify a set of CPUs instead of a range (e.g. -i 0,1,2,3)")
 
-    for c in re.split(",|-", cpus):
-        if c not in isolate_cpus:
-            print(f"CPU {c} is not available, select a core from {isolate_cpus}")
+    for c in re.split(",|-| ", cpus.replace(" ", "")):
+        try:
+            if int(c) not in background_cpus:
+                print(f"CPU {c} is not available, select a core from {background_cpus}")
+            isolate_cpus.append(c)
+            background_cpus.remove(int(c))
+        except ValueError:
+            print(f"{c} is not a valid integer")
 
-    isolate_cpus = cpus
+    isolate_cpus = ",".join(str(i) for i in list(isolate_cpus))
+    background_cpus = ",".join(str(i) for i in list(background_cpus))
 
     return isolate_cpus, background_cpus
 

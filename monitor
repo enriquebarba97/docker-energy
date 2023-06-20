@@ -71,7 +71,7 @@ if ${CLIENT} ; then
 fi
 
 if ${COMPOSE} ; then
-  NAME="${BASE/:/}" perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
+  BACKGROUND_CPU="${BACKGROUND}" ISOLATE_CPU="${ISOLATE}" NAME="${BASE/:/}" perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
   docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up
 else
   perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -C "${ISOLATE}" -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \

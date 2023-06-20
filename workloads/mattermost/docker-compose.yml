@@ -3,6 +3,7 @@ services:
         # image: mysql:5.7
         image: mattermost-db
         container_name: mattermost-db
+        cpuset: ${BACKGROUND_CPU}
         # build:
         #     context: .
         #     dockerfile: DockerfileMysql
@@ -18,6 +19,7 @@ services:
     mattermost:
         image: mattermost-${NAME}
         container_name: mattermost-${NAME}
+        cpuset: ${ISOLATE_CPU}
         # build:
         #     context: .
         #     dockerfile: ${FILE}
