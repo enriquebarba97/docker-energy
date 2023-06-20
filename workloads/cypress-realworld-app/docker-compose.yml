@@ -9,3 +9,5 @@ services:
         image: cypress-realworld-app-${NAME}
         container_name: cypress-realworld-app-${NAME}
         cpuset: ${ISOLATE_CPU}
+        ports:
+            - '3001:3001'

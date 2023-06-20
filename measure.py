@@ -131,7 +131,22 @@ def parse_args(argv):
             help_mode = True
         # Add all (pre-selected) images to the image set
         elif opt in ["-a", "--all"]:
-            images |= {"ubuntu", "alpine", "debian", "centos"}
+            images |= {
+                "ubuntu:latest",
+                "alpine:latest",
+                "debian:latest",
+                "centos:latest",
+            }
+            prepare_command += [
+                "-b",
+                "ubuntu:latest",
+                "-b",
+                "alpine:latest",
+                "-b",
+                "debian:latest",
+                "-b",
+                "centos:latest",
+            ]
 
     # # Add the images that needs to be built to the prepare command
     # for image in images:
