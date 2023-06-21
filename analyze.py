@@ -54,6 +54,11 @@ def anova_test(images: dict, labels: list, parts: list):
     print(
         "============================== One-way ANOVA test ============================="
     )
+
+    if len(labels) < 2:
+        print("Not enough data to perform the test.")
+        return
+
     print(
         "True means that the null hypothesis is rejected, i.e. the means are not equal.\n"
     )
@@ -83,6 +88,11 @@ def tukey_test(images: dict, labels: list, parts: list):
     print(
         "============================== Tukey HSD test ================================="
     )
+
+    if len(labels) < 2:
+        print("Not enough data to perform the test.")
+        return
+
     print("False means that the null hypothesis is rejected, i.e. the means are equal.")
     # tukey = list()
     # Perform the Tukey HSD test for each part between the base images
@@ -125,6 +135,11 @@ def cohen_d(images: dict, labels: list, parts: list):
     print(
         "============================== Cohen's d test ================================="
     )
+
+    if len(labels) < 2:
+        print("Not enough data to perform the test.")
+        return
+    
     print(
         "A positive value indicates that the second image performs better than the first.\n"
     )
@@ -172,7 +187,7 @@ def plot(images: dict, labels: list, parts: list):
         plt.show()
 
 
-def plot_samples(images: dict):
+def plot_samples(images: dict, x_value: str, y_value: str):
     sns.set_style("whitegrid")
     df = pd.DataFrame()
     for image in images:
@@ -181,12 +196,14 @@ def plot_samples(images: dict):
         else:
             df = pd.concat([df, images[image]], ignore_index=True)
 
-    plt.figure(figsize=(10, 7))
+    try:
+        plt.figure(figsize=(10, 7))
+        sns.lineplot(x=x_value, y=y_value, data=df, hue="Run")
 
-    sns.lineplot(x="Time", y="Watts", data=df, hue="Image")
-
-    plt.title("Power usage over time")
-    plt.show()
+        plt.title("Power usage over time")
+        plt.show()
+    except:
+        print("Incorrect values for x and y")
 
 
 def analyze(images: dict, images_samples: dict, labels: list, parts: list):
@@ -215,14 +232,15 @@ def read_tsv(file: str):
 
 def parse_args(argv):
     files = list()
-    files_samples = list()
     parts = list()
     statistical_test = list()
+    x_value = ""
+    y_value = ""
 
     # Get the arguments provided by the user
     opts, args = getopt.getopt(
         argv,
-        "f:d:p:",
+        "f:d:p:x:y:",
         [
             "file=",
             "directory=",
@@ -234,7 +252,7 @@ def parse_args(argv):
             "full",
             "statistics",
             "plot",
-            "plot_samples",
+            "plot-samples",
         ],
     )
     for opt, arg in opts:
@@ -244,7 +262,7 @@ def parse_args(argv):
             directory = arg
             if directory[-1] == "/":
                 directory = directory[:-1]
-            files, files_samples = parse.get_files(directory, "*.tsv")
+            files = parse.get_files(directory, "*.tsv")
         elif opt in ["-p", "--part"]:
             parts.append(arg)
         elif opt == "--shapiro":
@@ -261,16 +279,20 @@ def parse_args(argv):
             statistical_test.append("statistics")
         elif opt == "--plot":
             statistical_test.append("plot")
-        elif opt == "--plot_samples":
-            statistical_test.append("plot_samples")
+        elif opt == "--plot-samples":
+            statistical_test.append("plot-samples")
+        elif opt == "-x":
+            x_value = arg
+        elif opt == "-y":
+            y_value = arg
 
-    return files, files_samples, parts, statistical_test
+    return files, parts, statistical_test, x_value, y_value
 
 
 def main(argv):
     images = {}
     images_samples = {}
-    files, files_samples, parts, statistical_test = parse_args(argv)
+    files, parts, statistical_test, x_value, y_value = parse_args(argv)
 
     # if len(files) == 0:
     #     print("No .tsv files provided")
@@ -288,12 +310,6 @@ def main(argv):
         print("No (correct) .tsv files provided")
         return
 
-    print(len(images))
-
-    # for f in files_samples:
-    #     base, df = read_tsv(f)
-    #     images_samples[base] = df
-
     labels, all_parts = get_lists(images)
 
     for p in parts:
@@ -307,8 +323,6 @@ def main(argv):
         parts = all_parts
 
     # labels = list(images.keys())
-
-    print(statistical_test)
 
     if len(statistical_test) == 0:
         print("No statistical test selected.")
@@ -328,8 +342,8 @@ def main(argv):
         statistics(images, labels, parts)
     if "plot" in statistical_test:
         plot(images, labels, parts)
-    # elif statistical_test == "plot_samples":
-    #     plot_samples(images_samples)
+    elif "plot-samples" in statistical_test:
+        plot_samples(images, x_value, y_value)
 
 
 if __name__ == "__main__":

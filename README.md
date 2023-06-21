@@ -8,7 +8,7 @@ Measuring the impact of the base image choice for different workloads inside Doc
         -   [Installing the dependencies](#installing-the-dependencies)
     -   [Usage](#usage)
         -   [Measuring the energy consumption](#measuring-the-energy-consumption)
-        -   [Statistical analysis](#statistical-analysis)
+        -   [Parsing the results](#parsing-the-results)
     -   [Workloads](#workloads)
         -   [llama.cpp](#llamacpp)
         -   [nginx-vod-module-docker](#nginx-vod-module-docker)
@@ -102,41 +102,77 @@ It takes the following arguments:
 -   **_-p_** or **_--pause_**: Pause time (s) (e.g. -p 60) (default 15)
 -   **_-o_** or **_--options_**: Options for the Docker run command (default "")
 -   **_-c_** or **_--command_**: Command for the Docker run command (default "")
+-   **_-i_** or **_--isolate_**: Specify the cpus on which the containerized workload must be pinned; the client processes will be pinned on the remaining cpus (e.g. -i 0-3, 6)
 -   **_-a_** or **_--all_**: Monitor all compatible base images (i.e. ubuntu, debian, alpine, centos)
 -   **_--shuffle_**: Enables shuffle mode; random order of monitoring base images
 
-For example, to obtain 30 energy consumption measurements and power samples of the _llama.cpp_ using _ubuntu_, _debian_, and _alpine_, in shuffle mode, run the following command:
+For example, to obtain 30 energy consumption measurements and power samples of the _llama.cpp_ using _ubuntu_, _debian_, and _alpine_, on cpus 3 and 7, in shuffle mode, run the following command:
 
 ```bash
-sudo venv/bin/python measure.py -l llama.cpp -b ubuntu -b debian -b alpine -n 30 --shuffle
+python measure.py -l llama.cpp -b ubuntu -b debian -b alpine -n 30 -i "3,7" --shuffle
 ```
 
 This command will output the logs of the warm-up and the workload for each image in `logs/llama.cpp-{uuid}`.
 
 The energy consumption measurements for each image can be found in `results/llama.cpp-{uuid}`, and the samples in `results/llama.cpp-{uuid}/samples`.
 
-**NOTE:** It is important to run the script with _sudo_, since reading power statistics from RAPL domains require root privileges.
+<!-- **NOTE:** It is important to run the script with _sudo_, since reading power statistics from RAPL domains require root privileges. -->
+
+### Parsing the results
+
+The results of the `measure.py` script are .txt files. To parse these results into .tsv files, use the `parse.py` script.
+
+If you used _perf_ to measure the energy consumption, use the following command:
+
+```bash
+python parse.py -d results/<experiment-folder> --perf
+```
+
+If you used another tool to measure the energy consumption, which outputs the results as samples in a table, use the following command:
+
+```bash
+python parse.py -d results/<experiment-folder> --samples
+```
+
+```
 
 ### Statistical analysis
 
-When the measurements are obtained, it is possible to determine the statistical significance of the results using the `analyze.py` script. This script takes the following arguments:
+When the measurements are obtained, it is possible to determine the statistical significance of the results using the `analyze.py` script. To use this script it is important that the input files are .tsv files with the following format:
+
+```
+
+header1 header2 header3 ...
+x1 y1 z1 ...
+x2 y2 z2 ...
+x3 y3 z3 ...
+... ... ... ...
+
+````
+
+To parse the output of the `measure.py` script, see.
+
+This script takes the following arguments:
 
 -   **_-f_** or **_--file_**: the input file(s)
--   **_-d_** or _**--directory**_: the directory containing the input file(s)
+-   **_-d_** or **_--directory_**: the directory containing the input file(s)
+-   **_-p_** or **_--part_**: the column of the input file(s) for which the tests will be performed; if this is not defined the tests will be performed for all columns (e.g. -p "Watts" -p "Joules")
 -   **_--shapiro_**: perform the Shapiro-Wilk test for normality for each part of each base image
 -   **_--anova_**: perform the one-way ANOVA test for each part between the base images
 -   **_--tukey_**: perform the Tukey HSD test for each part between the base images
 -   **_--cohen_**: perform the Cohen's d test for each part between the base images
 -   **_--plot_**: plot the data for each part
 -   **_--full_**: perform all tests and plot the data
--   **_--plot_samples_**: plot the power samples over time
+-   **_--plot-samples_**: plot samples; requires **_-x_** and **_-y_** to be defined
 -   **_--statistics_**: print the mean and standard deviation for each part of each base image
+-   **_-x_**: the x-axis of the sample plot (must be a column in the input file)
+-   **_-y_**: the y-axis of the sample plot (must be a column in the input file)
 
 For example, to perform all tests for all measurements, run the following commands, respectively:
 
 ```bash
 python analyze.py -d results/llama.cpp-{uuid} --full
-```
+````
 
 The Shapiro-Wilk test will print _False_ if the data is normal, and _True_ if it is not.
 The ANOVA test will print _True_ if the means are significantly different, and _False_ if they are not.
