@@ -183,40 +183,25 @@ def init_queue(images, number, shuffle_mode):
 
 
 def set_cpus(cpus):
-    cpus = cpus.replace(" ", "")
+    cpus = cpus.replace(" ", "").split(",")
     total_cpus = set(range(os.cpu_count()))
     isolate_cpus = set()
     background_cpus = set(range(os.cpu_count()))
 
-    if cpus == "":
-        isolate_cpus = ",".join(str(i) for i in list(background_cpus))
-        background_cpus = ",".join(str(i) for i in list(background_cpus))
-        return isolate_cpus, background_cpus
-
-    # Check if a range of CPUs is specified
-    if "-" in cpus:
-        cpu_range = re.split("-", cpus)
-        x = cpu_range[0][-1]
-        cpus = cpus.replace(cpu_range[0][-1], "")
-        try:
-            y = cpu_range[1][0]
-            cpus = cpus.replace(cpu_range[1][0], "")
-            isolate_cpus = isolate_cpus | (set(range(int(x), int(y)+1)))
-            background_cpus = background_cpus.difference(set(range(int(x), int(y)+1)))
-        except IndexError:
-            print("Specify a range of CPUs (e.g. -i 0-3)")
-        cpus = cpus.replace("-", "")
-
-    # Check if a list of CPUs is specified
-    for c in re.split(",| ", cpus):
-        try:
-            if int(c) not in total_cpus:
-                print(f"CPU {c} is not available, select a core from {total_cpus}")
-            isolate_cpus.add(int(c))
-            background_cpus.remove(int(c))
-        except (ValueError, KeyError):
-            # print(f"{c} is not a valid integer")
-            pass
+    for cpu in cpus:
+        if "-" in cpu:
+            cpu_range = re.split("-", cpu)
+            try:
+                isolate_cpus |= set(range(int(cpu_range[0]), int(cpu_range[-1]) + 1))
+                background_cpus -= set(range(int(cpu_range[0]), int(cpu_range[-1]) + 1))
+            except ValueError:
+                print("Invalid CPU range")
+        else:
+            try:
+                isolate_cpus.add(int(cpu))
+                background_cpus.remove(int(cpu))
+            except ValueError:
+                print("Invalid CPU")
 
     isolate_cpus = ",".join(str(i) for i in list(isolate_cpus))
     background_cpus = ",".join(str(i) for i in list(background_cpus))
@@ -234,9 +219,9 @@ def main(argv):
         return
 
     # If no workload is specified, do not monitor
-    # if len(arguments["workload"]) == 0:
-    #     print('No workload provided (e.g. -w "llama.cpp" or -w "video-stream")')
-    #     return
+    if len(arguments["workload"]) == 0:
+        print('No workload provided (e.g. -w "llama.cpp" or -w "video-stream")')
+        return
 
     if len(arguments["images"]) == 0:
         print("No base images provided (e.g. -b ubuntu -b alpine)")
