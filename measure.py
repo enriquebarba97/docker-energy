@@ -192,14 +192,16 @@ def set_cpus(cpus):
         if "-" in cpu:
             cpu_range = re.split("-", cpu)
             try:
-                isolate_cpus |= set(range(int(cpu_range[0]), int(cpu_range[-1]) + 1))
-                background_cpus -= set(range(int(cpu_range[0]), int(cpu_range[-1]) + 1))
+                if int(cpu_range[0]) in total_cpus and int(cpu_range[-1]) in total_cpus:
+                    isolate_cpus |= set(range(int(cpu_range[0]), int(cpu_range[-1]) + 1))
+                    background_cpus -= set(range(int(cpu_range[0]), int(cpu_range[-1]) + 1))
             except ValueError:
                 print("Invalid CPU range")
         else:
             try:
-                isolate_cpus.add(int(cpu))
-                background_cpus.remove(int(cpu))
+                if int(cpu) in total_cpus:
+                    isolate_cpus.add(int(cpu))
+                    background_cpus.remove(int(cpu))
             except ValueError:
                 print("Invalid CPU")
 
@@ -237,15 +239,15 @@ def main(argv):
     )
 
     # Initiate the preparation phase: building the images and warming up the machine
-    # print(arguments["prepare_command"])
-    execute(arguments["prepare_command"])
+    print(arguments["prepare_command"])
+    # execute(arguments["prepare_command"])
 
-    run(arguments["monitor_command"], queue)
+    # run(arguments["monitor_command"], queue)
 
-    # Remove the base images used in the experiment
-    remove_command = arguments["prepare_command"].copy()
-    remove_command[1] = "remove"
-    execute(remove_command)
+    # # Remove the base images used in the experiment
+    # remove_command = arguments["prepare_command"].copy()
+    # remove_command[1] = "remove"
+    # execute(remove_command)
 
     # Parse the results
     # directory = f"results/{arguments['workload']}-{arguments['exp_id']}"
