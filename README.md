@@ -9,6 +9,7 @@ Measuring the impact of the base image choice for different workloads inside Doc
     -   [Usage](#usage)
         -   [Measuring the energy consumption](#measuring-the-energy-consumption)
         -   [Parsing the results](#parsing-the-results)
+        -   [Statistical analysis](#statistical-analysis)
     -   [Workloads](#workloads)
         -   [llama.cpp](#llamacpp)
         -   [nginx-vod-module-docker](#nginx-vod-module-docker)
@@ -128,12 +129,10 @@ If you used _perf_ to measure the energy consumption, use the following command:
 python parse.py -d results/<experiment-folder> --perf
 ```
 
-If you used another tool to measure the energy consumption, which outputs the results as samples in a table, use the following command:
+If you used another tool to measure the energy consumption, which outputs the results as samples in a table including a header, use the following command:
 
 ```bash
 python parse.py -d results/<experiment-folder> --samples
-```
-
 ```
 
 ### Statistical analysis
@@ -148,7 +147,7 @@ x2 y2 z2 ...
 x3 y3 z3 ...
 ... ... ... ...
 
-````
+```
 
 To parse the output of the `measure.py` script, see.
 
@@ -167,12 +166,13 @@ This script takes the following arguments:
 -   **_--statistics_**: print the mean and standard deviation for each part of each base image
 -   **_-x_**: the x-axis of the sample plot (must be a column in the input file)
 -   **_-y_**: the y-axis of the sample plot (must be a column in the input file)
+-   **_--samples_**: use this flag if the input file contains samples instead of means; this will ensure that the mean is calculated before doing the statistical tests
 
 For example, to perform all tests for all measurements, run the following commands, respectively:
 
 ```bash
 python analyze.py -d results/llama.cpp-{uuid} --full
-````
+```
 
 The Shapiro-Wilk test will print _False_ if the data is normal, and _True_ if it is not.
 The ANOVA test will print _True_ if the means are significantly different, and _False_ if they are not.

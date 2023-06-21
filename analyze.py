@@ -36,14 +36,17 @@ def shapiro_test(images: dict, labels: list, parts: list):
         data = list()
         print(f"{label}:")
         for part in parts:
-            x = images[label][part].values.astype(float)
             # print(list(x))
-            shapiro, p = stats.shapiro(list(x))
-            r = False
-            # If the p-value is less than 0.05, the null hypothesis is rejected (i.e. the data is not normal)
-            if p < 0.05:
-                r = True
-            data.append([part, r, p])
+            try:
+                x = images[label][part].values.astype(float)
+                shapiro, p = stats.shapiro(list(x))
+                r = False
+                # If the p-value is less than 0.05, the null hypothesis is rejected (i.e. the data is not normal)
+                if p < 0.05:
+                    r = True
+                data.append([part, r, p])
+            except:
+                print(f"Error in {part}")
             # print(f"\t {part}: {str(r)} - {p}")
         # normal.append(n)
         print(f"{pd.DataFrame(data, columns=header)}\n")
@@ -236,6 +239,7 @@ def parse_args(argv):
     statistical_test = list()
     x_value = ""
     y_value = ""
+    file_type = ""
 
     # Get the arguments provided by the user
     opts, args = getopt.getopt(
@@ -253,6 +257,7 @@ def parse_args(argv):
             "statistics",
             "plot",
             "plot-samples",
+            "samples",
         ],
     )
     for opt, arg in opts:
@@ -285,14 +290,16 @@ def parse_args(argv):
             x_value = arg
         elif opt == "-y":
             y_value = arg
+        elif opt == "--samples":
+            file_type = "samples"
 
-    return files, parts, statistical_test, x_value, y_value
+    return files, parts, statistical_test, x_value, y_value, file_type
 
 
 def main(argv):
     images = {}
     images_samples = {}
-    files, parts, statistical_test, x_value, y_value = parse_args(argv)
+    files, parts, statistical_test, x_value, y_value, file_type = parse_args(argv)
 
     # if len(files) == 0:
     #     print("No .tsv files provided")
@@ -309,7 +316,9 @@ def main(argv):
     if len(images) == 0:
         print("No (correct) .tsv files provided")
         return
-
+    
+    if file_type == "samples":
+        images["ubuntulatest"] = images["ubuntulatest"].groupby("Run")["Watts"].mean().reset_index()
     labels, all_parts = get_lists(images)
 
     for p in parts:
@@ -323,6 +332,7 @@ def main(argv):
         parts = all_parts
 
     # labels = list(images.keys())
+
 
     if len(statistical_test) == 0:
         print("No statistical test selected.")
