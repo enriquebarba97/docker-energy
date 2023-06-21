@@ -183,11 +183,17 @@ def init_queue(images, number, shuffle_mode):
 
 
 def set_cpus(cpus):
-    cpus = cpus.replace(" ", "").split(",")
-    total_cpus = set(range(os.cpu_count()))
     isolate_cpus = set()
     background_cpus = set(range(os.cpu_count()))
 
+    if cpus == "":
+        isolate_cpus = ",".join(str(i) for i in list(background_cpus))
+        background_cpus = ",".join(str(i) for i in list(background_cpus))
+        return isolate_cpus, background_cpus
+
+
+    total_cpus = set(range(os.cpu_count()))
+    cpus = cpus.replace(" ", "").split(",")
     for cpu in cpus:
         if "-" in cpu:
             cpu_range = re.split("-", cpu)
@@ -239,15 +245,15 @@ def main(argv):
     )
 
     # Initiate the preparation phase: building the images and warming up the machine
-    print(arguments["prepare_command"])
-    # execute(arguments["prepare_command"])
+    # print(arguments["prepare_command"])
+    execute(arguments["prepare_command"])
 
-    # run(arguments["monitor_command"], queue)
+    run(arguments["monitor_command"], queue)
 
-    # # Remove the base images used in the experiment
-    # remove_command = arguments["prepare_command"].copy()
-    # remove_command[1] = "remove"
-    # execute(remove_command)
+    # Remove the base images used in the experiment
+    remove_command = arguments["prepare_command"].copy()
+    remove_command[1] = "remove"
+    execute(remove_command)
 
     # Parse the results
     # directory = f"results/{arguments['workload']}-{arguments['exp_id']}"
