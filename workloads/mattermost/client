@@ -18,7 +18,11 @@ done
 echo "Server started, running tests"
 
 
-npm run cypress:run --prefix ${PWD}/mattermost/e2e-tests/cypress -- --spec ${PWD}/mattermost/e2e-tests/cypress/tests/integration/channels/accessibility/accessibility_account_settings_spec.js --config video=false
+npm run cypress:run --prefix ${PWD}/mattermost/e2e-tests/cypress -- \
+--spec "${PWD}/mattermost/e2e-tests/cypress/tests/integration/channels/accessibility/accessibility_account_settings_spec.js,\
+${PWD}/mattermost/e2e-tests/cypress/tests/integration/channels/account_settings/profile/account_settings_position_spec.ts,\
+${PWD}/mattermost/e2e-tests/cypress/tests/integration/channels/autocomplete/database/users_in_channel_switcher_spec.js" \
+--config video=false
 
 # docker stop mattermost-"${BASE/:/}" 
 docker compose -f ${PWD}/workloads/mattermost/docker-compose.yml down

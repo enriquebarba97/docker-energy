@@ -2,23 +2,47 @@ import os, sys, getopt, subprocess, uuid, random, re
 import parse
 
 
-def execute(command: list):
-    # Execute the given command
-    subprocess.call(command)
+class Workload:
+    def __init__(self, workload: str, images: set, queue: list, isolate_cpus: str, background_cpus: str, warmup: int, pause: int):
+        self.exp_id = str(uuid.uuid4())
+        self.workload = workload
+        self.images = images
+        self.queue = queue
+        self.isolate_cpus = isolate_cpus
+        self.background_cpus = background_cpus
+        self.warmup = warmup
+        self.pause = pause
 
 
-def run(command: list, queue: list):
-    # Current execution number in total
-    total = 1
+    def prepare(self):
+        # Execute the given command
+        command = ["bash", "prepare", "-x", self.exp_id, "-l", self.workload, "-i", self.isolate_cpus, "-j", self.background_cpus, "-w", str(self.warmup)]
+        for image in self.images:
+            command += ["-b", image]
+        subprocess.call(command)
 
-    # Monitor the selected images for the selected number of times in regular order
-    for image in queue:
-        # Execute the monitoring script;
-        # -r is the current run for the image;
-        # -t is the current run in total
-        run_command = command + ["-b", image, "-r", str(total)]
-        execute(run_command)
-        total += 1
+
+    def run(self):
+        # Current execution number in total
+        total = 1
+
+        command = ["bash", "monitor", "-x", self.exp_id, "-l", self.workload, "-i", self.isolate_cpus, "-j", self.background_cpus, "-p", str(self.pause)]
+
+        # Monitor the selected images for the selected number of times in regular order
+        for image in self.queue:
+            # Execute the monitoring script;
+            # -r is the current run for the image;
+            # -t is the current run in total
+            run_command = command + ["-b", image, "-r", str(total)]
+            subprocess.call(run_command)
+            total += 1
+
+    def remove(self):
+        command = ["bash", "remove", "-x", self.exp_id, "-l", self.workload, "-i", self.isolate_cpus, "-j", self.background_cpus]
+        for image in self.images:
+            command += ["-b", image]
+        subprocess.call(command)
+
 
 
 def help():
@@ -39,17 +63,12 @@ def help():
 
 
 def parse_args(argv):
-    # Create an ID for the experiment
-    exp_id = str(uuid.uuid4())
-
-    # Set up the commands for the scripts
-    prepare_command = ["bash", "prepare", "-x", exp_id]
-    monitor_command = ["bash", "monitor", "-x", exp_id]
-
     # Default values
-    workload = ""
+    workloads = set()
     images = set()
     number = 1
+    warmup = 10
+    pause = 15
     shuffle_mode = False
     help_mode = False
     cpus = ""
@@ -90,10 +109,10 @@ def parse_args(argv):
         elif opt in ["-i", "--isolate"]:
             cpus = arg
         elif opt in ["-l", "--workload"]:
-            workload = arg
-            opt = "-l"
-            prepare_command += [opt, arg]
-            monitor_command += [opt, arg]
+            workloads.add(arg)
+            # opt = "-l"
+            # prepare_command += [opt, arg]
+            # monitor_command += [opt, arg]
         # Add the images to the list and the preparation command
         elif opt in ["-b", "--base"]:
             if ":" not in arg:  # If no version is specified, use the latest
@@ -104,28 +123,27 @@ def parse_args(argv):
                 arg += "latest"
             if arg not in images:
                 images.add(arg)
-                prepare_command += ["-b", arg]
         # Set the number of runs
         elif opt in ["-n", "--runs"]:
             number = arg
         # Set up the warm up time (s)
         elif opt in ["-w", "--warmup"]:
-            opt = "-w"
-            prepare_command += [opt, arg]
+            try:
+                warmup = int(arg)
+            except ValueError:
+                print("Warm up time must be an integer")
         # Set up the pause time (s)
         elif opt in ["-p", "--pause"]:
-            opt = "-p"
-            monitor_command += [opt, arg]
+            try:
+                pause = int(arg)
+            except ValueError:
+                print("Pause time must be an integer")
         # Set the options for the Docker run command
         elif opt in ["-o", "--options"]:
             opt = "-o"
-            prepare_command += [opt, arg]
-            monitor_command += [opt, arg]
         # Set the command for the Docker run command
         elif opt in ["-c", "--command"]:
             opt = "-c"
-            prepare_command += [opt, arg]
-            monitor_command += [opt, arg]
         # Set help mode to true
         elif opt in ["-h", "--help"]:
             help_mode = True
@@ -137,41 +155,19 @@ def parse_args(argv):
                 "debian:latest",
                 "centos:latest",
             }
-            prepare_command += [
-                "-b",
-                "ubuntu:latest",
-                "-b",
-                "alpine:latest",
-                "-b",
-                "debian:latest",
-                "-b",
-                "centos:latest",
-            ]
-
-    # # Add the images that needs to be built to the prepare command
-    # for image in images:
-    #     prepare_command += ["-b", image]
-    #     queue += [image] * int(number)
-
-    # # The queue is a dictionary with the image as key and number of runs as value
-    # # queue = {x: int(number) for x in images}
-    # if shuffle_mode:
-    #     random.shuffle(queue)
 
     # Put the arguments in a dictionary
     arguments = {
-        "prepare_command": prepare_command,
-        "monitor_command": monitor_command,
         "images": images,
         "number": number,
         "shuffle_mode": shuffle_mode,
         "help_mode": help_mode,
-        "workload": workload,
-        "exp_id": exp_id,
+        "workloads": workloads,
         "cpus": cpus,
+        "warmup": warmup,
+        "pause": pause,
     }
     return arguments
-
 
 def init_queue(images, number, shuffle_mode):
     queue = list()
@@ -183,33 +179,23 @@ def init_queue(images, number, shuffle_mode):
 
 
 def set_cpus(cpus):
-    isolate_cpus = set()
-    background_cpus = set(range(os.cpu_count()))
+    isolate_cpus = list()
+    background_cpus = list(range(os.cpu_count()))
 
     if cpus == "":
-        isolate_cpus = ",".join(str(i) for i in list(background_cpus))
-        background_cpus = ",".join(str(i) for i in list(background_cpus))
         return isolate_cpus, background_cpus
 
+    if "-" in cpus:
+        print("Specify a set of CPUs instead of a range (e.g. -i 0,1,2,3)")
 
-    total_cpus = set(range(os.cpu_count()))
-    cpus = cpus.replace(" ", "").split(",")
-    for cpu in cpus:
-        if "-" in cpu:
-            cpu_range = re.split("-", cpu)
-            try:
-                if int(cpu_range[0]) in total_cpus and int(cpu_range[-1]) in total_cpus:
-                    isolate_cpus |= set(range(int(cpu_range[0]), int(cpu_range[-1]) + 1))
-                    background_cpus -= set(range(int(cpu_range[0]), int(cpu_range[-1]) + 1))
-            except ValueError:
-                print("Invalid CPU range")
-        else:
-            try:
-                if int(cpu) in total_cpus:
-                    isolate_cpus.add(int(cpu))
-                    background_cpus.remove(int(cpu))
-            except ValueError:
-                print("Invalid CPU")
+    for c in re.split(",|-| ", cpus.replace(" ", "")):
+        try:
+            if int(c) not in background_cpus:
+                print(f"CPU {c} is not available, select a core from {background_cpus}")
+            isolate_cpus.append(c)
+            background_cpus.remove(int(c))
+        except ValueError:
+            print(f"{c} is not a valid integer")
 
     isolate_cpus = ",".join(str(i) for i in list(isolate_cpus))
     background_cpus = ",".join(str(i) for i in list(background_cpus))
@@ -227,7 +213,7 @@ def main(argv):
         return
 
     # If no workload is specified, do not monitor
-    if len(arguments["workload"]) == 0:
+    if len(arguments["workloads"]) == 0:
         print('No workload provided (e.g. -w "llama.cpp" or -w "video-stream")')
         return
 
@@ -237,23 +223,16 @@ def main(argv):
 
     isolate_cpus, background_cpus = set_cpus(arguments["cpus"])
 
-    arguments["prepare_command"] += ["-i", isolate_cpus, "-j", background_cpus]
-    arguments["monitor_command"] += ["-i", isolate_cpus, "-j", background_cpus]
+    for workload in arguments["workloads"]:
+        queue = init_queue(
+            arguments["images"], arguments["number"], arguments["shuffle_mode"]
+        )
 
-    queue = init_queue(
-        arguments["images"], arguments["number"], arguments["shuffle_mode"]
-    )
+        current_workload = Workload(workload, arguments["images"], queue, isolate_cpus, background_cpus, arguments["warmup"], arguments["pause"])
 
-    # Initiate the preparation phase: building the images and warming up the machine
-    # print(arguments["prepare_command"])
-    execute(arguments["prepare_command"])
-
-    run(arguments["monitor_command"], queue)
-
-    # Remove the base images used in the experiment
-    remove_command = arguments["prepare_command"].copy()
-    remove_command[1] = "remove"
-    execute(remove_command)
+        current_workload.prepare()
+        current_workload.run()
+        current_workload.remove()
 
     # Parse the results
     # directory = f"results/{arguments['workload']}-{arguments['exp_id']}"
