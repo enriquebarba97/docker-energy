@@ -17,6 +17,11 @@ done
 
 echo "Server started, running tests"
 
+source ~/.nvm/nvm.sh
+nvm use 16
+
+yarn --cwd ${PWD}/cypress-realworld-app/ db:seed:dev && \
+yarn --cwd ${PWD}/cypress-realworld-app/ predev:cognito:ci
 
 yarn --cwd ${PWD}/cypress-realworld-app/ cypress run --config video=false
 

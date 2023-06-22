@@ -38,7 +38,7 @@ if [[ "$WORKLOAD" == "llama.cpp" ]]; then
     OPTIONS=(-v "${PWD}"/llama.cpp/models:/models)
   fi
   if [[ ${#COMMAND[@]} -eq 0 ]]; then
-    COMMAND=(-m /models/7B/ggml-model-q4_0.bin -p "Building a website can be done in 10 simple steps:" -n 64 --seed 12345678 -t 2)
+    COMMAND=(-m /models/7B/ggml-model-q4_0.bin -p "Building a website can be done in 10 simple steps:" -n 512 --seed 12345678 -t 2)
   fi
 elif [[ "$WORKLOAD" == "nginx-vod-module-docker" ]]; then
   if [[ ${#OPTIONS[@]} -eq 0 ]]; then
@@ -71,10 +71,12 @@ if ${CLIENT} ; then
 fi
 
 if ${COMPOSE} ; then
-  BACKGROUND_CPU="${BACKGROUND}" ISOLATE_CPU="${ISOLATE}" NAME="${BASE/:/}" perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
+#   BACKGROUND_CPU="${BACKGROUND}" ISOLATE_CPU="${ISOLATE}" NAME="${BASE/:/}" perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
+  BACKGROUND_CPU="${BACKGROUND}" ISOLATE_CPU="${ISOLATE}" NAME="${BASE/:/}" perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -e power/energy-pkg/ \
   docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up
 else
-  perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -C "${ISOLATE}" -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/ \
+  # perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -C "${ISOLATE}" -e power/energy-cores/,power/energy-ram/,power/energy-gpu/,power/energy-pkg/
+  perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -C "${ISOLATE}" -e power/energy-pkg/ \
   docker run --name "${WORKLOAD}"-"${BASE/:/}" --cpuset-cpus "${ISOLATE}" "${OPTIONS[@]}" "${WORKLOAD}"-"${BASE/:/}" "${COMMAND[@]}"
 fi
 

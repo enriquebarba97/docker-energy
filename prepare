@@ -19,7 +19,7 @@ set_defaults() {
       OPTIONS=(-v "${PWD}"/llama.cpp/models:/models)
     fi
     if [[ ${#COMMAND[@]} -eq 0 ]]; then
-      COMMAND=(-m /models/7B/ggml-model-q4_0.bin -p "Building a website can be done in 10 simple steps:" -n 32 --seed 12345679 -t 2)
+      COMMAND=(-m /models/7B/ggml-model-q4_0.bin -p "Building a website can be done in 10 simple steps:" -n 512 --seed 12345679 -t 2)
     fi
   elif [[ "$1" == "nginx-vod-module-docker" ]]; then
     if [[ ${#OPTIONS[@]} -eq 0 ]]; then
