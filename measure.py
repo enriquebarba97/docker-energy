@@ -179,7 +179,7 @@ def init_queue(images, number, shuffle_mode):
 
 
 def set_cpus(cpus):
-   isolate_cpus = set()
+    isolate_cpus = set()
     background_cpus = set(range(os.cpu_count()))
 
     if cpus == "":
