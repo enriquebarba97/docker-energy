@@ -103,7 +103,7 @@ It takes the following arguments:
 -   **_-p_** or **_--pause_**: Pause time (s) (e.g. -p 60) (default 15)
 -   **_-o_** or **_--options_**: Options for the Docker run command (default "")
 -   **_-c_** or **_--command_**: Command for the Docker run command (default "")
--   **_-i_** or **_--isolate_**: Specify the cpus on which the containerized workload must be pinned; the client processes will be pinned on the remaining cpus (e.g. -i 0-3, 6)
+-   **_-i_** or **_--isolate_**: Specify the cpus on which the containerized workload must be pinned; the client processes will be pinned on the remaining cpus (e.g. -i "0-3, 6")
 -   **_-a_** or **_--all_**: Monitor all compatible base images (i.e. ubuntu, debian, alpine, centos)
 -   **_--shuffle_**: Enables shuffle mode; random order of monitoring base images
 
@@ -149,7 +149,7 @@ x3 y3 z3 ...
 
 ```
 
-To parse the output of the `measure.py` script, see.
+To parse the output of the `measure.py` script, see [Parsing the results](#parsing-the-results).
 
 This script takes the following arguments:
 
