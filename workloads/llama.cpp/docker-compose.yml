@@ -1,0 +1,13 @@
+services:
+    llama.cpp:
+        image: mattermost-${NAME}
+        container_name: mattermost-${NAME}
+        cpuset: ${ISOLATE_CPU}
+        build:
+            context: '${PWD}/llama.cpp'
+            dockerfile: '$PWD/workloads/llama.cpp/${FILE}'
+            args:
+                - BASE=${IMAGE}
+        volumes:
+            - '${PWD}/llama.cpp/models:/models'
+        command: -m /models/7B/ggml-model-q4_0.bin -p "Building a website can be done in 10 simple steps:" -n 32 --seed 12345678 -t 2
