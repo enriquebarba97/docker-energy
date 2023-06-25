@@ -4,9 +4,9 @@ services:
         image: mattermost-db
         container_name: mattermost-db
         cpuset: ${BACKGROUND_CPU}
-        # build:
-        #     context: .
-        #     dockerfile: DockerfileMysql
+        build:
+            context: .
+            dockerfile: DockerfileMysql
         # environment:
         #     MYSQL_ROOT_PASSWORD: 'mostest'
         #     MYSQL_USER: 'mmuser'
@@ -16,16 +16,37 @@ services:
         #     - '3306:3306'
         # expose:
         #     - '3306'
+    tests:
+        image: mattermost-cypress
+        container_name: mattermost-cypress
+        cpuset: ${BACKGROUND_CPU}
+        build:
+            context: '${PWD}/mattermost/e2e-tests/cypress'
+            dockerfile: '${PWD}/workloads/mattermost/DockerfileCypress'
+        depends_on:
+            mattermost:
+                condition: service_healthy
+        network_mode: host
+        command: >-
+            -- --spec 
+            "tests/integration/channels/accessibility/accessibility_account_settings_spec.js,tests/integration/channels/account_settings/profile/account_settings_position_spec.ts,tests/integration/channels/autocomplete/database/users_in_channel_switcher_spec.js"
     mattermost:
         image: mattermost-${NAME}
         container_name: mattermost-${NAME}
         cpuset: ${ISOLATE_CPU}
-        # build:
-        #     context: .
-        #     dockerfile: ${FILE}
-        #     args:
-        #         - BASE=${IMAGE}
+        build:
+            context: .
+            dockerfile: ${FILE}
+            args:
+                - BASE=${IMAGE}
         ports:
             - '8065:8065'
         extra_hosts:
             - 'dockerhost:127.0.0.1'
+        healthcheck:
+            # test: curl --fail --head localhost:3000 || exit 1
+            test: curl --head -X GET localhost:8065
+            interval: 10s
+            retries: 20
+            start_period: 5s
+            timeout: 10s

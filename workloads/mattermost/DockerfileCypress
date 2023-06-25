@@ -1,0 +1,28 @@
+FROM node:16
+# FROM cypress/included:latest
+
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb
+
+WORKDIR /app
+
+COPY package.json package-lock.json .
+
+RUN npm i --force
+
+COPY . .
+
+
+
+
+# ENV NODE_ENV=development
+# ENV BROWSER=none
+
+# RUN yarn db:seed:dev && \
+#     yarn predev:cognito:ci
+
+# EXPOSE 3000
+
+ENTRYPOINT [ "npm", "run", "cypress:run"]
+# , "--spec", "tests/integration/channels/accessibility/accessibility_account_settings_spec.js,tests/integration/channels/account_settings/profile/account_settings_position_spec.ts,tests/integration/channels/autocomplete/database/users_in_channel_switcher_spec.js"]
+    # "--config video=false" ]

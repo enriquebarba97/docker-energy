@@ -38,7 +38,7 @@ class Workload:
             total += 1
 
     def remove(self):
-        command = ["bash", "remove", "-x", self.exp_id, "-l", self.workload, "-i", self.isolate_cpus, "-j", self.background_cpus]
+        command = ["bash", "remove", "-x", self.exp_id, "-l", self.workload]
         for image in self.images:
             command += ["-b", image]
         subprocess.call(command)

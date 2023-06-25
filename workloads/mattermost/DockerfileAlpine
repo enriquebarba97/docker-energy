@@ -5,7 +5,7 @@ ARG BASE=alpine:latest
 
 FROM ${BASE}
 
-RUN apk update && apk add --no-cache ca-certificates libc6-compat && apk add --no-cache --upgrade bash
+RUN apk update && apk add --no-cache ca-certificates libc6-compat && apk add --no-cache --upgrade bash curl curl-dev
 
 ENV MYSQL_ROOT_PASSWORD=mostest
 ENV MYSQL_USER=mmuser

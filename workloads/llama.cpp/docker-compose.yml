@@ -1,6 +1,6 @@
 services:
     llama.cpp:
-        image: mattermost-${NAME}
+        image: llama.cpp-${NAME}
         container_name: mattermost-${NAME}
         cpuset: ${ISOLATE_CPU}
         build:
