@@ -1,4 +1,4 @@
-import os, sys, getopt, subprocess, uuid, random, re
+import os, sys, getopt, subprocess, uuid, random, re, time
 import parse
 
 
@@ -56,7 +56,8 @@ def help():
         "   -p --pause          Pause time (s) (e.g. -p 60) (default 15)",
         '   -o --options        Options for the Docker run command (default "")',
         '   -c --command        Command for the Docker run command (default "")',
-        "   -a --all            Monitor all compatible base images (i.e. ubuntu, debian, alpine, centos)",
+        "   --all-images        Monitor all compatible base images (i.e. ubuntu, debian, alpine, centos)",
+        "   --all-workloads     Monitor all compatible workloads (i.e. llama.cpp, nginx-vod-module-docker, cypress-realworld-app, mattermost)",
         "   --shuffle           Enables shuffle mode; random order of monitoring base images",
         sep=os.linesep,
     )
@@ -83,7 +84,6 @@ def parse_args(argv):
         "p:"  # pause time
         "o:"  # options for the Docker run command
         "c:"  # command for the Docker run command
-        "a"  # all compatible base images
         "i:"  # isolate cpus
         "s"  # shuffle mode
         "h",  # help
@@ -91,7 +91,8 @@ def parse_args(argv):
             "isolate=",
             "shuffle",
             "help",
-            "all",
+            "all-images",
+            "all-workloads",
             "workload=",
             "base=",
             "runs=",
@@ -110,9 +111,6 @@ def parse_args(argv):
             cpus = arg
         elif opt in ["-l", "--workload"]:
             workloads.add(arg)
-            # opt = "-l"
-            # prepare_command += [opt, arg]
-            # monitor_command += [opt, arg]
         # Add the images to the list and the preparation command
         elif opt in ["-b", "--base"]:
             if ":" not in arg:  # If no version is specified, use the latest
@@ -148,12 +146,19 @@ def parse_args(argv):
         elif opt in ["-h", "--help"]:
             help_mode = True
         # Add all (pre-selected) images to the image set
-        elif opt in ["-a", "--all"]:
+        elif opt == "--all-images":
             images |= {
                 "ubuntu:latest",
                 "alpine:latest",
                 "debian:latest",
-                "centos:latest",
+                "centos:latest"
+            }
+        elif opt == "--all-workloads":
+            workloads |= {
+                "llama.cpp",
+                "nginx-vod-module-docker",
+                "cypress-realworld-app",
+                "mattermost"
             }
 
     # Put the arguments in a dictionary
@@ -243,6 +248,7 @@ def main(argv):
         current_workload.prepare()
         current_workload.run()
         current_workload.remove()
+        time.sleep(15)
 
     # Parse the results
     # directory = f"results/{arguments['workload']}-{arguments['exp_id']}"
