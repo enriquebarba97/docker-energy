@@ -12,38 +12,11 @@ set_dockerfile() {
   fi
 }
 
-set_defaults() {
-  # Setup the default options and commands for the Docker run command
-  if [[ "$1" == "llama.cpp" ]]; then
-    if [[ ${#OPTIONS[@]} -eq 0 ]]; then
-      OPTIONS=(-v "${PWD}"/llama.cpp/models:/models)
-    fi
-    if [[ ${#COMMAND[@]} -eq 0 ]]; then
-      COMMAND=(-m /models/7B/ggml-model-q4_0.bin -p "Building a website can be done in 10 simple steps:" -n 512 --seed 12345679 -t 2)
-    fi
-  elif [[ "$1" == "nginx-vod-module-docker" ]]; then
-    if [[ ${#OPTIONS[@]} -eq 0 ]]; then
-      OPTIONS=(-p 3030:80 -v "${PWD}"/nginx-vod-module-docker/examples/videos:/opt/static/videos -v "${PWD}"/workloads/nginx-vod-module-docker/nginx.conf:/usr/local/nginx/conf/nginx.conf)
-    fi
-    CLIENT=true
-  elif [[ "$1" == "cypress-realworld-app" ]]; then
-    docker build -t "$1"-react -f workloads/"$1"/DockerfileReact "${DIRECTORY}$1"
-    CLIENT=true
-    COMPOSE=true
-  elif [[ "$1" == "mattermost" ]]; then
-    DIRECTORY="workloads/"
-    docker build -t "$1"-db -f workloads/"$1"/DockerfileMysql "${DIRECTORY}$1"
-    CLIENT=true
-    COMPOSE=true
-  fi
-}
-
 warmup() {
   echo -e "\n# warmup\n" >> logs/"${WORKLOAD}"-"${EXPID}"/warmup.txt
   taskset -c "${BACKGROUND}" sysbench cpu --time="${WARMUP}" --cpu-max-prime=100000 --threads=2 run | tee -a logs/"${WORKLOAD}"-"${EXPID}"/warmup.txt
   echo -e "\n\n" >> logs/"${WORKLOAD}"-"${EXPID}"/warmup.txt
 }
-
 
 # Default values
 EXPID=-1
@@ -54,9 +27,6 @@ OPTIONS=()
 COMMAND=()
 ISOLATE=""
 BACKGROUND=""
-CLIENT=false
-COMPOSE=false
-DIRECTORY=""
 
 # Get the arguments
 while getopts "x:l:b:w:o:c:i:j:" arg; do
@@ -77,12 +47,10 @@ while getopts "x:l:b:w:o:c:i:j:" arg; do
   esac
 done
 
-set_defaults "${WORKLOAD}"
-
 # Setup the log files
 mkdir -p logs/"${WORKLOAD}-${EXPID}"
 mkdir -p results/"${WORKLOAD}-${EXPID}"
-mkdir -p results/"${WORKLOAD}-${EXPID}"/samples
+# mkdir -p results/"${WORKLOAD}-${EXPID}"/samples
 
 echo -e "### experiment ${EXPID} ###\n workload: ${WORKLOAD}\n" >> logs/"${WORKLOAD}-${EXPID}"/warmup.txt
 date +"# started on %c %n" >> logs/"${WORKLOAD}-${EXPID}"/warmup.txt
@@ -95,25 +63,11 @@ for i in "${BASE[@]}"; do
 
   set_dockerfile "${i}"
   
-  # docker build -t "${WORKLOAD}"-"${i/:/}" -f workloads/"${WORKLOAD}"/"${DOCKERFILE}" --build-arg BASE="${i}" "${DIRECTORY}${WORKLOAD}"
   NAME="${i/:/}" FILE="${DOCKERFILE}" IMAGE="${i}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml build
 
-  # Run the docker run command as warmup
-  # if ${CLIENT} ; then
-  #   taskset -c "${BACKGROUND}" bash workloads/"${WORKLOAD}"/client -b "${i}" &
-  # fi
-  
-  # if ${COMPOSE} ; then
-  #   BACKGROUND_CPU="${BACKGROUND}" ISOLATE_CPU="${ISOLATE}" NAME="${i/:/}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up
-  # else
-  #   # docker run --name "${WORKLOAD}"-"${i/:/}" --cpuset-cpus "${ISOLATE}" "${OPTIONS[@]}" "${WORKLOAD}"-"${i/:/}" "${COMMAND[@]}"
-  #   # docker rm "${WORKLOAD}"-"${i/:/}"
-  #   NAME="${i/:/}" FILE="${DOCKERFILE}" IMAGE="${i}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up
-  #   NAME="${i/:/}" FILE="${DOCKERFILE}" IMAGE="${i}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml down
-  # fi
   NAME="${i/:/}" FILE="${DOCKERFILE}" IMAGE="${i}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up --abort-on-container-exit
-  NAME="${i/:/}" FILE="${DOCKERFILE}" IMAGE="${i}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml down
 
+  NAME="${i/:/}" FILE="${DOCKERFILE}" IMAGE="${i}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml down
 done
 
 # Log the docker images information
