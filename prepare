@@ -95,19 +95,24 @@ for i in "${BASE[@]}"; do
 
   set_dockerfile "${i}"
   
-  docker build -t "${WORKLOAD}"-"${i/:/}" -f workloads/"${WORKLOAD}"/${DOCKERFILE} --build-arg BASE="${i}" "${DIRECTORY}${WORKLOAD}"
+  # docker build -t "${WORKLOAD}"-"${i/:/}" -f workloads/"${WORKLOAD}"/"${DOCKERFILE}" --build-arg BASE="${i}" "${DIRECTORY}${WORKLOAD}"
+  NAME="${i/:/}" FILE="${DOCKERFILE}" IMAGE="${i}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml build
 
   # Run the docker run command as warmup
-  if ${CLIENT} ; then
-    taskset -c "${BACKGROUND}" bash workloads/"${WORKLOAD}"/client -b "${i}" &
-  fi
+  # if ${CLIENT} ; then
+  #   taskset -c "${BACKGROUND}" bash workloads/"${WORKLOAD}"/client -b "${i}" &
+  # fi
   
-  if ${COMPOSE} ; then
-    BACKGROUND_CPU="${BACKGROUND}" ISOLATE_CPU="${ISOLATE}" NAME="${i/:/}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up
-  else
-    docker run --name "${WORKLOAD}"-"${i/:/}" --cpuset-cpus "${ISOLATE}" "${OPTIONS[@]}" "${WORKLOAD}"-"${i/:/}" "${COMMAND[@]}"
-    docker rm "${WORKLOAD}"-"${i/:/}"
-  fi
+  # if ${COMPOSE} ; then
+  #   BACKGROUND_CPU="${BACKGROUND}" ISOLATE_CPU="${ISOLATE}" NAME="${i/:/}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up
+  # else
+  #   # docker run --name "${WORKLOAD}"-"${i/:/}" --cpuset-cpus "${ISOLATE}" "${OPTIONS[@]}" "${WORKLOAD}"-"${i/:/}" "${COMMAND[@]}"
+  #   # docker rm "${WORKLOAD}"-"${i/:/}"
+  #   NAME="${i/:/}" FILE="${DOCKERFILE}" IMAGE="${i}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up
+  #   NAME="${i/:/}" FILE="${DOCKERFILE}" IMAGE="${i}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml down
+  # fi
+  NAME="${i/:/}" FILE="${DOCKERFILE}" IMAGE="${i}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up --abort-on-container-exit
+  NAME="${i/:/}" FILE="${DOCKERFILE}" IMAGE="${i}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml down
 
 done
 

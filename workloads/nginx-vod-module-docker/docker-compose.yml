@@ -1,0 +1,25 @@
+services:
+    vod-module:
+        image: nginx-vod-module-docker-${NAME}
+        container_name: nginx-vod-module-docker-${NAME}
+        cpuset: ${ISOLATE_CPU}
+        build:
+            context: '${PWD}/nginx-vod-module-docker'
+            dockerfile: '$PWD/workloads/nginx-vod-module-docker/${FILE}'
+            args:
+                - BASE=${IMAGE}
+        volumes:
+            - '${PWD}/nginx-vod-module-docker/examples/videos:/opt/static/videos'
+            - '${PWD}/workloads/nginx-vod-module-docker/nginx.conf:/usr/local/nginx/conf/nginx.conf'
+        ports:
+            - '3030:80'
+    vlc:
+        image: ngninx-vod-module-docker-vlc
+        container_name: nginx-vod-module-docker-vlc
+        cpuset: ${BACKGROUND_CPU}
+        build:
+            context: '${PWD}/nginx-vod-module-docker'
+            dockerfile: '$PWD/workloads/nginx-vod-module-docker/DockerfileVlc'
+        depends_on:
+            - vod-module
+        network_mode: host

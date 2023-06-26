@@ -9,15 +9,11 @@ services:
             context: '${PWD}/cypress-realworld-app'
             dockerfile: '${PWD}/workloads/cypress-realworld-app/DockerfileReact'
         healthcheck:
-            # test: curl --fail --head localhost:3000 || exit 1
             test: curl --head -X GET localhost:3000
             interval: 10s
             retries: 20
             start_period: 5s
             timeout: 10s
-        environment:
-            - REACT_APP_API_URL=http://backend:3001
-            - API_URL=http://backend:3001
     tests:
         image: cypress-realworld-app-cypress
         container_name: cypress-realworld-app-cypress
@@ -25,10 +21,6 @@ services:
         build:
             context: '${PWD}/cypress-realworld-app'
             dockerfile: '${PWD}/workloads/cypress-realworld-app/DockerfileCypress'
-        # environment:
-        #     - CYPRESS_baseUrl=http://frontend:3000
-        #     - REACT_APP_API_URL=http://backend:3001
-        #     - API_URL=http://backend:3001
         depends_on:
             frontend:
                 condition: service_healthy

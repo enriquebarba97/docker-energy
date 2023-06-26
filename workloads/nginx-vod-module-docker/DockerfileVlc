@@ -1,0 +1,10 @@
+FROM ubuntu:latest
+
+
+RUN apt-get update \
+&& apt-get install -y vlc \
+&& useradd -m vlcuser
+
+USER vlcuser
+
+ENTRYPOINT [ "cvlc", "http://localhost:3030/hls/devito,360p.mp4,480p.mp4,720p.mp4,.en_US.vtt,.urlset/master.m3u8", "--sout", "#standard{access=http,mux=ogg,dst=localhost:3000}", "--play-and-exit"]

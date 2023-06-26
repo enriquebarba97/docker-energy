@@ -5,7 +5,7 @@ WORKLOAD="llama.cpp"
 BASE=()
 
 # Get the arguments
-while getopts "l:b:x:o:c:i:j" arg; do
+while getopts "l:b:x:" arg; do
   case $arg in
     l) WORKLOAD=$OPTARG;;
     b) BASE+=("$OPTARG");;
@@ -13,14 +13,19 @@ while getopts "l:b:x:o:c:i:j" arg; do
   esac
 done
 
-if [[ "$WORKLOAD" == "cypress-realworld-app" ]]; then
-  # kill "$(lsof -t -i:3000)"
-  docker rmi cypress-realworld-app-react
-elif [[ "$WORKLOAD" == "mattermost" ]]; then
-  docker rmi mattermost-db
-fi
+echo "REMOVE WORKLOAD: ${WORKLOAD}"
 
-# Remove the docker images of this experiment
-for i in "${BASE[@]}"; do
-  docker rmi "${WORKLOAD}"-"${i/:/}"
-done
+# if [[ "$WORKLOAD" == "cypress-realworld-app" ]]; then
+#   # kill "$(lsof -t -i:3000)"
+#   docker rmi cypress-realworld-app-react
+# elif [[ "$WORKLOAD" == "mattermost" ]]; then
+#   docker rmi mattermost-db
+# fi
+
+# # Remove the docker images of this experiment
+# for i in "${BASE[@]}"; do
+#   echo "REMOVING: ${WORKLOAD}-${i/:/}"
+#   docker rmi "${WORKLOAD}"-"${i/:/}"
+# done
+
+docker rmi $(docker images --format '{{.Repository}}:{{.Tag}}' --filter=reference="${WORKLOAD}*")
