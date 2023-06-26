@@ -19,11 +19,11 @@ def parse_results_perf(file_name: str, directory: str = "results"):
     with open(file_name) as f:
         lines = f.readlines()
         data = {
-            "cores (J)": [],
-            "ram (J)": [],
-            "gpu (J)": [],
-            "pkg (J)": [],
             "time (s)": [],
+            # "cores (J)": [],
+            # "ram (J)": [],
+            # "gpu (J)": [],
+            "pkg (J)": [],
         }
         # image = ""
 
@@ -33,7 +33,7 @@ def parse_results_perf(file_name: str, directory: str = "results"):
                 continue
             if "experiment" in line:
                 xid = line[2]
-                if len(data["cores (J)"]) > 0:
+                if len(data["time (s)"]) > 0:
                     df = pd.DataFrame(data)
                     create_file(image, df, directory)
                     data = {k: [] for k in data}
@@ -69,7 +69,7 @@ def parse_results_perf(file_name: str, directory: str = "results"):
 
 def parse_results_samples(file_name: str, directory: str = "results"):
     with open(file_name) as f:
-        lines = f.readlines()
+        lines = f.read().splitlines()
         samples = list()
         data = list()
         headers = list()
@@ -77,7 +77,7 @@ def parse_results_samples(file_name: str, directory: str = "results"):
         image = ""
         start = False
         results = False
-        experiment_info = ["### experiment", "# cpus:", "# workload:"]
+        experiment_info = ["### experiment", "# cpus:", "# workload:", "# started on"]
         for line in lines:
             if len(line.split()) == 0:
                 continue
@@ -91,17 +91,16 @@ def parse_results_samples(file_name: str, directory: str = "results"):
                 run = line.split()[2][:-1]
             elif start:
                 if results:
-                    line = line.split()
+                    line = line.split(",")
                     line.insert(0, run)
                     samples.append(line)
                 elif len(headers) == 0:
-                    headers = line.split()
+                    headers = line.split(",")
                     headers.insert(0, "Run")
                     results = True
                 else:
                     results = True
 
-        
     try:
         df = pd.DataFrame(samples, columns=headers)
         create_file(image, df, directory)
