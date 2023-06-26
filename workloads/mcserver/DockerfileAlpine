@@ -1,0 +1,14 @@
+ARG BASE=alpine:latest
+
+FROM ${BASE}
+
+RUN apk update && \
+    apk --no-cache --update add openjdk17-jdk openjdk17-jre
+
+WORKDIR /app/
+
+ADD . /app/
+
+EXPOSE 25565:25565
+
+CMD java -Xmx1024M -Xms1024M -jar server-1.19.1.jar nogui

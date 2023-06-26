@@ -1,8 +1,3 @@
-# ARG BASE=centos
-# ARG VERSION=latest
-
-# FROM ${BASE}:${VERSION}
-
 ARG BASE=centos:latest
 
 FROM ${BASE}
