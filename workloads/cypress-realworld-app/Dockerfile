@@ -1,8 +1,3 @@
-# ARG BASE=ubuntu
-# ARG VERSION=latest
-
-# FROM ${BASE}:${VERSION}
-
 ARG BASE=ubuntu:latest
 
 FROM ${BASE}
