@@ -281,12 +281,6 @@ def main(argv):
         help()
         return
 
-    # for workload in get_workloads("workloads"):
-    #     with open(f"workloads/{workload}/config.yml", "r") as file:
-    #         config = yaml.safe_load(file)
-
-    #     print(config["name"])
-
     # If no workload is specified, do not monitor
     if len(arguments["workloads"]) == 0 and not arguments["all_workloads"]:
         print("No workload provided, all workloads will be used")

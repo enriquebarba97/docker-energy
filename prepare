@@ -14,7 +14,7 @@ set_dockerfile() {
 
 warmup() {
   echo -e "\n# warmup\n" >> logs/"${WORKLOAD}"-"${EXPID}"/warmup.txt
-  taskset -c "${BACKGROUND}" sysbench cpu --time="${WARMUP}" --cpu-max-prime=100000 --threads=2 run | tee -a logs/"${WORKLOAD}"-"${EXPID}"/warmup.txt
+  sysbench cpu --time=`expr ${WARMUP} \* $(nproc)` --threads=$(nproc) run | tee -a logs/"${WORKLOAD}"-"${EXPID}"/warmup.txt
   echo -e "\n\n" >> logs/"${WORKLOAD}"-"${EXPID}"/warmup.txt
 }
 
