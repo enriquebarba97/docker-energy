@@ -6,9 +6,8 @@ services:
         build:
             context: .
             dockerfile: DockerfileMysql
-    tests:
+    client:
         image: mattermost-cypress
-        container_name: mattermost-cypress
         cpuset: ${BACKGROUND_CPU}
         build:
             context: '${PWD}/mattermost/e2e-tests/cypress'

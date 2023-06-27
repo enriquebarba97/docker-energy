@@ -14,9 +14,8 @@ services:
             retries: 20
             start_period: 5s
             timeout: 10s
-    tests:
+    client:
         image: cypress-realworld-app-cypress
-        container_name: cypress-realworld-app-cypress
         cpuset: ${BACKGROUND_CPU}
         build:
             context: '${PWD}/cypress-realworld-app'

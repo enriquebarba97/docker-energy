@@ -13,13 +13,11 @@ services:
             - '${PWD}/workloads/nginx-vod-module-docker/nginx.conf:/usr/local/nginx/conf/nginx.conf'
         ports:
             - '3030:80'
-    vlc:
-        image: ngninx-vod-module-docker-vlc
-        container_name: nginx-vod-module-docker-vlc
+    client:
+        image: nginx-vod-module-docker-vlc
         cpuset: ${BACKGROUND_CPU}
         build:
             context: '${PWD}/nginx-vod-module-docker'
             dockerfile: '$PWD/workloads/nginx-vod-module-docker/DockerfileVlc'
         depends_on:
             - vod-module
-        network_mode: host
