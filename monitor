@@ -11,7 +11,7 @@ ISOLATE=""
 BACKGROUND=""
 
 # Get the arguments
-while getopts "x:l:b:p:o:c:i:j:r:" arg; do
+while getopts "x:l:b:p:o:c:i:j:r:s:" arg; do
   case $arg in
     x) EXPID=$OPTARG;;
     l) WORKLOAD=$OPTARG;;
@@ -26,6 +26,7 @@ while getopts "x:l:b:p:o:c:i:j:r:" arg; do
     i) ISOLATE=$OPTARG;;
     j) BACKGROUND=$OPTARG;;
     r) RUN=$OPTARG;;
+    s) SCALE="--scale client=${OPTARG}";;
     *) ;;
   esac
 done
@@ -38,7 +39,7 @@ date +"# run ${RUN}%n# started on %c %n" >> logs/"${WORKLOAD}"-"${EXPID}"/"${BAS
 
 # Run the monitoring tool on the docker run command
 NAME="${BASE/:/}" FILE="${DOCKERFILE}" IMAGE="${BASE}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -C "${ISOLATE}" -e power/energy-pkg/ \
-docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up --abort-on-container-exit 2>&1 | tee -a logs/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt
+docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up ${SCALE} --abort-on-container-exit 2>&1 | tee -a logs/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt
 
 # Log the output of the run
 echo -e "\n\n" | tee -a logs/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt
