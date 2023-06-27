@@ -50,7 +50,6 @@ done
 # Setup the log files
 mkdir -p logs/"${WORKLOAD}-${EXPID}"
 mkdir -p results/"${WORKLOAD}-${EXPID}"
-# mkdir -p results/"${WORKLOAD}-${EXPID}"/samples
 
 echo -e "### experiment ${EXPID} ###\n workload: ${WORKLOAD}\n" >> logs/"${WORKLOAD}-${EXPID}"/warmup.txt
 date +"# started on %c %n" >> logs/"${WORKLOAD}-${EXPID}"/warmup.txt
@@ -59,7 +58,7 @@ date +"# started on %c %n" >> logs/"${WORKLOAD}-${EXPID}"/warmup.txt
 for i in "${BASE[@]}"; do
   echo -e "### experiment ${EXPID} ###\n# cpus: ${ISOLATE}\n# workload: ${WORKLOAD}\n# image: ${i}\n" | tee -a \
   logs/"${WORKLOAD}"-"${EXPID}"/"${i/:/}".txt \
-  results/"${WORKLOAD}"-"${EXPID}"/"${i/:/}".txt results/"${WORKLOAD}"-"${EXPID}"/samples/"${i/:/}".txt
+  results/"${WORKLOAD}"-"${EXPID}"/"${i/:/}".txt
 
   set_dockerfile "${i}"
   

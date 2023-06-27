@@ -32,8 +32,7 @@ done
 
 # Run and monitor the workload for the specified number of times
 sleep "${PAUSE}"
-echo -e "# run ${RUN}: ${BASE}" | tee -a results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt \
-results/"${WORKLOAD}"-"${EXPID}"/samples/"${BASE/:/}".txt
+echo -e "# run ${RUN}: ${BASE}" | tee -a results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt
 
 date +"# run ${RUN}%n# started on %c %n" >> logs/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt
 

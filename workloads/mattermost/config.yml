@@ -1,0 +1,8 @@
+name: 'mattermost'
+description: 'Mattermost is an open source platform for secure collaboration across the entire software development lifecycle'
+development: false
+images:
+    - 'ubuntu:latest'
+    - 'debian:latest'
+    - 'alpine:latest'
+    - 'centos:latest'

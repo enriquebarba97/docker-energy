@@ -1,11 +1,21 @@
 import os, sys, getopt, subprocess, uuid, random, re, time
+import yaml
 import parse
 
 
 class Workload:
-    def __init__(self, workload: str, images: set, queue: list, isolate_cpus: str, background_cpus: str, warmup: int, pause: int):
+    def __init__(
+        self,
+        name: str,
+        images: set,
+        queue: list,
+        isolate_cpus: str,
+        background_cpus: str,
+        warmup: int,
+        pause: int,
+    ):
         self.exp_id = str(uuid.uuid4())
-        self.workload = workload
+        self.name = name
         self.images = images
         self.queue = queue
         self.isolate_cpus = isolate_cpus
@@ -13,20 +23,44 @@ class Workload:
         self.warmup = warmup
         self.pause = pause
 
-
     def prepare(self):
         # Execute the given command
-        command = ["bash", "prepare", "-x", self.exp_id, "-l", self.workload, "-i", self.isolate_cpus, "-j", self.background_cpus, "-w", str(self.warmup)]
+        command = [
+            "bash",
+            "prepare",
+            "-x",
+            self.exp_id,
+            "-l",
+            self.name,
+            "-i",
+            self.isolate_cpus,
+            "-j",
+            self.background_cpus,
+            "-w",
+            str(self.warmup),
+        ]
         for image in self.images:
             command += ["-b", image]
         subprocess.call(command)
-
 
     def run(self):
         # Current execution number in total
         total = 1
 
-        command = ["bash", "monitor", "-x", self.exp_id, "-l", self.workload, "-i", self.isolate_cpus, "-j", self.background_cpus, "-p", str(self.pause)]
+        command = [
+            "bash",
+            "monitor",
+            "-x",
+            self.exp_id,
+            "-l",
+            self.name,
+            "-i",
+            self.isolate_cpus,
+            "-j",
+            self.background_cpus,
+            "-p",
+            str(self.pause),
+        ]
 
         # Monitor the selected images for the selected number of times in regular order
         for image in self.queue:
@@ -38,11 +72,10 @@ class Workload:
             total += 1
 
     def remove(self):
-        command = ["bash", "remove", "-x", self.exp_id, "-l", self.workload]
+        command = ["bash", "remove", "-x", self.exp_id, "-l", self.name]
         for image in self.images:
             command += ["-b", image]
         subprocess.call(command)
-
 
 
 def help():
@@ -73,6 +106,8 @@ def parse_args(argv):
     shuffle_mode = False
     help_mode = False
     cpus = ""
+    all_images = False
+    all_workloads = False
 
     # Get the arguments provided by the user
     opts, args = getopt.getopt(
@@ -93,6 +128,7 @@ def parse_args(argv):
             "help",
             "all-images",
             "all-workloads",
+            "full",
             "workload=",
             "base=",
             "runs=",
@@ -147,19 +183,13 @@ def parse_args(argv):
             help_mode = True
         # Add all (pre-selected) images to the image set
         elif opt == "--all-images":
-            images |= {
-                "ubuntu:latest",
-                "alpine:latest",
-                "debian:latest",
-                "centos:latest"
-            }
+            all_images = True
         elif opt == "--all-workloads":
-            workloads |= {
-                "llama.cpp",
-                "nginx-vod-module-docker",
-                "cypress-realworld-app",
-                "mattermost"
-            }
+            # workloads |= set(get_workloads("workloads"))
+            all_workloads = True
+        elif opt == "--full":
+            all_images = True
+            all_workloads = True
 
     # Put the arguments in a dictionary
     arguments = {
@@ -171,8 +201,11 @@ def parse_args(argv):
         "cpus": cpus,
         "warmup": warmup,
         "pause": pause,
+        "all_images": all_images,
+        "all_workloads": all_workloads,
     }
     return arguments
+
 
 def init_queue(images, number, shuffle_mode):
     queue = list()
@@ -192,7 +225,6 @@ def set_cpus(cpus):
         background_cpus = ",".join(str(i) for i in list(background_cpus))
         return isolate_cpus, background_cpus
 
-
     total_cpus = set(range(os.cpu_count()))
     cpus = cpus.replace(" ", "").split(",")
     for cpu in cpus:
@@ -200,8 +232,12 @@ def set_cpus(cpus):
             cpu_range = re.split("-", cpu)
             try:
                 if int(cpu_range[0]) in total_cpus and int(cpu_range[-1]) in total_cpus:
-                    isolate_cpus |= set(range(int(cpu_range[0]), int(cpu_range[-1]) + 1))
-                    background_cpus -= set(range(int(cpu_range[0]), int(cpu_range[-1]) + 1))
+                    isolate_cpus |= set(
+                        range(int(cpu_range[0]), int(cpu_range[-1]) + 1)
+                    )
+                    background_cpus -= set(
+                        range(int(cpu_range[0]), int(cpu_range[-1]) + 1)
+                    )
             except ValueError:
                 print("Invalid CPU range")
         else:
@@ -218,6 +254,24 @@ def set_cpus(cpus):
     return isolate_cpus, background_cpus
 
 
+def get_workloads(directory: str):
+    try:
+        return [
+            workload
+            for workload in os.listdir(directory)
+            if os.path.isdir(f"{directory}/{workload}")
+        ]
+    except FileNotFoundError:
+        print(f"Directory {directory} not found")
+        return []
+
+
+def get_workload_config(workload: str):
+    with open(f"workloads/{workload}/config.yml", "r") as file:
+        config = yaml.safe_load(file)
+    return config
+
+
 def main(argv):
     # Get the arguments from the command
     arguments = parse_args(argv)
@@ -227,24 +281,57 @@ def main(argv):
         help()
         return
 
-    # If no workload is specified, do not monitor
-    if len(arguments["workloads"]) == 0:
-        print('No workload provided (e.g. -w "llama.cpp" or -w "video-stream")')
-        return
+    # for workload in get_workloads("workloads"):
+    #     with open(f"workloads/{workload}/config.yml", "r") as file:
+    #         config = yaml.safe_load(file)
 
-    if len(arguments["images"]) == 0:
-        print("No base images provided (e.g. -b ubuntu -b alpine)")
-        return
+    #     print(config["name"])
+
+    # If no workload is specified, do not monitor
+    if len(arguments["workloads"]) == 0 and not arguments["all_workloads"]:
+        print("No workload provided, all workloads will be used")
+        arguments["all_workloads"] = True
+
+    if len(arguments["images"]) == 0 and not arguments["all_images"]:
+        print("No base images provided, all images will be used")
+        arguments["all_images"] = True
 
     isolate_cpus, background_cpus = set_cpus(arguments["cpus"])
 
-    for workload in arguments["workloads"]:
-        queue = init_queue(
-            arguments["images"], arguments["number"], arguments["shuffle_mode"]
+    workloads = get_workloads("workloads")
+
+    if not arguments["all_workloads"]:
+        workloads = set(workloads).intersection(arguments["workloads"])
+
+    for workload in workloads:
+        config = get_workload_config(workload)
+
+        # Skip development workloads
+        if config["development"]:
+            continue
+
+        # Use all images if all_images is enabled, otherwise use the provided images (if they exist)
+        images = (
+            config["images"]
+            if arguments["all_images"]
+            else set(config["images"]).intersection(arguments["images"])
         )
 
-        current_workload = Workload(workload, arguments["images"], queue, isolate_cpus, background_cpus, arguments["warmup"], arguments["pause"])
+        # Create the queue of images for the workload
+        queue = init_queue(images, arguments["number"], arguments["shuffle_mode"])
 
+        # Create the workload
+        current_workload = Workload(
+            workload,
+            images,
+            queue,
+            isolate_cpus,
+            background_cpus,
+            arguments["warmup"],
+            arguments["pause"],
+        )
+
+        # Run the workload
         current_workload.prepare()
         current_workload.run()
         current_workload.remove()

@@ -1,0 +1,8 @@
+name: 'mcserver'
+description: 'Minecraft Server'
+development: true
+images:
+    - 'ubuntu:latest'
+    - 'debian:latest'
+    - 'alpine:latest'
+    - 'centos:latest'
