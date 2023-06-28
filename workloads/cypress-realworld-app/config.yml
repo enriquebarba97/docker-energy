@@ -1,6 +1,7 @@
 name: 'cypress-realworld-app'
 description: 'A payment application to demonstrate real-world usage of Cypress testing methods, patterns, and workflows.'
 development: false
+clients: 1
 images:
     - 'ubuntu:latest'
     - 'debian:latest'

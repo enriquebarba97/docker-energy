@@ -13,6 +13,7 @@ class Workload:
         background_cpus: str,
         warmup: int,
         pause: int,
+        clients: int,
     ):
         self.exp_id = str(uuid.uuid4())
         self.name = name
@@ -22,6 +23,7 @@ class Workload:
         self.background_cpus = background_cpus
         self.warmup = warmup
         self.pause = pause
+        self.clients = clients
 
     def prepare(self):
         # Execute the given command
@@ -61,6 +63,9 @@ class Workload:
             "-p",
             str(self.pause),
         ]
+
+        if self.clients > 0:
+            command += ["-c", str(self.clients)]
 
         # Monitor the selected images for the selected number of times in regular order
         for image in self.queue:
@@ -301,15 +306,23 @@ def main(argv):
         config = get_workload_config(workload)
 
         # Skip development workloads
-        if config["development"]:
+        if "development" in config.keys() and config["development"]:
             continue
 
-        # Use all images if all_images is enabled, otherwise use the provided images (if they exist)
-        images = (
-            config["images"]
-            if arguments["all_images"]
-            else set(config["images"]).intersection(arguments["images"])
-        )
+        # # Use all images if all_images is enabled, otherwise use the provided images (if they exist)
+        images = set(config["images"]) if "images" in config.keys() else set()
+
+        if not arguments["all_images"]:
+            images = images.intersection(arguments["images"])
+
+        if len(images) == 0:
+            print(f"No correct images provided for workload {workload}")
+            continue
+
+        if "clients" in config.keys() and type(config["clients"]) is int:
+            clients = abs(config["clients"])
+        else:
+            clients = 0
 
         # Create the queue of images for the workload
         queue = init_queue(images, arguments["number"], arguments["shuffle_mode"])
@@ -323,6 +336,7 @@ def main(argv):
             background_cpus,
             arguments["warmup"],
             arguments["pause"],
+            clients,
         )
 
         # Run the workload
