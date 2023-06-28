@@ -65,7 +65,7 @@ class Workload:
         ]
 
         if self.clients > 0:
-            command += ["-c", str(self.clients)]
+            command += ["-s", str(self.clients)]
 
         # Monitor the selected images for the selected number of times in regular order
         for image in self.queue:
@@ -309,7 +309,7 @@ def main(argv):
         if "development" in config.keys() and config["development"]:
             continue
 
-        # # Use all images if all_images is enabled, otherwise use the provided images (if they exist)
+        # Use all images if all_images is enabled, otherwise use the provided images (if they exist)
         images = set(config["images"]) if "images" in config.keys() else set()
 
         if not arguments["all_images"]:
