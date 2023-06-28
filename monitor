@@ -38,6 +38,8 @@ echo -e "# run ${RUN}: ${BASE}" | tee -a results/"${WORKLOAD}"-"${EXPID}"/"${BAS
 date +"# run ${RUN}%n# started on %c %n" >> logs/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt
 
 # Run the monitoring tool on the docker run command
+# NAME="${BASE/:/}" FILE="${DOCKERFILE}" IMAGE="${BASE}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" perf stat -I 100 -x "\t" -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -C "${ISOLATE}" -e power/energy-pkg/ \
+# docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up ${SCALE} --abort-on-container-exit 2>&1 | tee -a logs/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt
 NAME="${BASE/:/}" FILE="${DOCKERFILE}" IMAGE="${BASE}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -C "${ISOLATE}" -e power/energy-pkg/ \
 docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up ${SCALE} --abort-on-container-exit 2>&1 | tee -a logs/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt
 
