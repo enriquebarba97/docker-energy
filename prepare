@@ -76,6 +76,7 @@ done
 # Log the docker images information
 echo -e "# docker images\n" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/info.txt
 docker image ls | egrep "REPOSITORY|${WORKLOAD}" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/info.txt
+echo -e "\n# total order\n" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/info.txt
 
 # Start the warm up procedure
 warmup

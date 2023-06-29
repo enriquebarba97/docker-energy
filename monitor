@@ -37,6 +37,9 @@ sleep "${PAUSE}"
 
 # date +"# run ${RUN}%n# started on %c %n" >> logs/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt
 
+
+echo -e "${RUN}\t${BASE}" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/info.txt
+
 # Run the monitoring tool on the docker run command
 NAME="${BASE/:/}" FILE="${DOCKERFILE}" IMAGE="${BASE}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" perf stat -I 100 -x "\t" -o results/experiment-"${EXPID}"/"${WORKLOAD}"/"${BASE/:/}"/run-"${RUN}".tsv --append -C "${ISOLATE}" -e power/energy-pkg/ \
 docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up ${SCALE} --abort-on-container-exit 2>&1 | tee -a logs/experiment-"${EXPID}"/"${WORKLOAD}"/"${BASE/:/}"/run-"${RUN}".txt
