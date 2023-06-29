@@ -1,11 +1,13 @@
 import os, sys, getopt, subprocess, uuid, random, re, time
 import yaml
 import parse
+from datetime import datetime
 
 
 class Workload:
     def __init__(
         self,
+        exp_id: str,
         name: str,
         images: set,
         queue: list,
@@ -15,7 +17,7 @@ class Workload:
         pause: int,
         clients: int,
     ):
-        self.exp_id = str(uuid.uuid4())
+        self.exp_id = exp_id
         self.name = name
         self.images = images
         self.queue = queue
@@ -96,7 +98,7 @@ def help():
         '   -c --command        Command for the Docker run command (default "")',
         "   --all-images        Monitor all compatible base images (i.e. ubuntu, debian, alpine, centos)",
         "   --all-workloads     Monitor all compatible workloads (i.e. llama.cpp, nginx-vod-module-docker, cypress-realworld-app, mattermost)",
-        "   --shuffle           Enables shuffle mode; random order of monitoring base images",
+        "   --no-shuffle           Enables shuffle mode; random order of monitoring base images",
         sep=os.linesep,
     )
 
@@ -105,10 +107,10 @@ def parse_args(argv):
     # Default values
     workloads = set()
     images = set()
-    number = 1
-    warmup = 10
+    number = 30
+    warmup = 15
     pause = 15
-    shuffle_mode = False
+    shuffle_mode = True
     help_mode = False
     cpus = ""
     all_images = False
@@ -144,9 +146,9 @@ def parse_args(argv):
         ],
     )
     for opt, arg in opts:
-        # Set shuffle mode to true
-        if opt in ["-s", "--shuffle"]:
-            shuffle_mode = True
+        # Set shuffle mode to false
+        if opt in ["-s", "--no-shuffle"]:
+            shuffle_mode = False
         # Add the images to the list and the preparation command
         elif opt in ["-i", "--isolate"]:
             cpus = arg
@@ -286,6 +288,8 @@ def main(argv):
         help()
         return
 
+    date = datetime.now().strftime("%Y%m%dT%H%M%S")
+
     # If no workload is specified, do not monitor
     if len(arguments["workloads"]) == 0 and not arguments["all_workloads"]:
         print("No workload provided, all workloads will be used")
@@ -329,6 +333,7 @@ def main(argv):
 
         # Create the workload
         current_workload = Workload(
+            date,
             workload,
             images,
             queue,
@@ -342,7 +347,7 @@ def main(argv):
         # Run the workload
         current_workload.prepare()
         current_workload.run()
-        current_workload.remove()
+        # current_workload.remove()
         time.sleep(15)
 
     # Parse the results

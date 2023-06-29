@@ -13,9 +13,9 @@ set_dockerfile() {
 }
 
 warmup() {
-  echo -e "\n# warmup\n" >> logs/"${WORKLOAD}"-"${EXPID}"/warmup.txt
-  sysbench cpu --time=`expr ${WARMUP} \* $(nproc)` --threads=$(nproc) run | tee -a logs/"${WORKLOAD}"-"${EXPID}"/warmup.txt
-  echo -e "\n\n" >> logs/"${WORKLOAD}"-"${EXPID}"/warmup.txt
+  echo -e "\n# warmup\n" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/warmup.txt
+  sysbench cpu --time=`expr ${WARMUP} \* $(nproc)` --threads=$(nproc) run | tee -a logs/experiment-"${EXPID}"/"${WORKLOAD}"/warmup.txt
+  echo -e "\n\n" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/warmup.txt
 }
 
 # Default values
@@ -48,17 +48,21 @@ while getopts "x:l:b:w:o:c:i:j:" arg; do
 done
 
 # Setup the log files
-mkdir -p logs/"${WORKLOAD}-${EXPID}"
-mkdir -p results/"${WORKLOAD}-${EXPID}"
+mkdir -p logs/experiment-"${EXPID}"/"${WORKLOAD}"
+mkdir -p results/experiment-"${EXPID}"/"${WORKLOAD}"
 
-echo -e "### experiment ${EXPID} ###\n workload: ${WORKLOAD}\n" >> logs/"${WORKLOAD}-${EXPID}"/warmup.txt
-date +"# started on %c %n" >> logs/"${WORKLOAD}-${EXPID}"/warmup.txt
+echo -e "### experiment ${EXPID} ###\n# cpus: ${ISOLATE}\n# workload: ${WORKLOAD}\n" | tee -a logs/experiment-"${EXPID}"/"${WORKLOAD}"/warmup.txt \
+  logs/experiment-"${EXPID}"/"${WORKLOAD}"/info.txt
+date +"# started on %c %n" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/warmup.txt
 
 # Build the Docker images and run the workload once for each base image as warm-up
 for i in "${BASE[@]}"; do
-  echo -e "### experiment ${EXPID} ###\n# cpus: ${ISOLATE}\n# workload: ${WORKLOAD}\n# image: ${i}\n" | tee -a \
-  logs/"${WORKLOAD}"-"${EXPID}"/"${i/:/}".txt \
-  results/"${WORKLOAD}"-"${EXPID}"/"${i/:/}".txt
+  # echo -e "### experiment ${EXPID} ###\n# cpus: ${ISOLATE}\n# workload: ${WORKLOAD}\n# image: ${i}\n" | tee -a \
+  # logs/experiment-"${EXPID}"/"${WORKLOAD}"/"${i/:/}".txt \
+  # results/experiment-"${EXPID}"/"${WORKLOAD}"/"${i/:/}".txt
+  mkdir -p logs/experiment-"${EXPID}"/"${WORKLOAD}"/"${i/:/}"
+  mkdir -p results/experiment-"${EXPID}"/"${WORKLOAD}"/"${i/:/}"
+
 
   set_dockerfile "${i}"
   
@@ -70,8 +74,8 @@ for i in "${BASE[@]}"; do
 done
 
 # Log the docker images information
-echo -e "# docker images\n" >> logs/"${WORKLOAD}"-"${EXPID}"/warmup.txt
-docker image ls | egrep "REPOSITORY|${WORKLOAD}" >> logs/"${WORKLOAD}"-"${EXPID}"/warmup.txt
+echo -e "# docker images\n" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/info.txt
+docker image ls | egrep "REPOSITORY|${WORKLOAD}" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/info.txt
 
 # Start the warm up procedure
 warmup

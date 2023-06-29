@@ -19,7 +19,9 @@ services:
         command:
             "-- --spec tests/integration/channels/accessibility/accessibility_account_settings_spec.js,\
             tests/integration/channels/account_settings/profile/account_settings_position_spec.ts,\
-            tests/integration/channels/autocomplete/database/users_in_channel_switcher_spec.js"
+            tests/integration/channels/account_settings/profile/account_settings_position_spec.ts,\
+            tests/integration/channels/autocomplete/database/users_in_channel_switcher_spec.js,\
+            tests/integration/channels/autocomplete/database/users_in_message_input_box_spec.js"
     mattermost:
         image: mattermost-${NAME}
         container_name: mattermost-${NAME}

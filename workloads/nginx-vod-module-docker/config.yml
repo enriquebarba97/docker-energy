@@ -1,7 +1,7 @@
 name: 'nginx-vod-module-docker'
 description: 'Docker NGINX-based MP4 Repackager'
 development: false
-clients: 2
+clients: 1
 images:
     - 'ubuntu:latest'
     - 'debian:latest'
