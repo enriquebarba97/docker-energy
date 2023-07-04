@@ -41,8 +41,16 @@ sleep "${PAUSE}"
 echo -e "${RUN}\t${BASE}" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/info.txt
 
 # Run the monitoring tool on the docker run command
-NAME="${BASE/:/}" FILE="${DOCKERFILE}" IMAGE="${BASE}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" perf stat -I 100 -x "\t" -o results/experiment-"${EXPID}"/"${WORKLOAD}"/"${BASE/:/}"/run-"${RUN}".tsv --append -C "${ISOLATE}" -e power/energy-pkg/ \
-docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up ${SCALE} --abort-on-container-exit 2>&1 | tee -a logs/experiment-"${EXPID}"/"${WORKLOAD}"/"${BASE/:/}"/run-"${RUN}".txt
+ENVI="NAME=${BASE/:/} FILE=${DOCKERFILE} IMAGE=${BASE} ISOLATE_CPU=${ISOLATE} BACKGROUND_CPU=${BACKGROUND}"
+MONITOR="perf stat -I 100 -x \"\t\" -o results/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.tsv --append -C ${ISOLATE} -e power/energy-pkg/"
+MONITOR="/home/tdurieux/git/greenserver/resource_usage/monitor -i 100 -o results/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.csv --"
+CMD="docker compose -f workloads/${WORKLOAD}/docker-compose.yml up ${SCALE} --abort-on-container-exit"
+
+echo -e "Started at `date -R`" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/"${BASE/:/}"/run-"${RUN}".txt
+echo -e "CMD: $ENVI $MONITOR $CMD \n\n" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/"${BASE/:/}"/run-"${RUN}".txt
+
+eval "$ENVI $MONITOR $CMD" 2>&1 | tee -a logs/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.txt
+
 # NAME="${BASE/:/}" FILE="${DOCKERFILE}" IMAGE="${BASE}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -C "${ISOLATE}" -e power/energy-pkg/ \
 # docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up ${SCALE} --abort-on-container-exit 2>&1 | tee -a logs/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt
 
@@ -51,3 +59,5 @@ docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up ${SCALE} --abort
 
 # Remove the containers
 NAME="${BASE/:/}" FILE="${DOCKERFILE}" IMAGE="${BASE}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml down
+
+echo -e "\n\nEnded at `date -R`" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/"${BASE/:/}"/run-"${RUN}".txt
