@@ -1,6 +1,7 @@
 import os, sys, getopt, subprocess, uuid, random, re, time
 import yaml
 import parse
+import psutil
 from datetime import datetime
 
 
@@ -98,7 +99,7 @@ def help():
         '   -c --command        Command for the Docker run command (default "")',
         "   --all-images        Monitor all compatible base images (i.e. ubuntu, debian, alpine, centos)",
         "   --all-workloads     Monitor all compatible workloads (i.e. llama.cpp, nginx-vod-module-docker, cypress-realworld-app, mattermost)",
-        "   --no-shuffle           Enables shuffle mode; random order of monitoring base images",
+        "   --no-shuffle        Disables shuffle mode; regular order of monitoring base images",
         sep=os.linesep,
     )
 
@@ -252,7 +253,7 @@ def set_cpus(cpus):
                 if int(cpu) in total_cpus:
                     isolate_cpus.add(int(cpu))
                     background_cpus.remove(int(cpu))
-            except ValueError:
+            except:
                 print("Invalid CPU")
 
     isolate_cpus = ",".join(str(i) for i in list(isolate_cpus))
@@ -299,7 +300,9 @@ def main(argv):
         print("No base images provided, all images will be used")
         arguments["all_images"] = True
 
-    isolate_cpus, background_cpus = set_cpus(arguments["cpus"])
+    # Get the number of physical and logical CPUs
+    physical_cpus = psutil.cpu_count(logical=False)
+    logical_cpus = psutil.cpu_count()
 
     workloads = get_workloads("workloads")
 
@@ -312,6 +315,24 @@ def main(argv):
         # Skip development workloads
         if "development" in config.keys() and config["development"]:
             continue
+
+        # If number of cpus is defined in the config, use that, otherwise use the provided cpus
+        if "cpus" in config.keys() and type(config["cpus"]) is int:
+            # Try to use logical cpus that are on the same physical cpu
+            cpus = list()
+            count = 0.5
+            for x in range(config["cpus"]):
+                cpu = (x * physical_cpus) % logical_cpus
+                if cpu not in cpus:
+                    cpus.append(cpu)
+                else:
+                    count += 0.5
+                    cpus.append(cpu + int(count))
+            cpus = ",".join([str(x) for x in cpus])
+        else:
+            cpus = arguments["cpus"]
+
+        isolate_cpus, background_cpus = set_cpus(cpus)
 
         # Use all images if all_images is enabled, otherwise use the provided images (if they exist)
         images = set(config["images"]) if "images" in config.keys() else set()
