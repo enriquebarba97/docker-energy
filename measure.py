@@ -303,6 +303,7 @@ def main(argv):
     # Get the number of physical and logical CPUs
     physical_cpus = psutil.cpu_count(logical=False)
     logical_cpus = psutil.cpu_count()
+    threads = physical_cpus / logical_cpus
 
     workloads = get_workloads("workloads")
 
@@ -320,19 +321,21 @@ def main(argv):
         if "cpus" in config.keys() and type(config["cpus"]) is int:
             # Try to use logical cpus that are on the same physical cpu
             cpus = list()
-            count = 0.5
+            count = threads
             for x in range(config["cpus"]):
                 cpu = (x * physical_cpus) % logical_cpus
                 if cpu not in cpus:
                     cpus.append(cpu)
                 else:
-                    count += 0.5
+                    count += threads
                     cpus.append(cpu + int(count))
             cpus = ",".join([str(x) for x in cpus])
         else:
             cpus = arguments["cpus"]
 
         isolate_cpus, background_cpus = set_cpus(cpus)
+        print(isolate_cpus)
+        print(background_cpus)
 
         # Use all images if all_images is enabled, otherwise use the provided images (if they exist)
         images = set(config["images"]) if "images" in config.keys() else set()
@@ -366,10 +369,10 @@ def main(argv):
         )
 
         # Run the workload
-        current_workload.prepare()
-        current_workload.run()
+        # current_workload.prepare()
+        # current_workload.run()
         # current_workload.remove()
-        time.sleep(15)
+        # time.sleep(15)
 
     # Parse the results
     # directory = f"results/{arguments['workload']}-{arguments['exp_id']}"
