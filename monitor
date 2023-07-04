@@ -41,9 +41,11 @@ sleep "${PAUSE}"
 echo -e "${RUN}\t${BASE}" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/info.txt
 
 # Run the monitoring tool on the docker run command
+
+INTERVAL=100
 ENVI="NAME=${BASE/:/} FILE=${DOCKERFILE} IMAGE=${BASE} ISOLATE_CPU=${ISOLATE} BACKGROUND_CPU=${BACKGROUND}"
-MONITOR="perf stat -I 100 -x \"\t\" -o results/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.tsv --append -C ${ISOLATE} -e power/energy-pkg/"
-MONITOR="/home/tdurieux/git/greenserver/resource_usage/monitor -i 100 -o results/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.csv --"
+MONITOR="perf stat -I ${INTERVAL} -x \"\t\" -o results/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.tsv --append -C ${ISOLATE} -e power/energy-pkg/"
+MONITOR="/home/tdurieux/git/greenserver/resource_usage/monitor -i ${INTERVAL} -o results/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.tsv --"
 CMD="docker compose -f workloads/${WORKLOAD}/docker-compose.yml up ${SCALE} --abort-on-container-exit"
 
 echo -e "Started at `date -R`" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/"${BASE/:/}"/run-"${RUN}".txt
