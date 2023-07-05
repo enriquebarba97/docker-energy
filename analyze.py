@@ -142,7 +142,7 @@ def cohen_d(images: dict, labels: list, parts: list):
     if len(labels) < 2:
         print("Not enough data to perform the test.")
         return
-    
+
     print(
         "A positive value indicates that the second image performs better than the first.\n"
     )
@@ -231,6 +231,16 @@ def read_tsv(file: str):
                 "The header length in the file does not match the number of columns."
             )
     return base, pd.read_csv(file, sep="\t", skiprows=1, names=parts)
+    # df = pd.read_csv(
+    #     file,
+    #     sep="\t",
+    #     skiprows=1,
+    #     header=None,
+    #     usecols=[0],
+    #     names=["Time"],
+    # )
+    # df["Time"] = df["Time"].div(1000)
+    # return base, df
 
 
 def parse_args(argv):
@@ -316,9 +326,11 @@ def main(argv):
     if len(images) == 0:
         print("No (correct) .tsv files provided")
         return
-    
-    if file_type == "samples":
-        images["ubuntulatest"] = images["ubuntulatest"].groupby("Run")["Watts"].mean().reset_index()
+
+    # TODO: Interpolation of data samples
+
+    # if file_type == "samples":
+    #     images["ubuntulatest"] = images["ubuntulatest"].groupby("Run")["Watts"].mean().reset_index()
     labels, all_parts = get_lists(images)
 
     for p in parts:
@@ -331,8 +343,7 @@ def main(argv):
     if len(parts) == 0:
         parts = all_parts
 
-    # labels = list(images.keys())
-
+    labels = list(images.keys())
 
     if len(statistical_test) == 0:
         print("No statistical test selected.")
