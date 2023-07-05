@@ -1,7 +1,7 @@
 name: 'mattermost'
 description: 'Mattermost is an open source platform for secure collaboration across the entire software development lifecycle'
 development: false
-cpus: 2
+cpus: 1
 clients: 1
 images:
     - 'ubuntu:latest'

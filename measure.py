@@ -1,4 +1,4 @@
-import os, sys, getopt, subprocess, uuid, random, re, time
+import os, sys, getopt, subprocess, uuid, random, re, time, math
 import yaml
 import parse
 import psutil
@@ -95,11 +95,14 @@ def help():
         "   -n --runs           Number of monitoring runs per base image (e.g. -n 30) (default 1)",
         "   -w --warmup         Warm up time (s) (e.g. -w 30) (default 10)",
         "   -p --pause          Pause time (s) (e.g. -p 60) (default 15)",
-        '   -o --options        Options for the Docker run command (default "")',
-        '   -c --command        Command for the Docker run command (default "")',
+        # '   -o --options        Options for the Docker run command (default "")',
+        # '   -c --command        Command for the Docker run command (default "")',
         "   --all-images        Monitor all compatible base images (i.e. ubuntu, debian, alpine, centos)",
         "   --all-workloads     Monitor all compatible workloads (i.e. llama.cpp, nginx-vod-module-docker, cypress-realworld-app, mattermost)",
+        "   --full              Monitor all compatible workloads using all compatible base images",
         "   --no-shuffle        Disables shuffle mode; regular order of monitoring base images",
+        "   --cpus              Number of CPUs to isolate; will use threads on the same physical core (e.g. --cpus 2)",
+        "   --cpuset            CPUs to isolate (e.g. --cpuset 0-1)",
         sep=os.linesep,
     )
 
@@ -113,7 +116,8 @@ def parse_args(argv):
     pause = 15
     shuffle_mode = True
     help_mode = False
-    cpus = ""
+    cpus = 0
+    cpuset = ""
     all_images = False
     all_workloads = False
 
@@ -127,12 +131,12 @@ def parse_args(argv):
         "p:"  # pause time
         "o:"  # options for the Docker run command
         "c:"  # command for the Docker run command
-        "i:"  # isolate cpus
         "s"  # shuffle mode
         "h",  # help
         [
-            "isolate=",
-            "shuffle",
+            "cpus=",
+            "cpuset=",
+            "no-shuffle",
             "help",
             "all-images",
             "all-workloads",
@@ -151,8 +155,13 @@ def parse_args(argv):
         if opt in ["-s", "--no-shuffle"]:
             shuffle_mode = False
         # Add the images to the list and the preparation command
-        elif opt in ["-i", "--isolate"]:
-            cpus = arg
+        elif opt == "--cpus":
+            try:
+                cpus = int(arg)
+            except ValueError:
+                print("Number of CPUs must be an integer")
+        elif opt == "--cpuset":
+            cpuset = arg
         elif opt in ["-l", "--workload"]:
             workloads.add(arg)
         # Add the images to the list and the preparation command
@@ -207,6 +216,7 @@ def parse_args(argv):
         "help_mode": help_mode,
         "workloads": workloads,
         "cpus": cpus,
+        "cpuset": cpuset,
         "warmup": warmup,
         "pause": pause,
         "all_images": all_images,
@@ -225,20 +235,58 @@ def init_queue(images, number, shuffle_mode):
 
 
 def set_cpus(cpus):
-    isolate_cpus = set()
-    background_cpus = set(range(os.cpu_count()))
+    # Get the number of physical and logical CPUs
+    physical_cpus = psutil.cpu_count(logical=False)
+    logical_cpus = psutil.cpu_count()
 
-    if cpus == "":
+    # Allocate the logical CPUs to the physical CPUs
+    dict_cpus = {x: [] for x in range(physical_cpus)}
+    core = 0
+    for x in range(logical_cpus):
+        dict_cpus[core].append(x)
+        core += 1
+        if core >= physical_cpus:
+            core = 0
+
+    # Isolate the amount of threads on the same physical CPU
+    cpuset = list()
+    reserve = list()
+    threads = logical_cpus / physical_cpus
+    for x in range(math.ceil(cpus / threads)):
+        cpuset.extend(dict_cpus[x])
+
+    # Reserve the remaining threads on a physical CPU
+    for x in range(len(cpuset) - cpus):
+        reserve.append(cpuset.pop())
+
+    # Convert the list to a string
+    cpuset = ",".join([str(x) for x in cpuset])
+    return cpuset, reserve
+
+
+def set_cpuset(cpuset, reserve=[]):
+    isolate_cpus = set()
+    background_cpus = set(range(psutil.cpu_count()))
+
+    # Remove the reserved CPUs from the available CPUs
+    for x in reserve:
+        background_cpus.remove(x)
+
+    # If no cpuset is specified, use all available CPUs
+    if cpuset == "":
         isolate_cpus = ",".join(str(i) for i in list(background_cpus))
         background_cpus = ",".join(str(i) for i in list(background_cpus))
         return isolate_cpus, background_cpus
 
-    total_cpus = set(range(os.cpu_count()))
-    cpus = cpus.replace(" ", "").split(",")
-    for cpu in cpus:
+    # If a cpuset is specified, isolate the specified CPUs
+    total_cpus = set(range(psutil.cpu_count()))
+    cpuset = cpuset.replace(" ", "").split(",")
+    for cpu in cpuset:
+        # If a range is specified, isolate the range
         if "-" in cpu:
             cpu_range = re.split("-", cpu)
             try:
+                # If the range is valid, isolate the range
                 if int(cpu_range[0]) in total_cpus and int(cpu_range[-1]) in total_cpus:
                     isolate_cpus |= set(
                         range(int(cpu_range[0]), int(cpu_range[-1]) + 1)
@@ -250,12 +298,19 @@ def set_cpus(cpus):
                 print("Invalid CPU range")
         else:
             try:
+                # If the CPU is valid, isolate the CPU
                 if int(cpu) in total_cpus:
                     isolate_cpus.add(int(cpu))
                     background_cpus.remove(int(cpu))
             except:
                 print("Invalid CPU")
 
+    # If no CPUs are isolated or all CPUs are isolated, use all available CPUs
+    if len(background_cpus) == 0 or len(isolate_cpus) == 0:
+        isolate_cpus = set(range(psutil.cpu_count()))
+        background_cpus = set(range(psutil.cpu_count()))
+
+    # Convert the sets to strings
     isolate_cpus = ",".join(str(i) for i in list(isolate_cpus))
     background_cpus = ",".join(str(i) for i in list(background_cpus))
 
@@ -300,11 +355,6 @@ def main(argv):
         print("No base images provided, all images will be used")
         arguments["all_images"] = True
 
-    # Get the number of physical and logical CPUs
-    physical_cpus = psutil.cpu_count(logical=False)
-    logical_cpus = psutil.cpu_count()
-    threads = physical_cpus / logical_cpus
-
     workloads = get_workloads("workloads")
 
     if not arguments["all_workloads"]:
@@ -317,25 +367,22 @@ def main(argv):
         if "development" in config.keys() and config["development"]:
             continue
 
-        # If number of cpus is defined in the config, use that, otherwise use the provided cpus
-        if "cpus" in config.keys() and type(config["cpus"]) is int:
-            # Try to use logical cpus that are on the same physical cpu
-            cpus = list()
-            count = threads
-            for x in range(config["cpus"]):
-                cpu = (x * physical_cpus) % logical_cpus
-                if cpu not in cpus:
-                    cpus.append(cpu)
-                else:
-                    count += threads
-                    cpus.append(cpu + int(count))
-            cpus = ",".join([str(x) for x in cpus])
+        # First set the cpuset
+        if arguments["cpuset"] != "":
+            cpuset = arguments["cpuset"]
+            reserve = []
+        # If no cpuset is provided, use the number of cpus
+        elif arguments["cpus"] != 0:
+            cpuset, reserve = set_cpus(arguments["cpus"])
+        # If no cpus are provided, use the cpus from the config
+        elif "cpus" in config.keys() and type(config["cpus"]) is int:
+            cpuset, reserve = set_cpus(config["cpus"])
+        # If no cpus are provided in the config, use all cpus
         else:
-            cpus = arguments["cpus"]
+            cpuset = ""
+            reserve = []
 
-        isolate_cpus, background_cpus = set_cpus(cpus)
-        print(isolate_cpus)
-        print(background_cpus)
+        isolate_cpus, background_cpus = set_cpuset(cpuset, reserve)
 
         # Use all images if all_images is enabled, otherwise use the provided images (if they exist)
         images = set(config["images"]) if "images" in config.keys() else set()
@@ -369,10 +416,10 @@ def main(argv):
         )
 
         # Run the workload
-        # current_workload.prepare()
-        # current_workload.run()
+        current_workload.prepare()
+        current_workload.run()
         # current_workload.remove()
-        # time.sleep(15)
+        time.sleep(15)
 
     # Parse the results
     # directory = f"results/{arguments['workload']}-{arguments['exp_id']}"
