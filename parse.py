@@ -105,7 +105,7 @@ def parse_greenserver_samples(directory: str, columns=r"CORE\d+_ENERGY \(J\)"):
     ]
 
     for image in images:
-        files = get_files(f"{directory}/{image}", "*.csv")
+        files = get_files(f"{directory}/{image}", "*.tsv")
         for file in files:
             base, df = read_tsv(file)
             df_delta = df.filter(regex=columns).copy()
@@ -131,9 +131,8 @@ def parse_greenserver(directory: str, columns=r"CORE\d+_ENERGY \(J\)"):
         if os.path.isdir(f"{directory}/{image}")
     ]
 
-    files = get_files(f"{directory}", "*.csv")
     for image in images:
-        files = get_files(f"{directory}/{image}", "*.csv")
+        files = get_files(f"{directory}/{image}", "*.tsv")
         if len(files) == 0:
             return
 
