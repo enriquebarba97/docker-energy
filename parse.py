@@ -105,7 +105,7 @@ def parse_greenserver_samples(directory: str, columns=r"CORE\d+_ENERGY \(J\)"):
     ]
 
     for image in images:
-        files = get_files(f"{directory}/{image}", "*.tsv")
+        files = get_files(f"{directory}/{image}", "*.csv")
         for file in files:
             base, df = read_tsv(file)
             df_delta = df.filter(regex=columns).copy()
@@ -132,7 +132,7 @@ def parse_greenserver(directory: str, columns=r"CORE\d+_ENERGY \(J\)"):
     ]
 
     for image in images:
-        files = get_files(f"{directory}/{image}", "*.tsv")
+        files = get_files(f"{directory}/{image}", "*.csv")
         if len(files) == 0:
             return
 
@@ -143,15 +143,17 @@ def parse_greenserver(directory: str, columns=r"CORE\d+_ENERGY \(J\)"):
         keys.sort()
 
         # Set the headers
-        headers = ["ELAPSED_TIME (s)"]
+        headers = ["RUN", "ELAPSED_TIME (s)"]
         for key in keys:
             power = f"{key[:-10]}AVERAGE_POWER (W)"
             headers.extend([power, key])
+        headers.extend(["TOTAL_CORE_AVERAGE_POWER (W)", "TOTAL_CORE_ENERGY (J)"])
 
         data = list()
         for file in files:
             run_data = list()
             base, df = read_tsv(file)
+            run_data.append(int(base[4:]))
 
             # Calculate the total time
             datetime_start = datetime.strptime(
@@ -163,17 +165,36 @@ def parse_greenserver(directory: str, columns=r"CORE\d+_ENERGY \(J\)"):
             total_time = datetime_end - datetime_start
             run_data.append(total_time)
 
-            # For each key, calculate the average power and energy
+            # For each key, calculate the average power and energy, and the total values
+            total_energy = 0
+            total_power = 0
             for key in keys:
                 df[key] = df[key].values.astype(float)
                 energy = df[key].iloc[-1] - df[key].iloc[0]
-                # print(watts)
+                # If the energy is negative, it means that the counter has overflowed
+                if energy < 0:
+                    # Get the first negative value
+                    i = df[key].lt(0).idxmax()
+                    # Calculate the difference between the last positive value and the first negative value
+                    switch_diff = df[key].iloc[i - 1] - abs(df[key].iloc[i])
+                    # Calculate the difference between the first value and the last positive value
+                    positive_diff = df[key].iloc[i - 1] - df[key].iloc[0]
+                    # Calculate the difference between the last value and the first negative value
+                    negative_diff = df[key].iloc[-1] - df[key].iloc[i]
+                    energy = switch_diff + positive_diff + negative_diff
                 power = (energy / total_time) if total_time != 0 else 0
                 run_data.extend([power, energy])
+                total_energy += energy
+                total_power += power
 
+            run_data.extend([total_power, total_energy])
             data.append(run_data)
         df = pd.DataFrame(data, columns=headers)
-        create_file(image, df, directory)
+        create_file(
+            image,
+            df.sort_values(by=["RUN"], ascending=True).reset_index(drop=True),
+            directory,
+        )
 
 
 def parse_results_samples(file_name: str, directory: str = "results"):
@@ -262,9 +283,21 @@ def parse_files(mode: str, files: list, directory: str):
         for file in files:
             parse_results_samples(file, directory)
     elif mode == "greenserver":
-        parse_greenserver(directory)
+        workloads = [
+            workload
+            for workload in os.listdir(directory)
+            if os.path.isdir(f"{directory}/{workload}")
+        ]
+        for workload in workloads:
+            parse_greenserver(f"{directory}/{workload}")
     elif mode == "greenserver-samples":
-        parse_greenserver(directory)
+        workloads = [
+            workload
+            for workload in os.listdir(directory)
+            if os.path.isdir(f"{directory}/{workload}")
+        ]
+        for workload in workloads:
+            parse_greenserver_samples(f"{directory}/{workload}")
     else:
         print("No mode selected")
 

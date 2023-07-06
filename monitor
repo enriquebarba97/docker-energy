@@ -33,10 +33,6 @@ done
 
 # Run and monitor the workload for the specified number of times
 sleep "${PAUSE}"
-# echo -e "# run ${RUN}: ${BASE}" | tee -a results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt
-
-# date +"# run ${RUN}%n# started on %c %n" >> logs/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt
-
 
 echo -e "${RUN}\t${BASE}" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/info.txt
 
@@ -55,9 +51,6 @@ eval "$ENVI $MONITOR $CMD" 2>&1 | tee -a logs/experiment-${EXPID}/${WORKLOAD}/${
 
 # NAME="${BASE/:/}" FILE="${DOCKERFILE}" IMAGE="${BASE}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -C "${ISOLATE}" -e power/energy-pkg/ \
 # docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up ${SCALE} --abort-on-container-exit 2>&1 | tee -a logs/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt
-
-# Log the output of the run
-# echo -e "\n\n" | tee -a logs/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt
 
 # Remove the containers
 NAME="${BASE/:/}" FILE="${DOCKERFILE}" IMAGE="${BASE}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml down

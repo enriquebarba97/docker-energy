@@ -57,9 +57,6 @@ date +"# started on %c %n" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/warmup.tx
 
 # Build the Docker images and run the workload once for each base image as warm-up
 for i in "${BASE[@]}"; do
-  # echo -e "### experiment ${EXPID} ###\n# cpus: ${ISOLATE}\n# workload: ${WORKLOAD}\n# image: ${i}\n" | tee -a \
-  # logs/experiment-"${EXPID}"/"${WORKLOAD}"/"${i/:/}".txt \
-  # results/experiment-"${EXPID}"/"${WORKLOAD}"/"${i/:/}".txt
   mkdir -p logs/experiment-"${EXPID}"/"${WORKLOAD}"/"${i/:/}"
   mkdir -p results/experiment-"${EXPID}"/"${WORKLOAD}"/"${i/:/}"
 
