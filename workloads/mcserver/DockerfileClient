@@ -1,0 +1,15 @@
+ARG BOT="bot1"
+
+FROM node:16
+
+ARG BOT
+
+WORKDIR /app
+
+COPY package.json package-lock.json index.js ./
+
+RUN npm install
+
+ENV BOT_NAME=${BOT}
+
+CMD node index.js ${BOT_NAME}

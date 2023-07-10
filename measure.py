@@ -105,6 +105,7 @@ def help():
         "   -n --runs           Number of monitoring runs per base image (e.g. -n 30) (default 1)",
         "   -w --warmup         Warm up time (s) (e.g. -w 30) (default 10)",
         "   -p --pause          Pause time (s) (e.g. -p 60) (default 15)",
+        "   -i --interval       Interval of monitoring (ms) (e.g. -i 100) (default 100)",
         # '   -o --options        Options for the Docker run command (default "")',
         # '   -c --command        Command for the Docker run command (default "")',
         "   --all-images        Monitor all compatible base images (i.e. ubuntu, debian, alpine, centos)",
