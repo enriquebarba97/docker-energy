@@ -9,9 +9,11 @@ OPTIONS=()
 COMMAND=()
 ISOLATE=""
 BACKGROUND=""
+THREADS=1
+INTERVAL=100
 
 # Get the arguments
-while getopts "x:l:b:p:o:c:i:j:r:s:" arg; do
+while getopts "x:l:b:p:o:c:i:j:r:s:t:v:" arg; do
   case $arg in
     x) EXPID=$OPTARG;;
     l) WORKLOAD=$OPTARG;;
@@ -25,8 +27,10 @@ while getopts "x:l:b:p:o:c:i:j:r:s:" arg; do
       COMMAND+=("${FLAG}" "${ARG}");;
     i) ISOLATE=$OPTARG;;
     j) BACKGROUND=$OPTARG;;
+    t) THREADS=$OPTARG;;
     r) RUN=$OPTARG;;
     s) SCALE="--scale client=${OPTARG}";;
+    v) INTERVAL=$OPTARG;;
     *) ;;
   esac
 done
@@ -37,11 +41,9 @@ sleep "${PAUSE}"
 echo -e "${RUN}\t${BASE}" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/info.txt
 
 # Run the monitoring tool on the docker run command
-
-INTERVAL=100
-ENVI="NAME=${BASE/:/} FILE=${DOCKERFILE} IMAGE=${BASE} ISOLATE_CPU=${ISOLATE} BACKGROUND_CPU=${BACKGROUND}"
+ENVI="NAME=${BASE/:/} FILE=${DOCKERFILE} IMAGE=${BASE} ISOLATE_CPU=${ISOLATE} BACKGROUND_CPU=${BACKGROUND} THREADS_CPU=${THREADS}" 
 MONITOR="perf stat -I ${INTERVAL} -x \"\t\" -o results/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.tsv --append -C ${ISOLATE} -e power/energy-pkg/"
-MONITOR="/home/tdurieux/git/greenserver/resource_usage/monitor -i ${INTERVAL} -o results/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.tsv --"
+# MONITOR="/home/tdurieux/git/greenserver/resource_usage/monitor -i ${INTERVAL} -o results/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.tsv --"
 CMD="docker compose -f workloads/${WORKLOAD}/docker-compose.yml up ${SCALE} --abort-on-container-exit"
 
 echo -e "Started at `date -R`" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/"${BASE/:/}"/run-"${RUN}".txt
@@ -49,10 +51,7 @@ echo -e "CMD: $ENVI $MONITOR $CMD \n\n" >> logs/experiment-"${EXPID}"/"${WORKLOA
 
 eval "$ENVI $MONITOR $CMD" 2>&1 | tee -a logs/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.txt
 
-# NAME="${BASE/:/}" FILE="${DOCKERFILE}" IMAGE="${BASE}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" perf stat -o results/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt --append -C "${ISOLATE}" -e power/energy-pkg/ \
-# docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up ${SCALE} --abort-on-container-exit 2>&1 | tee -a logs/"${WORKLOAD}"-"${EXPID}"/"${BASE/:/}".txt
-
 # Remove the containers
-NAME="${BASE/:/}" FILE="${DOCKERFILE}" IMAGE="${BASE}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml down
+eval "$ENVI docker compose -f workloads/${WORKLOAD}/docker-compose.yml down"
 
 echo -e "\n\nEnded at `date -R`" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/"${BASE/:/}"/run-"${RUN}".txt

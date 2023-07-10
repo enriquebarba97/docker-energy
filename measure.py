@@ -14,8 +14,10 @@ class Workload:
         queue: list,
         isolate_cpus: str,
         background_cpus: str,
+        threads: int,
         warmup: int,
         pause: int,
+        interval: int,
         clients: int,
     ):
         self.exp_id = exp_id
@@ -24,8 +26,10 @@ class Workload:
         self.queue = queue
         self.isolate_cpus = isolate_cpus
         self.background_cpus = background_cpus
+        self.threads = threads
         self.warmup = warmup
         self.pause = pause
+        self.interval = interval
         self.clients = clients
 
     def prepare(self):
@@ -41,6 +45,8 @@ class Workload:
             self.isolate_cpus,
             "-j",
             self.background_cpus,
+            "-t",
+            str(self.threads),
             "-w",
             str(self.warmup),
         ]
@@ -63,8 +69,12 @@ class Workload:
             self.isolate_cpus,
             "-j",
             self.background_cpus,
+            "-t",
+            str(self.threads),
             "-p",
             str(self.pause),
+            "-v",
+            str(self.interval),
         ]
 
         if self.clients > 0:
@@ -114,6 +124,7 @@ def parse_args(argv):
     number = 30
     warmup = 15
     pause = 15
+    interval = 100
     shuffle_mode = True
     help_mode = False
     cpus = 0
@@ -129,6 +140,7 @@ def parse_args(argv):
         "n:"  # number of runs
         "w:"  # warm up time
         "p:"  # pause time
+        "i:"  # interval of monitoring
         "o:"  # options for the Docker run command
         "c:"  # command for the Docker run command
         "s"  # shuffle mode
@@ -146,6 +158,7 @@ def parse_args(argv):
             "runs=",
             "warmup=",
             "pause=",
+            "interval=",
             "options=",
             "command=",
         ],
@@ -189,6 +202,11 @@ def parse_args(argv):
                 pause = int(arg)
             except ValueError:
                 print("Pause time must be an integer")
+        elif opt in ["-i", "--interval"]:
+            try:
+                interval = int(arg)
+            except ValueError:
+                print("Pause time must be an integer")
         # Set the options for the Docker run command
         elif opt in ["-o", "--options"]:
             opt = "-o"
@@ -219,6 +237,7 @@ def parse_args(argv):
         "cpuset": cpuset,
         "warmup": warmup,
         "pause": pause,
+        "interval": interval,
         "all_images": all_images,
         "all_workloads": all_workloads,
     }
@@ -311,10 +330,11 @@ def set_cpuset(cpuset, reserve=[]):
         background_cpus = set(range(psutil.cpu_count()))
 
     # Convert the sets to strings
+    threads = len(isolate_cpus)
     isolate_cpus = ",".join(str(i) for i in list(isolate_cpus))
     background_cpus = ",".join(str(i) for i in list(background_cpus))
 
-    return isolate_cpus, background_cpus
+    return isolate_cpus, background_cpus, threads
 
 
 def get_workloads(directory: str):
@@ -382,7 +402,7 @@ def main(argv):
             cpuset = ""
             reserve = []
 
-        isolate_cpus, background_cpus = set_cpuset(cpuset, reserve)
+        isolate_cpus, background_cpus, threads = set_cpuset(cpuset, reserve)
 
         # Use all images if all_images is enabled, otherwise use the provided images (if they exist)
         images = set(config["images"]) if "images" in config.keys() else set()
@@ -410,8 +430,10 @@ def main(argv):
             queue,
             isolate_cpus,
             background_cpus,
+            threads,
             arguments["warmup"],
             arguments["pause"],
+            arguments["interval"],
             clients,
         )
 

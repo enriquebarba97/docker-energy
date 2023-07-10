@@ -27,9 +27,10 @@ OPTIONS=()
 COMMAND=()
 ISOLATE=""
 BACKGROUND=""
+THREADS=1
 
 # Get the arguments
-while getopts "x:l:b:w:o:c:i:j:" arg; do
+while getopts "x:l:b:w:o:c:i:j:t:" arg; do
   case $arg in
     x) EXPID=$OPTARG;;
     l) WORKLOAD=$OPTARG;;
@@ -43,6 +44,7 @@ while getopts "x:l:b:w:o:c:i:j:" arg; do
       COMMAND+=("${FLAG}" "${ARG}");;
     i) ISOLATE=$OPTARG;;
     j) BACKGROUND=$OPTARG;;
+    t) THREADS=$OPTARG;;
     *) ;;
   esac
 done
@@ -62,12 +64,15 @@ for i in "${BASE[@]}"; do
 
 
   set_dockerfile "${i}"
-  
-  NAME="${i/:/}" FILE="${DOCKERFILE}" IMAGE="${i}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml build
 
-  NAME="${i/:/}" FILE="${DOCKERFILE}" IMAGE="${i}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml up --abort-on-container-exit
 
-  NAME="${i/:/}" FILE="${DOCKERFILE}" IMAGE="${i}" ISOLATE_CPU="${ISOLATE}" BACKGROUND_CPU="${BACKGROUND}" docker compose -f workloads/"${WORKLOAD}"/docker-compose.yml down
+  ENVI="NAME=${i/:/} FILE=${DOCKERFILE} IMAGE=${i} ISOLATE_CPU=${ISOLATE} BACKGROUND_CPU=${BACKGROUND} THREADS_CPU=${THREADS}"
+
+  eval "$ENVI docker compose -f workloads/${WORKLOAD}/docker-compose.yml build"
+
+  eval "$ENVI docker compose -f workloads/${WORKLOAD}/docker-compose.yml up --abort-on-container-exit"
+
+  eval "$ENVI docker compose -f workloads/${WORKLOAD}/docker-compose.yml down"
 done
 
 # Log the docker images information
