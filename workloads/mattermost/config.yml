@@ -3,6 +3,7 @@ description: 'Mattermost is an open source platform for secure collaboration acr
 development: false
 cpus: 1
 clients: 1
+docker: true
 images:
     - 'ubuntu:latest'
     - 'debian:latest'

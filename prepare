@@ -3,10 +3,10 @@
 set_dockerfile() {
   # If alpine is selected, use the alpine Dockerfile;
   if [[ "$1" == "alpine"* ]]; then 
-    DOCKERFILE=DockerfileAlpine; 
+    DOCKERFILE=Dockerfile.alpine; 
   # If centos is selected, use the centos Dockerfile
   elif [[ "$1" == "centos"* ]]; then
-    DOCKERFILE=DockerfileCentos;
+    DOCKERFILE=Dockerfile.centos;
   else 
     DOCKERFILE=Dockerfile; 
   fi

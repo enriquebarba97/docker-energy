@@ -1,0 +1,5 @@
+ARG BASE=alpine:latest
+
+FROM ${BASE} as build
+
+CMD sleep ${TIME}

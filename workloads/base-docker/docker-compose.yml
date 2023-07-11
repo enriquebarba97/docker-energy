@@ -1,0 +1,11 @@
+services:
+    base-docker:
+        image: base-docker-${NAME}
+        container_name: base-docker-${NAME}
+        cpuset: ${ISOLATE_CPU}
+        build:
+            context: '${PWD}/workloads/base-docker'
+            dockerfile: '$PWD/workloads/base-docker/${FILE}'
+            args:
+                - BASE=${IMAGE}
+        command: sleep 20

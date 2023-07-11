@@ -2,6 +2,7 @@ name: 'llama.cpp'
 description: 'Inference of LLaMA model in pure C/C++'
 development: false
 cpus: 2
+docker: true
 images:
     - 'ubuntu:latest'
     - 'debian:latest'

@@ -7,7 +7,7 @@ services:
             - '3000:3000'
         build:
             context: '${PWD}/cypress-realworld-app'
-            dockerfile: '${PWD}/workloads/cypress-realworld-app/DockerfileReact'
+            dockerfile: '${PWD}/workloads/cypress-realworld-app/Dockerfile.react'
         healthcheck:
             test: curl --head -X GET localhost:3000
             interval: 10s
@@ -19,7 +19,7 @@ services:
         cpuset: ${BACKGROUND_CPU}
         build:
             context: '${PWD}/cypress-realworld-app'
-            dockerfile: '${PWD}/workloads/cypress-realworld-app/DockerfileCypress'
+            dockerfile: '${PWD}/workloads/cypress-realworld-app/Dockerfile.client'
         depends_on:
             frontend:
                 condition: service_healthy

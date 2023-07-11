@@ -296,7 +296,8 @@ def set_cpuset(cpuset, reserve=[]):
     if cpuset == "":
         isolate_cpus = ",".join(str(i) for i in list(background_cpus))
         background_cpus = ",".join(str(i) for i in list(background_cpus))
-        return isolate_cpus, background_cpus
+        threads = len(isolate_cpus)
+        return isolate_cpus, background_cpus, threads
 
     # If a cpuset is specified, isolate the specified CPUs
     total_cpus = set(range(psutil.cpu_count()))

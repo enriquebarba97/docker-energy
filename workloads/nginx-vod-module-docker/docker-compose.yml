@@ -18,6 +18,6 @@ services:
         cpuset: ${BACKGROUND_CPU}
         build:
             context: '${PWD}/nginx-vod-module-docker'
-            dockerfile: '$PWD/workloads/nginx-vod-module-docker/DockerfileVlc'
+            dockerfile: '$PWD/workloads/nginx-vod-module-docker/Dockerfile.client'
         depends_on:
             - vod-module

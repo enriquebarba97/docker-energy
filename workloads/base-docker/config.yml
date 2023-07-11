@@ -1,6 +1,7 @@
-name: 'mcserver'
-description: 'Minecraft Server'
+name: 'base-docker'
+description: 'Baseline workload with Docker containers'
 development: false
+cpus: 1
 docker: true
 images:
     - 'ubuntu:latest'

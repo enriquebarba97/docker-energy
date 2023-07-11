@@ -4,7 +4,7 @@ services:
         cpuset: ${BACKGROUND_CPU}
         build:
             context: '${PWD}/workloads/mcserver'
-            dockerfile: '${PWD}/workloads/mcserver/DockerfileClient'
+            dockerfile: '${PWD}/workloads/mcserver/Dockerfile.client'
             args:
                 - BOT="bot2"
         network_mode: host

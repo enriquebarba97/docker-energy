@@ -5,13 +5,13 @@ services:
         cpuset: ${BACKGROUND_CPU}
         build:
             context: .
-            dockerfile: DockerfileMysql
+            dockerfile: Dockerfile.mysql
     client:
         image: mattermost-cypress
         cpuset: ${BACKGROUND_CPU}
         build:
             context: '${PWD}/mattermost/e2e-tests/cypress'
-            dockerfile: '${PWD}/workloads/mattermost/DockerfileCypress'
+            dockerfile: '${PWD}/workloads/mattermost/Dockerfile.client'
         depends_on:
             mattermost:
                 condition: service_healthy

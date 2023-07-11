@@ -1,0 +1,5 @@
+ARG BASE=centos:latest
+
+FROM ${BASE} as build
+
+CMD sleep ${TIME}

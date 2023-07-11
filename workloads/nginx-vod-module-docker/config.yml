@@ -3,6 +3,7 @@ description: 'Docker NGINX-based MP4 Repackager'
 development: false
 cpus: 1
 clients: 2
+docker: true
 images:
     - 'ubuntu:latest'
     - 'debian:latest'
