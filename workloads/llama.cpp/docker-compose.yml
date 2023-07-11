@@ -10,4 +10,4 @@ services:
                 - BASE=${IMAGE}
         volumes:
             - '${PWD}/llama.cpp/models:/models'
-        command: -m /models/7B/ggml-model-q4_0.bin -p "Building a website can be done in 10 simple steps:" -n 32 --seed 12345678 -t '${THREADS_CPU}'
+        command: -m /models/7B/ggml-model-q4_0.bin -p "Building a website can be done in 10 simple steps:" -n 1024 --seed 12345678 -t '${THREADS_CPU}'

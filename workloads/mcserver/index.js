@@ -44,7 +44,7 @@ const connect = () => {
         mcData = require('minecraft-data')(bot.version);
         collectGrass(bot, mcData);
 
-        await bot.waitForTicks(1200);
+        await bot.waitForTicks(2400);
         bot.chat("I'm done!");
         bot.quit();
         process.exit();

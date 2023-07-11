@@ -1,6 +1,8 @@
 name: 'mcserver'
 description: 'Minecraft Server'
 development: false
+cpus: 1
+clients: 1
 docker: true
 images:
     - 'ubuntu:latest'
