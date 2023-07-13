@@ -8,4 +8,4 @@ services:
             dockerfile: '$PWD/workloads/base-docker/${FILE}'
             args:
                 - BASE=${IMAGE}
-        command: sleep 20
+                - TIME=120

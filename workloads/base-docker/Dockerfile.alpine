@@ -1,5 +1,10 @@
 ARG BASE=alpine:latest
+ARG TIME=120
 
 FROM ${BASE} as build
+
+ARG TIME
+
+ENV TIME=${TIME}
 
 CMD sleep ${TIME}
