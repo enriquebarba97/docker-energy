@@ -4,7 +4,7 @@ services:
         container_name: llama.cpp-${NAME}
         cpuset: ${ISOLATE_CPU}
         build:
-            context: '${PWD}/llama.cpp'
+            context: '$PWD/workloads/llama.cpp/'
             dockerfile: '$PWD/workloads/llama.cpp/${FILE}'
             args:
                 - BASE=${IMAGE}

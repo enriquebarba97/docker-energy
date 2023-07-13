@@ -2,11 +2,6 @@ ARG BASE=alpine:latest
 
 FROM ${BASE} as build
 
-RUN apk update && \
-apk --no-cache --update add build-base
-
-COPY . .
-
-RUN make
+COPY linux-binaries .
 
 ENTRYPOINT [ "/main" ]
