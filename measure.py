@@ -19,6 +19,7 @@ class Workload:
         pause: int,
         interval: int,
         clients: int,
+        monitor: str,
     ):
         self.exp_id = exp_id
         self.name = name
@@ -31,6 +32,7 @@ class Workload:
         self.pause = pause
         self.interval = interval
         self.clients = clients
+        self.monitor = monitor
 
     def prepare(self):
         # Execute the given command
@@ -75,6 +77,8 @@ class Workload:
             str(self.pause),
             "-v",
             str(self.interval),
+            "-m",
+            self.monitor,
         ]
 
         if self.clients > 0:
@@ -106,6 +110,7 @@ def help():
         "   -w --warmup         Warm up time (s) (e.g. -w 30) (default 10)",
         "   -p --pause          Pause time (s) (e.g. -p 60) (default 15)",
         "   -i --interval       Interval of monitoring (ms) (e.g. -i 100) (default 100)",
+        '   -m --monitor        Monitoring tool (e.g. -m "perf") (default "greenserver")',
         # '   -o --options        Options for the Docker run command (default "")',
         # '   -c --command        Command for the Docker run command (default "")',
         "   --all-images        Monitor all compatible base images (i.e. ubuntu, debian, alpine, centos)",
@@ -126,6 +131,7 @@ def parse_args(argv):
     warmup = 15
     pause = 15
     interval = 100
+    monitor = ""
     shuffle_mode = True
     help_mode = False
     cpus = 0
@@ -142,6 +148,7 @@ def parse_args(argv):
         "w:"  # warm up time
         "p:"  # pause time
         "i:"  # interval of monitoring
+        "m:"  # monitoring tool
         "o:"  # options for the Docker run command
         "c:"  # command for the Docker run command
         "s"  # shuffle mode
@@ -160,6 +167,7 @@ def parse_args(argv):
             "warmup=",
             "pause=",
             "interval=",
+            "monitor=",
             "options=",
             "command=",
         ],
@@ -208,6 +216,9 @@ def parse_args(argv):
                 interval = int(arg)
             except ValueError:
                 print("Pause time must be an integer")
+        # Set the monitoring tool
+        elif opt in ["-m", "--monitor"]:
+            monitor = arg
         # Set the options for the Docker run command
         elif opt in ["-o", "--options"]:
             opt = "-o"
@@ -239,6 +250,7 @@ def parse_args(argv):
         "warmup": warmup,
         "pause": pause,
         "interval": interval,
+        "monitor": monitor,
         "all_images": all_images,
         "all_workloads": all_workloads,
     }
@@ -437,6 +449,7 @@ def main(argv):
             arguments["pause"],
             arguments["interval"],
             clients,
+            arguments["monitor"],
         )
 
         # Run the workload

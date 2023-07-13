@@ -1,5 +1,13 @@
 #!/bin/bash
 
+set_monitoring() {
+  if [ "$1" == "perf" ]; then
+    MONITOR="perf stat -I ${INTERVAL} -x \"\t\" -o results/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.tsv --append -C ${ISOLATE} -e power/energy-pkg/"
+  else
+    MONITOR="/home/tdurieux/git/greenserver/resource_usage/monitor -i ${INTERVAL} -o results/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.tsv --"
+  fi
+}
+
 # Default values
 EXPID=-1
 WORKLOAD="llama.cpp"
@@ -13,7 +21,7 @@ THREADS=1
 INTERVAL=100
 
 # Get the arguments
-while getopts "x:l:b:p:o:c:i:j:r:s:t:v:" arg; do
+while getopts "x:l:b:p:o:c:i:j:r:s:t:v:m:" arg; do
   case $arg in
     x) EXPID=$OPTARG;;
     l) WORKLOAD=$OPTARG;;
@@ -31,6 +39,7 @@ while getopts "x:l:b:p:o:c:i:j:r:s:t:v:" arg; do
     r) RUN=$OPTARG;;
     s) SCALE="--scale client=${OPTARG}";;
     v) INTERVAL=$OPTARG;;
+    m) MONITOR_TOOL=$OPTARG;;
     *) ;;
   esac
 done
@@ -42,8 +51,9 @@ echo -e "${RUN}\t${BASE}" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/info.txt
 
 # Run the monitoring tool on the docker run command
 ENVI="NAME=${BASE/:/} FILE=${DOCKERFILE} IMAGE=${BASE} ISOLATE_CPU=${ISOLATE} BACKGROUND_CPU=${BACKGROUND} THREADS_CPU=${THREADS}" 
-MONITOR="perf stat -I ${INTERVAL} -x \"\t\" -o results/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.tsv --append -C ${ISOLATE} -e power/energy-pkg/"
-# MONITOR="/home/tdurieux/git/greenserver/resource_usage/monitor -i ${INTERVAL} -o results/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.tsv --"
+
+set_monitoring "${MONITOR_TOOL}"
+
 CMD="docker compose -f workloads/${WORKLOAD}/docker-compose.yml up ${SCALE} --abort-on-container-exit"
 
 echo -e "Started at `date -R`" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/"${BASE/:/}"/run-"${RUN}".txt
