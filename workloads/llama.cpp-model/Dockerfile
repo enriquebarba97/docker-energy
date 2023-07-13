@@ -1,0 +1,20 @@
+ARG BASE=ubuntu:latest
+
+FROM ${BASE} as build_binary
+
+WORKDIR /app
+
+COPY --from=binary . .
+
+FROM ${BASE} as build_model
+
+WORKDIR /app
+
+COPY --from=model /7B/ggml-model-q4_0.bin ./models/7B/ggml-model-q4_0.bin
+
+FROM ${BASE} as runtime
+
+COPY --from=build_binary /app .
+COPY --from=build_model /app .
+
+ENTRYPOINT [ "/main" ]

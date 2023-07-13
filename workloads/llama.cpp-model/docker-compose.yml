@@ -1,0 +1,14 @@
+services:
+    llama.cpp-model:
+        image: llama.cpp-model-${NAME}
+        container_name: llama.cpp-model-${NAME}
+        cpuset: ${ISOLATE_CPU}
+        build:
+            context: .
+            additional_contexts:
+                binary: '$PWD/workloads/llama.cpp/linux-binaries'
+                model: '$PWD/llama.cpp/models'
+            dockerfile: '$PWD/workloads/llama.cpp-model/${FILE}'
+            args:
+                - BASE=${IMAGE}
+        command: -m /models/7B/ggml-model-q4_0.bin -p "Building a website can be done in 10 simple steps:" -n 1024 --seed 12345678 -t '${THREADS_CPU}'

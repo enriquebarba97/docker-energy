@@ -1,0 +1,10 @@
+name: 'llama.cpp-model'
+description: 'Inference of LLaMA model in pure C/C++; similar to the llama.cpp workload, but this workload includes the model in the container instead of using volumes'
+development: false
+cpus: 2
+docker: true
+images:
+    - 'ubuntu:latest'
+    - 'debian:latest'
+    - 'alpine:latest'
+    - 'centos:latest'
