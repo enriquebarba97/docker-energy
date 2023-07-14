@@ -1,0 +1,9 @@
+ARG BASE=alpine:latest
+
+FROM ${BASE} as build
+
+RUN apk update && apk add --no-cache redis
+
+EXPOSE 6379
+
+CMD ["redis-server", "--protected-mode no"]

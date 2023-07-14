@@ -1,6 +1,6 @@
 ARG BASE=centos:latest
 
-FROM ${BASE} as build_binary
+FROM ${BASE} as build
 
 COPY --from=binary . .
 

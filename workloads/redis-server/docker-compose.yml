@@ -1,0 +1,31 @@
+services:
+    redis-server:
+        image: redis-server-${NAME}
+        container_name: redis-server-${NAME}
+        cpuset: ${ISOLATE_CPU}
+        build:
+            context: '${PWD}/workloads/redis-server'
+            dockerfile: '$PWD/workloads/redis-server/${FILE}'
+            args:
+                - BASE=${IMAGE}
+        ports:
+            - '6379:6379'
+        healthcheck:
+            test: ['CMD', 'redis-cli', 'ping']
+            interval: 10s
+            retries: 20
+            start_period: 5s
+            timeout: 10s
+    client:
+        image: redis-benchmark
+        cpuset: ${BACKGROUND_CPU}
+        build:
+            context: '${PWD}/workloads/redis-server'
+            dockerfile: '${PWD}/workloads/redis-server/Dockerfile.client'
+            args:
+                - REQUESTS=1000000
+                - KEYSPACE=100000
+        network_mode: host
+        depends_on:
+            redis-server:
+                condition: service_healthy

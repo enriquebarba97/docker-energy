@@ -1,0 +1,14 @@
+ARG REQUESTS=1000000
+ARG KEYSPACE=100000
+
+FROM redis:latest
+
+RUN apt-get update && apt-get install -y redis-tools
+
+ARG REQUESTS
+ARG KEYSPACE
+
+ENV REQUESTS=${REQUESTS}
+ENV KEYSPACE=${KEYSPACE}
+
+CMD redis-benchmark -n ${REQUESTS} -r ${KEYSPACE} -h localhost -p 6379
