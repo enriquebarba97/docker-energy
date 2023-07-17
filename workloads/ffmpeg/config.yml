@@ -1,0 +1,10 @@
+name: 'ffmpeg'
+description: 'FFmpeg is a cross-platform solution to record, convert and stream audio and video.'
+development: true
+cpus: 1
+docker: true
+images:
+    - 'ubuntu:latest'
+    - 'debian:latest'
+    - 'alpine:latest'
+    - 'centos:latest'

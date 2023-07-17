@@ -1,0 +1,7 @@
+ARG BASE=alpine:latest
+
+FROM ${BASE} as build
+
+RUN apk update && apk add --no-cache ffmpeg
+
+ENTRYPOINT ["ffmpeg"]

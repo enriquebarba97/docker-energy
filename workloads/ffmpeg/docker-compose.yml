@@ -1,0 +1,13 @@
+services:
+    ffmpeg:
+        image: ffmpeg-${NAME}
+        container_name: ffmpeg-${NAME}
+        cpuset: ${ISOLATE_CPU}
+        build:
+            context: '${PWD}/workloads/ffmpeg'
+            dockerfile: '$PWD/workloads/ffmpeg/${FILE}'
+            args:
+                - BASE=${IMAGE}
+        volumes:
+            - '${PWD}/workloads/ffmpeg/videos/:/videos'
+        command: -f rawvideo -pix_fmt yuv420p -video_size 1920x1080 -framerate 120 -i videos/ReadySteadyGo_1920x1080_120fps_420_8bit_YUV.yuv -f mp4 out.mp4
