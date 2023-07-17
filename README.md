@@ -96,21 +96,32 @@ This `setup` script installs the following dependencies:
 The `measure.py` script is used to measure the energy consumption of Docker containers for the various workloads using different base images.
 It takes the following arguments:
 
--   **_-l_** or **_--workload_**: Workload to monitor (e.g. -l "llama.cpp" or -l "video-stream")
--   **_-b_** or **_--base_**: Base image to monitor; can be used for multiple base images (e.g. -b ubuntu -b alpine) (default "ubuntu")
--   **_-n_** or **_--runs_**: Number of monitoring runs per base image (e.g. -n 30) (default 1)
+-   **_-l_** or **_--workload_**: Workload to monitor; can be used to for multiple workloads (e.g. -l llama.cpp -l mattermost)
+-   **_-b_** or **_--base_**: Base image to monitor; can be used for multiple base images (e.g. -b ubuntu -b alpine) (default all defined images in config.yml)
+-   **_-n_** or **_--runs_**: Number of monitoring runs per base image (e.g. -n 30) (default 30)
 -   **_-w_** or **_--warmup_**: Warm up time (s) (e.g. -w 30) (default 10)
 -   **_-p_** or **_--pause_**: Pause time (s) (e.g. -p 60) (default 15)
--   **_-o_** or **_--options_**: Options for the Docker run command (default "")
--   **_-c_** or **_--command_**: Command for the Docker run command (default "")
--   **_-i_** or **_--isolate_**: Specify the cpus on which the containerized workload must be pinned; the client processes will be pinned on the remaining cpus (e.g. -i "0-3, 6")
--   **_-a_** or **_--all_**: Monitor all compatible base images (i.e. ubuntu, debian, alpine, centos)
--   **_--shuffle_**: Enables shuffle mode; random order of monitoring base images
+-   **_-i_** or **_--interval_**: Interval of monitoring (ms) (e.g. -i 100) (default 100)
+-   **_-m_** or **_--monitor_**: Monitoring tool (e.g. -m "perf") (default "greenserver")
+<!-- -   **_-o_** or **_--options_**: Options for the Docker run command (default "")
+-   **_-c_** or **_--command_**: Command for the Docker run command (default "") -->
+-   **_--all-images_**: Monitor all compatible base images (i.e. ubuntu, debian, alpine, centos
+-   **_--all-workloads_**: Monitor all compatible workloads (i.e. llama.cpp, nginx-vod-module-docker, cypress-realworld-app, mattermost)
+-   **_--full_**: Monitor all compatible workloads using all compatible base images
+-   **_--no-shuffle_**: Disables shuffle mode; regular order of monitoring base images
+-   **_--cpus_**: Number of CPUs to isolate; will use threads on the same physical core (e.g. --cpus 2)
+-   **_--cpuset_**: CPUs to isolate (e.g. --cpuset 0-1)
 
-For example, to obtain 30 energy consumption measurements and power samples of the _llama.cpp_ using _ubuntu_, _debian_, and _alpine_, on cpus 3 and 7, in shuffle mode, run the following command:
+For example, to obtain 30 energy consumption measurements and power samples of the _llama.cpp_ using _ubuntu_, _debian_, and _alpine_, on cpus 0 and 12, in shuffle mode, run the following command:
 
 ```bash
-python measure.py -l llama.cpp -b ubuntu -b debian -b alpine -n 30 -i "3,7" --shuffle
+python measure.py -l llama.cpp -b ubuntu -b debian -b alpine -n 30 --cpuset "0,12"
+```
+
+In order to run all available workloads with their corresponding configurations, run the following command:
+
+```bash
+python measure.py --full
 ```
 
 This command will output the logs of the warm-up and the workload for each image in `logs/llama.cpp-{uuid}`.
@@ -129,11 +140,19 @@ If you used _perf_ to measure the energy consumption, use the following command:
 python parse.py -d results/<experiment-folder> --perf
 ```
 
-If you used another tool to measure the energy consumption, which outputs the results as samples in a table including a header, use the following command:
+If you used _greenserver_ to measure the energy consumption, use the following command:
+
+```bash
+python parse.py -d results/<experiment-folder> --greenserver
+```
+
+These commands will output the summary of the samples in `results/<experiment-folder>`.
+
+<!-- If you used another tool to measure the energy consumption, which outputs the results as samples in a table including a header, use the following command:
 
 ```bash
 python parse.py -d results/<experiment-folder> --samples
-```
+``` -->
 
 ### Statistical analysis
 

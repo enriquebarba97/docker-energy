@@ -104,7 +104,7 @@ def help():
     print(
         "A tool for measuring energy consumption for specific workloads using different base images.\n",
         "Options:",
-        "   -l --workload       Workload to monitor; can be used to for multiple workloads (e.g. -l llama.cpp -l video-stream)",
+        "   -l --workload       Workload to monitor; can be used to for multiple workloads (e.g. -l llama.cpp -l mattermost)",
         '   -b --base           Base image to monitor; can be used for multiple base images (e.g. -b ubuntu -b alpine) (default "ubuntu")',
         "   -n --runs           Number of monitoring runs per base image (e.g. -n 30) (default 1)",
         "   -w --warmup         Warm up time (s) (e.g. -w 30) (default 10)",
