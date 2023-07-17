@@ -1,0 +1,12 @@
+services:
+    postgres-server:
+        image: postgres-server-${NAME}
+        container_name: postgres-server-${NAME}
+        cpuset: ${ISOLATE_CPU}
+        build:
+            context: '${PWD}/workloads/postgres-server'
+            dockerfile: '$PWD/workloads/postgres-server/${FILE}'
+            args:
+                - BASE=${IMAGE}
+        ports:
+            - '5432:5432'
