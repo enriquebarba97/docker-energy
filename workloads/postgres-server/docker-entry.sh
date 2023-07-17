@@ -5,9 +5,9 @@ set -e
 POSTGRES_PASSWORD=postgres
 POSTGRES_PASSWORD_USER=postgres
 
-# service postgresql start
-initdb -D /var/lib/postgresql/data
-postgres -D /var/lib/postgresql/data
+service postgresql start
+# initdb -D /var/lib/postgresql/data
+# postgres -D /var/lib/postgresql/data
 
 createdb testdb
 
