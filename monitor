@@ -50,7 +50,7 @@ sleep "${PAUSE}"
 echo -e "${RUN}\t${BASE}" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/info.txt
 
 # Run the monitoring tool on the docker run command
-ENVI="NAME=${BASE/:/} FILE=${DOCKERFILE} IMAGE=${BASE} ISOLATE_CPU=${ISOLATE} BACKGROUND_CPU=${BACKGROUND} THREADS_CPU=${THREADS}" 
+ENVI="NAME=${BASE%%@*} FILE=${DOCKERFILE} IMAGE=${BASE} ISOLATE_CPU=${ISOLATE} BACKGROUND_CPU=${BACKGROUND} THREADS_CPU=${THREADS}" 
 
 set_monitoring "${MONITOR_TOOL}"
 

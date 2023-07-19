@@ -66,7 +66,7 @@ for i in "${BASE[@]}"; do
   set_dockerfile "${i}"
 
 
-  ENVI="NAME=${i/:/} FILE=${DOCKERFILE} IMAGE=${i} ISOLATE_CPU=${ISOLATE} BACKGROUND_CPU=${BACKGROUND} THREADS_CPU=${THREADS}"
+  ENVI="NAME=${i%%@*} FILE=${DOCKERFILE} IMAGE=${i} ISOLATE_CPU=${ISOLATE} BACKGROUND_CPU=${BACKGROUND} THREADS_CPU=${THREADS}"
 
   eval "$ENVI docker compose -f workloads/${WORKLOAD}/docker-compose.yml build"
 
