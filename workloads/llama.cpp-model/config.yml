@@ -4,7 +4,7 @@ development: false
 cpus: 2
 docker: true
 images:
-    - 'ubuntu:latest'
-    - 'debian:latest'
-    - 'alpine:latest'
-    - 'centos:latest'
+    - 'ubuntu:22.04'
+    - 'debian:12.0'
+    - 'alpine:3.18.2'
+    - 'centos:8.4.2105'
