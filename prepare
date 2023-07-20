@@ -1,14 +1,11 @@
 #!/bin/bash
 
 set_dockerfile() {
-  # If alpine is selected, use the alpine Dockerfile;
-  if [[ "$1" == "alpine"* ]]; then 
-    DOCKERFILE=Dockerfile.alpine; 
-  # If centos is selected, use the centos Dockerfile
-  elif [[ "$1" == "centos"* ]]; then
-    DOCKERFILE=Dockerfile.centos;
-  else 
+  if [[ "$1" = "ubuntu"* ]] || [[ "$1" = "debian"* ]]; then
     DOCKERFILE=Dockerfile; 
+  else
+    DIGEST="${1%%@*}"
+    DOCKERFILE=Dockerfile."${DIGEST%%:*}";
   fi
 }
 
