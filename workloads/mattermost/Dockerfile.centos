@@ -1,7 +1,6 @@
 # Copyright (c) 2016-present Mattermost, Inc. All Rights Reserved.
 # See License.txt for license information.
-# FROM debian:latest
-ARG BASE=centos:latest
+ARG BASE=centos@sha256:a1801b843b1bfaf77c501e7a6d3f709401a1e0c83863037fa3aab063a7fdb9dc
 
 FROM ${BASE}
 

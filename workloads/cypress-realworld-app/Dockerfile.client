@@ -1,4 +1,4 @@
-FROM node:16
+FROM node@sha256:b04c99456868ce5e52dfdd3307b3d2a212deeec792b29692e19fb8b9078ae125
 
 RUN apt-get update && \
     apt-get install --no-install-recommends -y libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb

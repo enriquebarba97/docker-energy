@@ -1,7 +1,6 @@
 # Copyright (c) 2016-present Mattermost, Inc. All Rights Reserved.
 # See License.txt for license information.
-# FROM debian:latest
-ARG BASE=alpine:latest
+ARG BASE=alpine@sha256:25fad2a32ad1f6f510e528448ae1ec69a28ef81916a004d3629874104f8a7f70
 
 FROM ${BASE}
 
