@@ -1,0 +1,10 @@
+name: 'base-docker-model'
+description: 'Baseline workload with Docker containers with bloat'
+development: false
+cpus: 2
+docker: true
+images:
+    - 'ubuntu@sha256:b060fffe8e1561c9c3e6dea6db487b900100fc26830b9ea2ec966c151ab4c020'
+    - 'debian@sha256:60774985572749dc3c39147d43089d53e7ce17b844eebcf619d84467160217ab'
+    - 'alpine@sha256:25fad2a32ad1f6f510e528448ae1ec69a28ef81916a004d3629874104f8a7f70'
+    - 'centos@sha256:a1801b843b1bfaf77c501e7a6d3f709401a1e0c83863037fa3aab063a7fdb9dc'

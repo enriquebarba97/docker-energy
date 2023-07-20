@@ -57,7 +57,7 @@ echo -e "### experiment ${EXPID} ###\n# cpus: ${ISOLATE}\n# workload: ${WORKLOAD
   logs/experiment-"${EXPID}"/"${WORKLOAD}"/info.txt
 date +"# started on %c %n" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/warmup.txt
 
-# Build the Docker images and run the workload once for each base image as warm-up
+# Build the Docker image
 for i in "${BASE[@]}"; do
   mkdir -p logs/experiment-"${EXPID}"/"${WORKLOAD}"/"${i/:/}"
   mkdir -p results/experiment-"${EXPID}"/"${WORKLOAD}"/"${i/:/}"
@@ -65,14 +65,9 @@ for i in "${BASE[@]}"; do
 
   set_dockerfile "${i}"
 
-
   ENVI="NAME=${i%%@*} FILE=${DOCKERFILE} IMAGE=${i} ISOLATE_CPU=${ISOLATE} BACKGROUND_CPU=${BACKGROUND} THREADS_CPU=${THREADS}"
 
   eval "$ENVI docker compose -f workloads/${WORKLOAD}/docker-compose.yml build"
-
-  eval "$ENVI docker compose -f workloads/${WORKLOAD}/docker-compose.yml up --abort-on-container-exit  2>&1 | tee -a logs/experiment-${EXPID}/warmup.txt"
-
-  eval "$ENVI docker compose -f workloads/${WORKLOAD}/docker-compose.yml down"
 done
 
 # Log the docker images information
@@ -80,6 +75,13 @@ echo -e "# docker images\n" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/info.txt
 docker image ls | egrep "REPOSITORY|${WORKLOAD}" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/info.txt
 echo -e "\n# total order\n" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/info.txt
 
+# run the workload once for each base image as warm-up
+for i in "${BASE[@]}"; do
+  ENVI="NAME=${i%%@*} FILE=${DOCKERFILE} IMAGE=${i} ISOLATE_CPU=${ISOLATE} BACKGROUND_CPU=${BACKGROUND} THREADS_CPU=${THREADS}"
+  eval "$ENVI docker compose -f workloads/${WORKLOAD}/docker-compose.yml up --abort-on-container-exit  2>&1 | tee -a logs/experiment-${EXPID}/warmup.txt"
+
+  eval "$ENVI docker compose -f workloads/${WORKLOAD}/docker-compose.yml down"
+done
+
 # Start the warm up procedure
 warmup
-
