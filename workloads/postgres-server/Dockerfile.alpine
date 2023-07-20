@@ -1,16 +1,12 @@
-ARG BASE=ubuntu:latest
+ARG BASE=alpine:latest
 
 FROM ${BASE} as build
 
-ENV TZ=Europe/Amsterdam
-ENV DIST=debian
+ENV DIST=alpine
 ENV VERSION=14
 ENV PATH="${PATH}:/usr/lib/postgresql/${VERSION}/bin"
 
-ARG DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update && apt-get install -y postgresql-${VERSION} postgresql-contrib-${VERSION}
-
+RUN apk update && apk add --no-cache --upgrade bash postgresql14 postgresql14-contrib
 
 EXPOSE 5432
 
@@ -22,7 +18,9 @@ RUN chmod +x ./docker-entry.sh \
     && echo "listen_addresses='*'" >> /etc/postgresql/14/main/postgresql.conf \
     && rm -rf /var/lib/postgresql/${VERSION}/main \
     && mkdir -p /var/lib/postgresql/${VERSION}/main \
-    && chown -R postgres:postgres /var/lib/postgresql/${VERSION}/main
+    && chown -R postgres:postgres /var/lib/postgresql/${VERSION}/main \
+    && mkdir /run/postgresql \
+    && chown -Rs postgres:postgres /run/postgresql
 
 USER postgres
 

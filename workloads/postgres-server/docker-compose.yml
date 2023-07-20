@@ -3,6 +3,10 @@ services:
         image: postgres-server-${NAME}
         container_name: postgres-server-${NAME}
         cpuset: ${ISOLATE_CPU}
+        environment:
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=postgres
+            - POSTGRES_DB=testdb
         build:
             context: '${PWD}/workloads/postgres-server'
             dockerfile: '$PWD/workloads/postgres-server/${FILE}'
@@ -10,3 +14,24 @@ services:
                 - BASE=${IMAGE}
         ports:
             - '5432:5432'
+        network_mode: host
+        healthcheck:
+            test: ['CMD', 'pg_isready', '-U', 'postgres', '-d', 'testdb']
+            interval: 10s
+            retries: 20
+            start_period: 5s
+            timeout: 5s
+    client:
+        image: pgbench
+        cpuset: ${BACKGROUND_CPU}
+        build:
+            context: '${PWD}/workloads/postgres-server'
+            dockerfile: '${PWD}/workloads/postgres-server/Dockerfile.client'
+        network_mode: host
+        environment:
+            PGHOST: localhost
+            PGUSER: postgres
+            PGDATABASE: testdb
+        depends_on:
+            postgres-server:
+                condition: service_healthy

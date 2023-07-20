@@ -1,16 +1,13 @@
 #!/bin/bash
 set -e
 
-# PGPASSWORD=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_PASSWORD_USER=postgres
+if [[ "$DIST" == "centos" ]]; then
+  initdb -D /var/lib/pgsql/14/data
+  pg_ctl -D /var/lib/pgsql/14/data start &
+else
+  initdb -D /var/lib/postgresql/14/main
+  postgres -D /var/lib/postgresql/14/main -c config_file=/etc/postgresql/14/main/postgresql.conf &
+fi
 
-service postgresql start
-# initdb -D /var/lib/postgresql/data
-# postgres -D /var/lib/postgresql/data
-
-createdb testdb
-
-pgbench -i -s 50 testdb
-
-pgbench -c 1 -j 2 -T 10 testdb
+sleep 5
+createdb -U postgres testdb
