@@ -3,7 +3,7 @@ ARG BASE=centos:latest
 FROM ${BASE} as build
 
 ENV DIST=centos
-ENV VERSION=14
+ENV VERSION=15
 ENV PATH="${PATH}:/usr/pgsql-${VERSION}/bin"
 
 RUN cd /etc/yum.repos.d/ \
@@ -19,7 +19,7 @@ EXPOSE 5432
 
 COPY docker-entry.sh .
 
-COPY pg_hba.conf /etc/postgresql/14/main/pg_hba.conf
+COPY pg_hba.conf /etc/postgresql/${VERSION}/main/pg_hba.conf
 
 RUN chmod +x ./docker-entry.sh \
     && echo "listen_addresses='*'" >> /etc/postgresql/${VERSION}/main/postgresql.conf

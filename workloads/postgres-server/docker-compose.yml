@@ -12,8 +12,6 @@ services:
             dockerfile: '$PWD/workloads/postgres-server/${FILE}'
             args:
                 - BASE=${IMAGE}
-        ports:
-            - '5432:5432'
         network_mode: host
         healthcheck:
             test: ['CMD', 'pg_isready', '-U', 'postgres', '-d', 'testdb']

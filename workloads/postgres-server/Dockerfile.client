@@ -1,10 +1,4 @@
-FROM ubuntu:latest
-
-ARG DEBIAN_FRONTEND=noninteractive
-
-ENV TZ=Europe/Amsterdam
-
-RUN apt-get update && apt-get install -y postgresql-client postgresql-contrib
+FROM postgres@sha256:ad126c2b7482bf0ea4f90c2cbb9ab1dfec41ab58d8bef773273a3a1733ad6af0
 
 COPY docker-entry-client.sh .
 

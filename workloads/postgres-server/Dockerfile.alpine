@@ -3,24 +3,24 @@ ARG BASE=alpine:latest
 FROM ${BASE} as build
 
 ENV DIST=alpine
-ENV VERSION=14
+ENV VERSION=15
 ENV PATH="${PATH}:/usr/lib/postgresql/${VERSION}/bin"
 
-RUN apk update && apk add --no-cache --upgrade bash postgresql14 postgresql14-contrib
+RUN apk update && apk add --no-cache --upgrade bash postgresql${VERSION} postgresql${VERSION}-contrib
 
 EXPOSE 5432
 
 COPY docker-entry.sh .
 
-COPY pg_hba.conf /etc/postgresql/14/main/pg_hba.conf
+COPY pg_hba.conf /etc/postgresql/${VERSION}/main/pg_hba.conf
 
 RUN chmod +x ./docker-entry.sh \
-    && echo "listen_addresses='*'" >> /etc/postgresql/14/main/postgresql.conf \
+    && echo "listen_addresses='*'" >> /etc/postgresql/${VERSION}/main/postgresql.conf \
     && rm -rf /var/lib/postgresql/${VERSION}/main \
     && mkdir -p /var/lib/postgresql/${VERSION}/main \
     && chown -R postgres:postgres /var/lib/postgresql/${VERSION}/main \
     && mkdir /run/postgresql \
-    && chown -Rs postgres:postgres /run/postgresql
+    && chown -R postgres:postgres /run/postgresql
 
 USER postgres
 

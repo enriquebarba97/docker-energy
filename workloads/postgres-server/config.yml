@@ -1,6 +1,6 @@
 name: 'postgres-server'
 description: 'PostgreSQL is a powerful, open source object-relational database system.'
-development: true
+development: false
 cpus: 1
 docker: true
 images:
