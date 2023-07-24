@@ -1,0 +1,15 @@
+ARG BASE=centos@sha256:a1801b843b1bfaf77c501e7a6d3f709401a1e0c83863037fa3aab063a7fdb9dc
+
+FROM ${BASE} as build
+
+
+RUN cd /etc/yum.repos.d/ \
+    && sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-* \
+    && sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-* \
+    && yum update -y \
+    && yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm\
+    && yum localinstall --nogpgcheck https://download1.rpmfusion.org/free/el/rpmfusion-free-release-8.noarch.rpm -y \
+    && dnf config-manager --set-enabled powertools \
+    && yum install -y --enablerepo=epel --nobest ffmpeg && rm -rf /var/cache/yum
+
+ENTRYPOINT ["ffmpeg"]
