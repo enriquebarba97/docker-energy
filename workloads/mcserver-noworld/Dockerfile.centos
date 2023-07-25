@@ -1,0 +1,19 @@
+ARG BASE=centos@sha256:a1801b843b1bfaf77c501e7a6d3f709401a1e0c83863037fa3aab063a7fdb9dc
+
+FROM ${BASE}
+
+RUN cd /etc/yum.repos.d/ && \
+    sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-* && \
+    sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-* && \
+    yum update -y && \
+    yum install -y java-17-openjdk-devel java-17-openjdk && rm -rf /var/cache/yum
+
+WORKDIR /app
+
+COPY . /app
+
+EXPOSE 25565:25565
+
+RUN java -Xmx1024M -Xms1024M -jar server-1.19.1.jar nogui
+
+ENTRYPOINT java -Xmx1024M -Xms1024M -jar server-1.19.1.jar nogui

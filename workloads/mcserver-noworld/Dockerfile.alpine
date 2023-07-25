@@ -1,0 +1,16 @@
+ARG BASE=alpine@sha256:25fad2a32ad1f6f510e528448ae1ec69a28ef81916a004d3629874104f8a7f70
+
+FROM ${BASE}
+
+RUN apk update && \
+    apk --no-cache --update add openjdk17-jdk openjdk17-jre
+
+WORKDIR /app
+
+COPY . /app
+
+EXPOSE 25565:25565
+
+RUN java -Xmx1024M -Xms1024M -jar server-1.19.1.jar nogui
+
+ENTRYPOINT java -Xmx1024M -Xms1024M -jar server-1.19.1.jar nogui

@@ -1,0 +1,21 @@
+services:
+    client:
+        image: mcserver-bot
+        cpuset: ${BACKGROUND_CPU}
+        build:
+            context: '${PWD}/workloads/mcserver'
+            dockerfile: '${PWD}/workloads/mcserver/Dockerfile.client'
+            args:
+                - BOT="bot2"
+        network_mode: host
+    mcserver:
+        image: mcserver-${NAME}
+        container_name: mcserver-${NAME}
+        cpuset: ${ISOLATE_CPU}
+        build:
+            context: .
+            dockerfile: ${FILE}
+            args:
+                - BASE=${IMAGE}
+        ports:
+            - '25565:25565'

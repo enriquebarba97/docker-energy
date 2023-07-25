@@ -1,0 +1,15 @@
+ARG BOT="bot1"
+
+FROM node@sha256:b04c99456868ce5e52dfdd3307b3d2a212deeec792b29692e19fb8b9078ae125
+
+ARG BOT
+
+WORKDIR /app
+
+COPY package.json package-lock.json index.js ./
+
+RUN npm install
+
+ENV BOT_NAME=${BOT}
+
+CMD node index.js ${BOT_NAME}
