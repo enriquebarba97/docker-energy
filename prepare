@@ -85,7 +85,7 @@ for i in "${BASE[@]}"; do
     eval "$ENVI docker compose -f workloads/${WORKLOAD}/docker-compose.yml up --abort-on-container-exit  2>&1 | tee -a logs/experiment-${EXPID}/warmup.txt"
     eval "$ENVI docker compose -f workloads/${WORKLOAD}/docker-compose.yml down"
   else
-    eval "$COMMAND 2>&1 | tee -a logs/experiment-${EXPID}/warmup.txt"
+    eval "taskset -c $ISOLATE $COMMAND 2>&1 | tee -a logs/experiment-${EXPID}/warmup.txt"
   fi
 done
 

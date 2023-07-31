@@ -61,7 +61,7 @@ set_monitoring "${MONITOR_TOOL}"
 if [ "$DOCKER" = true ] ; then
   CMD="docker compose -f workloads/${WORKLOAD}/docker-compose.yml up ${SCALE} --abort-on-container-exit"
 else
-  CMD="${COMMAND}"
+  CMD="taskset -c ${ISOLATE} ${COMMAND}"
 fi
 
 
