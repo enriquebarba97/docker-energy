@@ -1,0 +1,6 @@
+name: 'base-machine'
+description: 'Baseline workload without Docker containers'
+development: false
+cpus: 1
+docker: false
+command: 'sleep 120'

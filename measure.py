@@ -20,6 +20,8 @@ class Workload:
         interval: int,
         clients: int,
         monitor: str,
+        docker: bool,
+        command: str,
     ):
         self.exp_id = exp_id
         self.name = name
@@ -33,6 +35,8 @@ class Workload:
         self.interval = interval
         self.clients = clients
         self.monitor = monitor
+        self.docker = docker
+        self.command = command
 
     def prepare(self):
         # Execute the given command
@@ -51,6 +55,10 @@ class Workload:
             str(self.threads),
             "-w",
             str(self.warmup),
+            "-d",
+            str(self.docker),
+            "-c",
+            self.command,
         ]
         for image in self.images:
             command += ["-b", image]
@@ -79,6 +87,10 @@ class Workload:
             str(self.interval),
             "-m",
             self.monitor,
+            "-d",
+            str(self.docker),
+            "-c",
+            self.command,
         ]
 
         if self.clients > 0:
@@ -418,20 +430,31 @@ def main(argv):
 
         isolate_cpus, background_cpus, threads = set_cpuset(cpuset, reserve)
 
+        if "clients" in config.keys() and type(config["clients"]) is int:
+            clients = abs(config["clients"])
+        else:
+            clients = 0
+
         # Use all images if all_images is enabled, otherwise use the provided images (if they exist)
         images = set(config["images"]) if "images" in config.keys() else set()
 
         if not arguments["all_images"]:
             images = images.intersection(arguments["images"])
 
-        if len(images) == 0:
-            print(f"No correct images provided for workload {workload}")
-            continue
-
-        if "clients" in config.keys() and type(config["clients"]) is int:
-            clients = abs(config["clients"])
+        # If the workload is not a Docker workload, use the command from the config
+        docker = True
+        command = ""
+        if "docker" in config.keys() and not config["docker"]:
+            if "command" in config.keys() and type(config["command"]) is str:
+                docker = False
+                command = config["command"]
+                images = set(["machine"])
+            else:
+                continue
         else:
-            clients = 0
+            if len(images) == 0:
+                print(f"No correct images provided for workload {workload}")
+                continue
 
         # Create the queue of images for the workload
         queue = init_queue(images, arguments["number"], arguments["shuffle_mode"])
@@ -450,6 +473,8 @@ def main(argv):
             arguments["interval"],
             clients,
             arguments["monitor"],
+            docker,
+            command,
         )
 
         # Run the workload
