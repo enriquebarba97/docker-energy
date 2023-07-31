@@ -41,7 +41,10 @@ while getopts "x:l:b:w:d:c:i:j:t:" arg; do
     # c)
     #   IFS=' ' read -r FLAG ARG <<< "${OPTARG}"
     #   COMMAND+=("${FLAG}" "${ARG}");;
-    d) DOCKER=$OPTARG;;
+    d) 
+      if [ "$OPTARG" = "False" ] ; then
+        DOCKER=false
+      fi;;
     c) COMMAND=$OPTARG;;
     i) ISOLATE=$OPTARG;;
     j) BACKGROUND=$OPTARG;;
