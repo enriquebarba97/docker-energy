@@ -1,0 +1,7 @@
+name: 'llama.cpp-gpu'
+description: 'Inference of LLaMA model in pure C/C++ with GPU'
+development: false
+cpus: 2
+docker: true
+images:
+    - 'cuda:latest'
