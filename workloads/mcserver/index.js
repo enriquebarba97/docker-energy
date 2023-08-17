@@ -31,7 +31,7 @@ const connect = () => {
         username: `${process.argv[2]}`,
     });
 
-    bot.on('error', (err) => setTimeout(connect, 1e4));
+    bot.on('error', (err) => setTimeout(connect, 1e3));
 
     bot.loadPlugin(require('mineflayer-collectblock').plugin);
 

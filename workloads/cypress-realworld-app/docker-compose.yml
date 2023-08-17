@@ -10,8 +10,8 @@ services:
             dockerfile: '${PWD}/workloads/cypress-realworld-app/Dockerfile.react'
         healthcheck:
             test: curl --head -X GET localhost:3000
-            interval: 10s
-            retries: 20
+            interval: 1s
+            retries: 200
             start_period: 5s
             timeout: 10s
     client:
