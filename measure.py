@@ -141,7 +141,7 @@ def parse_args(argv):
     images = set()
     number = 30
     warmup = 15
-    pause = 15
+    pause = 30
     interval = 100
     monitor = ""
     shuffle_mode = True
