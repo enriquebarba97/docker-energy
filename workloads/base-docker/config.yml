@@ -1,6 +1,6 @@
 name: 'base-docker'
 description: 'Baseline workload with Docker containers'
-development: true
+development: false
 cpus: 1
 docker: true
 images:

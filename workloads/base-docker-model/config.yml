@@ -1,6 +1,6 @@
 name: 'base-docker-model'
 description: 'Baseline workload with Docker containers with bloat'
-development: true
+development: false
 cpus: 2
 docker: true
 images:

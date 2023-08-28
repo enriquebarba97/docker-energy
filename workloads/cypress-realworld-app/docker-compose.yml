@@ -11,9 +11,9 @@ services:
         healthcheck:
             test: curl --head -X GET localhost:3000
             interval: 1s
-            retries: 200
+            retries: 400
             start_period: 5s
-            timeout: 10s
+            timeout: 5s
     client:
         image: cypress-realworld-app-cypress
         cpuset: ${BACKGROUND_CPU}

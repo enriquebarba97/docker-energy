@@ -1,0 +1,81 @@
+#!/bin/bash
+
+set_monitoring() {
+  if [ "$1" == "perf" ]; then
+    MONITOR="perf stat -I ${INTERVAL} -x \"\t\" -o results/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.tsv --append -C ${ISOLATE} -e power/energy-pkg/"
+  else
+    MONITOR="/home/tdurieux/git/greenserver/resource_usage/monitor -i ${INTERVAL} -o results/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.tsv --"
+  fi
+}
+
+# Default values
+EXPID=-1
+WORKLOAD="llama.cpp"
+BASE="ubuntu"
+PAUSE=15
+# OPTIONS=()
+# COMMAND=()
+DOCKER=true
+COMMAND=""
+ISOLATE=""
+BACKGROUND=""
+THREADS=1
+INTERVAL=100
+
+# Get the arguments
+while getopts "x:l:b:p:d:c:i:j:r:s:t:v:m:" arg; do
+  case $arg in
+    x) EXPID=$OPTARG;;
+    l) WORKLOAD=$OPTARG;;
+    b) BASE=$OPTARG;;
+    p) PAUSE=$OPTARG;;
+    # o)
+    #   IFS=' ' read -r FLAG ARG <<< "${OPTARG}"
+    #   OPTIONS+=("${FLAG}" "${ARG}");;
+    # c)
+    #   IFS=' ' read -r FLAG ARG <<< "${OPTARG}"
+    #   COMMAND+=("${FLAG}" "${ARG}");;
+    d) 
+      if [ "$OPTARG" = "False" ] ; then
+        DOCKER=false
+      fi;;
+    c) COMMAND=$OPTARG;;
+    i) ISOLATE=$OPTARG;;
+    j) BACKGROUND=$OPTARG;;
+    t) THREADS=$OPTARG;;
+    r) RUN=$OPTARG;;
+    s) SCALE="--scale client=${OPTARG}";;
+    v) INTERVAL=$OPTARG;;
+    m) MONITOR_TOOL=$OPTARG;;
+    *) ;;
+  esac
+done
+
+# Run and monitor the workload for the specified number of times
+sleep "${PAUSE}"
+
+echo -e "${RUN}\t${BASE}" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/info.txt
+
+# Run the monitoring tool on the docker run command
+ENVI="NAME=${BASE%%@*} FILE=${DOCKERFILE} IMAGE=${BASE} ISOLATE_CPU=${ISOLATE} BACKGROUND_CPU=${BACKGROUND} THREADS_CPU=${THREADS}" 
+
+set_monitoring "${MONITOR_TOOL}"
+
+if [ "$DOCKER" = true ] ; then
+  CMD="docker compose -f workloads/${WORKLOAD}/docker-compose.yml up ${SCALE} --abort-on-container-exit"
+else
+  CMD="taskset -c ${ISOLATE} ${COMMAND}"
+fi
+
+
+echo -e "Started at `date -R`" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/"${BASE/:/}"/run-"${RUN}".txt
+echo -e "CMD: $ENVI $MONITOR $CMD \n\n" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/"${BASE/:/}"/run-"${RUN}".txt
+
+eval "$ENVI $MONITOR $CMD" 2>&1 | tee -a logs/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.txt
+
+if [ "$DOCKER" = true ] ; then
+  # Remove the containers
+  eval "$ENVI docker compose -f workloads/${WORKLOAD}/docker-compose.yml down"
+fi
+
+echo -e "\n\nEnded at `date -R`" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/"${BASE/:/}"/run-"${RUN}".txt

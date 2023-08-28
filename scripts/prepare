@@ -1,0 +1,96 @@
+#!/bin/bash
+
+set_dockerfile() {
+  if [[ "$1" = "ubuntu"* ]] || [[ "$1" = "debian"* ]]; then
+    DOCKERFILE=Dockerfile; 
+  else
+    DIGEST="${1%%@*}"
+    DOCKERFILE=Dockerfile."${DIGEST%%:*}";
+  fi
+}
+
+warmup() {
+  echo -e "\n# warmup\n" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/warmup.txt
+  sysbench cpu --time=`expr ${WARMUP} \* $(nproc)` --threads=$(nproc) run | tee -a logs/experiment-"${EXPID}"/"${WORKLOAD}"/warmup.txt
+  echo -e "\n\n" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/warmup.txt
+}
+
+# Default values
+EXPID=-1
+WORKLOAD="llama.cpp"
+BASE=()
+WARMUP=10
+# OPTIONS=()
+# COMMAND=()
+DOCKER=true
+COMMAND=""
+ISOLATE=""
+BACKGROUND=""
+THREADS=1
+
+# Get the arguments
+while getopts "x:l:b:w:d:c:i:j:t:" arg; do
+  case $arg in
+    x) EXPID=$OPTARG;;
+    l) WORKLOAD=$OPTARG;;
+    b) BASE+=("$OPTARG");;
+    w) WARMUP=$OPTARG;;
+    # o)
+    #   IFS=' ' read -r FLAG ARG <<< "${OPTARG}"
+    #   OPTIONS+=("${FLAG}" "${ARG}");;
+    # c)
+    #   IFS=' ' read -r FLAG ARG <<< "${OPTARG}"
+    #   COMMAND+=("${FLAG}" "${ARG}");;
+    d) 
+      if [ "$OPTARG" = "False" ] ; then
+        DOCKER=false
+      fi;;
+    c) COMMAND=$OPTARG;;
+    i) ISOLATE=$OPTARG;;
+    j) BACKGROUND=$OPTARG;;
+    t) THREADS=$OPTARG;;
+    *) ;;
+  esac
+done
+
+# Setup the log files
+mkdir -p logs/experiment-"${EXPID}"/"${WORKLOAD}"
+mkdir -p results/experiment-"${EXPID}"/"${WORKLOAD}"
+
+echo -e "### experiment ${EXPID} ###\n# cpus: ${ISOLATE}\n# workload: ${WORKLOAD}\n" | tee -a logs/experiment-"${EXPID}"/"${WORKLOAD}"/warmup.txt \
+  logs/experiment-"${EXPID}"/"${WORKLOAD}"/info.txt
+date +"# started on %c %n" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/warmup.txt
+
+# Build the Docker image
+
+for i in "${BASE[@]}"; do
+  mkdir -p logs/experiment-"${EXPID}"/"${WORKLOAD}"/"${i/:/}"
+  mkdir -p results/experiment-"${EXPID}"/"${WORKLOAD}"/"${i/:/}"
+  if [ "$DOCKER" = true ] ; then
+    set_dockerfile "${i}"
+    ENVI="NAME=${i%%@*} FILE=${DOCKERFILE} IMAGE=${i} ISOLATE_CPU=${ISOLATE} BACKGROUND_CPU=${BACKGROUND} THREADS_CPU=${THREADS}"
+    eval "$ENVI docker compose -f workloads/${WORKLOAD}/docker-compose.yml build"
+  fi
+done
+
+
+# Log the docker images information
+echo -e "# docker images\n" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/info.txt
+docker image ls | egrep "REPOSITORY|${WORKLOAD}" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/info.txt
+echo -e "\n# total order\n" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/info.txt
+
+
+# run the workload once for each base image as warm-up
+
+for i in "${BASE[@]}"; do
+  if [ "$DOCKER" = true ] ; then
+    ENVI="NAME=${i%%@*} FILE=${DOCKERFILE} IMAGE=${i} ISOLATE_CPU=${ISOLATE} BACKGROUND_CPU=${BACKGROUND} THREADS_CPU=${THREADS}"
+    eval "$ENVI docker compose -f workloads/${WORKLOAD}/docker-compose.yml up --abort-on-container-exit  2>&1 | tee -a logs/experiment-${EXPID}/warmup.txt"
+    eval "$ENVI docker compose -f workloads/${WORKLOAD}/docker-compose.yml down"
+  else
+    eval "taskset -c $ISOLATE $COMMAND 2>&1 | tee -a logs/experiment-${EXPID}/warmup.txt"
+  fi
+done
+
+# Start the warm up procedure
+warmup

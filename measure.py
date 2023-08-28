@@ -1,7 +1,4 @@
-import os, sys, getopt, subprocess, uuid, random, re, time, math
-import yaml
-import parse
-import psutil
+import os, sys, getopt, subprocess, random, re, time, math, yaml, psutil
 from datetime import datetime
 
 
@@ -42,7 +39,7 @@ class Workload:
         # Execute the given command
         command = [
             "bash",
-            "prepare",
+            "scripts/prepare",
             "-x",
             self.exp_id,
             "-l",
@@ -70,7 +67,7 @@ class Workload:
 
         command = [
             "bash",
-            "monitor",
+            "scripts/monitor",
             "-x",
             self.exp_id,
             "-l",
@@ -106,170 +103,23 @@ class Workload:
             total += 1
 
     def remove(self):
-        command = ["bash", "remove", "-x", self.exp_id, "-l", self.name]
+        command = ["bash", "scripts/remove", "-x", self.exp_id, "-l", self.name]
         for image in self.images:
             command += ["-b", image]
         subprocess.call(command)
 
 
-def help():
-    print(
-        "A tool for measuring energy consumption for specific workloads using different base images.\n",
-        "Options:",
-        "   -l --workload       Workload to monitor; can be used to for multiple workloads (e.g. -l llama.cpp -l mattermost)",
-        '   -b --base           Base image to monitor; can be used for multiple base images (e.g. -b ubuntu -b alpine) (default "ubuntu")',
-        "   -n --runs           Number of monitoring runs per base image (e.g. -n 30) (default 1)",
-        "   -w --warmup         Warm up time (s) (e.g. -w 30) (default 10)",
-        "   -p --pause          Pause time (s) (e.g. -p 60) (default 15)",
-        "   -i --interval       Interval of monitoring (ms) (e.g. -i 100) (default 100)",
-        '   -m --monitor        Monitoring tool (e.g. -m "perf") (default "greenserver")',
-        # '   -o --options        Options for the Docker run command (default "")',
-        # '   -c --command        Command for the Docker run command (default "")',
-        "   --all-images        Monitor all compatible base images (i.e. ubuntu, debian, alpine, centos)",
-        "   --all-workloads     Monitor all compatible workloads (i.e. llama.cpp, nginx-vod-module-docker, cypress-realworld-app, mattermost)",
-        "   --full              Monitor all compatible workloads using all compatible base images",
-        "   --no-shuffle        Disables shuffle mode; regular order of monitoring base images",
-        "   --cpus              Number of CPUs to isolate; will use threads on the same physical core (e.g. --cpus 2)",
-        "   --cpuset            CPUs to isolate (e.g. --cpuset 0-1)",
-        sep=os.linesep,
-    )
-
-
-def parse_args(argv):
-    # Default values
-    workloads = set()
-    images = set()
-    number = 30
-    warmup = 15
-    pause = 15
-    interval = 100
-    monitor = ""
-    shuffle_mode = True
-    help_mode = False
-    cpus = 0
-    cpuset = ""
-    all_images = False
-    all_workloads = False
-
-    # Get the arguments provided by the user
-    opts, args = getopt.getopt(
-        argv,
-        "l:"  # workload
-        "b:"  # base image
-        "n:"  # number of runs
-        "w:"  # warm up time
-        "p:"  # pause time
-        "i:"  # interval of monitoring
-        "m:"  # monitoring tool
-        "o:"  # options for the Docker run command
-        "c:"  # command for the Docker run command
-        "s"  # shuffle mode
-        "h",  # help
-        [
-            "cpus=",
-            "cpuset=",
-            "no-shuffle",
-            "help",
-            "all-images",
-            "all-workloads",
-            "full",
-            "workload=",
-            "base=",
-            "runs=",
-            "warmup=",
-            "pause=",
-            "interval=",
-            "monitor=",
-            "options=",
-            "command=",
-        ],
-    )
-    for opt, arg in opts:
-        # Set shuffle mode to false
-        if opt in ["-s", "--no-shuffle"]:
-            shuffle_mode = False
-        # Add the images to the list and the preparation command
-        elif opt == "--cpus":
-            try:
-                cpus = int(arg)
-            except ValueError:
-                print("Number of CPUs must be an integer")
-        elif opt == "--cpuset":
-            cpuset = arg
-        elif opt in ["-l", "--workload"]:
-            workloads.add(arg)
-        # Add the images to the list and the preparation command
-        elif opt in ["-b", "--base"]:
-            if ":" not in arg:  # If no version is specified, use the latest
-                arg += ":latest"
-            elif (
-                arg[-1] == ":"
-            ):  # If the version is specified but empty, use the latest
-                arg += "latest"
-            if arg not in images:
-                images.add(arg)
-        # Set the number of runs
-        elif opt in ["-n", "--runs"]:
-            number = arg
-        # Set up the warm up time (s)
-        elif opt in ["-w", "--warmup"]:
-            try:
-                warmup = int(arg)
-            except ValueError:
-                print("Warm up time must be an integer")
-        # Set up the pause time (s)
-        elif opt in ["-p", "--pause"]:
-            try:
-                pause = int(arg)
-            except ValueError:
-                print("Pause time must be an integer")
-        elif opt in ["-i", "--interval"]:
-            try:
-                interval = int(arg)
-            except ValueError:
-                print("Pause time must be an integer")
-        # Set the monitoring tool
-        elif opt in ["-m", "--monitor"]:
-            monitor = arg
-        # Set the options for the Docker run command
-        elif opt in ["-o", "--options"]:
-            opt = "-o"
-        # Set the command for the Docker run command
-        elif opt in ["-c", "--command"]:
-            opt = "-c"
-        # Set help mode to true
-        elif opt in ["-h", "--help"]:
-            help_mode = True
-        # Add all (pre-selected) images to the image set
-        elif opt == "--all-images":
-            all_images = True
-        elif opt == "--all-workloads":
-            # workloads |= set(get_workloads("workloads"))
-            all_workloads = True
-        elif opt == "--full":
-            all_images = True
-            all_workloads = True
-
-    # Put the arguments in a dictionary
-    arguments = {
-        "images": images,
-        "number": number,
-        "shuffle_mode": shuffle_mode,
-        "help_mode": help_mode,
-        "workloads": workloads,
-        "cpus": cpus,
-        "cpuset": cpuset,
-        "warmup": warmup,
-        "pause": pause,
-        "interval": interval,
-        "monitor": monitor,
-        "all_images": all_images,
-        "all_workloads": all_workloads,
-    }
-    return arguments
-
-
 def init_queue(images, number, shuffle_mode):
+    """Initializes the queue based on the images, the number of runs, and order.
+
+    Args:
+        images: The images to monitor for this workload.
+        number: The number of runs per image.
+        shuffle_mode: Whether to shuffle the order of the images.
+
+    Returns:
+        The queue of images to monitor.
+    """
     queue = list()
     for image in images:
         queue += [image] * int(number)
@@ -279,6 +129,14 @@ def init_queue(images, number, shuffle_mode):
 
 
 def set_cpus(cpus):
+    """Sets the cpuset for the workload if no cpuset is provided, but the number of threads is.
+
+    Args:
+        cpus: The number of threads to isolate for the workload
+
+    Returns:
+        The cpuset and the reserved threads (i.e. threads that are not used at all).
+    """
     # Get the number of physical and logical CPUs
     physical_cpus = psutil.cpu_count(logical=False)
     logical_cpus = psutil.cpu_count()
@@ -309,6 +167,15 @@ def set_cpus(cpus):
 
 
 def set_cpuset(cpuset, reserve=[]):
+    """Defines the set of threads for the workload and the background processes.
+
+    Args:
+        cpuset: The cpuset to use for the workload.
+        reserve: The threads on the isolated cores that are not used.
+
+    Returns:
+        The cpuset for the workload, the cpuset for the background processes, and the number of threads for the workload.
+    """
     isolate_cpus = set()
     background_cpus = set(range(psutil.cpu_count()))
 
@@ -364,6 +231,14 @@ def set_cpuset(cpuset, reserve=[]):
 
 
 def get_workloads(directory: str):
+    """Returns the workloads in the given directory.
+
+    Args:
+        directory: The directory to search for workloads.
+
+    Returns:
+        The workloads in the given directory.
+    """    
     try:
         return [
             workload
@@ -376,9 +251,165 @@ def get_workloads(directory: str):
 
 
 def get_workload_config(workload: str):
+    """Returns the configuration of the given workload.
+
+    Args:
+        workload: The workload to get the configuration for.
+
+    Returns:
+        The configuration of the given workload.
+    """    
     with open(f"workloads/{workload}/config.yml", "r") as file:
         config = yaml.safe_load(file)
     return config
+
+
+def help():
+    print(
+        "A tool for measuring energy consumption for specific workloads using different base images.\n",
+        "Options:",
+        "   -l --workload       Workload to monitor; can be used to for multiple workloads (e.g. -l llama.cpp -l mattermost)",
+        '   -b --base           Base image to monitor; can be used for multiple base images (e.g. -b ubuntu -b alpine) (default "ubuntu")',
+        "   -n --runs           Number of monitoring runs per base image (e.g. -n 30) (default 1)",
+        "   -w --warmup         Warm up time (s) (e.g. -w 30) (default 10)",
+        "   -p --pause          Pause time (s) (e.g. -p 60) (default 15)",
+        "   -i --interval       Interval of monitoring (ms) (e.g. -i 100) (default 100)",
+        '   -m --monitor        Monitoring tool (e.g. -m "perf") (default "greenserver")',
+        "   --no-shuffle        Disables shuffle mode; regular order of monitoring base images",
+        "   --cpus              Number of CPUs to isolate; will use threads on the same physical core (e.g. --cpus 2)",
+        "   --cpuset            CPUs to isolate (e.g. --cpuset 0-1)",
+        "   --all-images        Monitor all compatible base images (i.e. ubuntu, debian, alpine, centos)",
+        "   --all-workloads     Monitor all compatible workloads (i.e. llama.cpp, nginx-vod-module-docker, cypress-realworld-app, mattermost)",
+        "   --full              Monitor all compatible workloads using all compatible base images",
+        sep=os.linesep,
+    )
+
+
+def parse_args(argv):
+    # Default values
+    workloads = set()
+    images = set()
+    runs = 30 # number of runs per image
+    warmup = 15 # (warmup * cores) seconds of warm up time
+    pause = 20 # seconds of pause between runs
+    interval = 100 # ms of interval between measurements
+    monitor = "" # monitoring tool (default: greenserver)
+    shuffle_mode = True # shuffle the order of the images
+    help_mode = False # show the help menu
+    cpus = 0 # number of cpus to dedicate only to the workload
+    cpuset = "" # cpus to dedicate only to the workload
+    all_images = False # monitor all compatible images
+    all_workloads = False # monitor all compatible workloads
+
+    # Get the arguments provided by the user
+    opts, args = getopt.getopt(
+        argv,
+        "l:"  # workload
+        "b:"  # base image
+        "n:"  # number of runs
+        "w:"  # warm up time
+        "p:"  # pause time
+        "i:"  # interval of monitoring
+        "m:"  # monitoring tool
+        "s"  # shuffle mode
+        "h",  # help
+        [
+            "workload=",
+            "base=",
+            "runs=",
+            "warmup=",
+            "pause=",
+            "interval=",
+            "monitor=",
+            "no-shuffle",
+            "cpus=",
+            "cpuset=",
+            "all-images",
+            "all-workloads",
+            "full",
+            "help",
+        ],
+    )
+    for opt, arg in opts:
+        if opt in ["-l", "--workload"]:
+            workloads.add(arg)
+        # Add the images to the list and the preparation command
+        elif opt in ["-b", "--base"]:
+            if ":" not in arg:  # If no version is specified, use the latest
+                arg += ":latest"
+            elif (
+                arg[-1] == ":"
+            ):  # If the version is specified but empty, use the latest
+                arg += "latest"
+            if arg not in images:
+                images.add(arg)
+        # Set the number of runs
+        elif opt in ["-n", "--runs"]:
+            try:
+                runs = int(arg)
+            except ValueError:
+                print(f"Number of runs must be an integer; using default value ({runs}))")
+        # Set up the warm up time (s)
+        elif opt in ["-w", "--warmup"]:
+            try:
+                warmup = int(arg)
+            except ValueError:
+                print(f"Warm up time must be an integer; using default value ({warmup})")
+        # Set up the pause time (s)
+        elif opt in ["-p", "--pause"]:
+            try:
+                pause = int(arg)
+            except ValueError:
+                print(f"Pause time must be an integer; using default value ({pause})")
+        elif opt in ["-i", "--interval"]:
+            try:
+                interval = int(arg)
+            except ValueError:
+                print(f"Interval time must be an integer; using default value ({interval})")
+        # Set the monitoring tool
+        elif opt in ["-m", "--monitor"]:
+            monitor = arg
+        # Set shuffle mode to false
+        elif opt in ["-s", "--no-shuffle"]:
+            shuffle_mode = False
+        # Add the images to the list and the preparation command
+        elif opt == "--cpus":
+            try:
+                cpus = int(arg)
+            except ValueError:
+                print("Number of CPUs must be an integer")
+        elif opt == "--cpuset":
+            cpuset = arg
+        # Add all (pre-selected) images to the image set
+        elif opt == "--all-images":
+            all_images = True
+        elif opt == "--all-workloads":
+            # workloads |= set(get_workloads("workloads"))
+            all_workloads = True
+        elif opt == "--full":
+            all_images = True
+            all_workloads = True
+        # Set help mode to true
+        elif opt in ["-h", "--help"]:
+            help_mode = True
+
+    # Put the arguments in a dictionary
+    arguments = {
+        "workloads": workloads,
+        "images": images,
+        "runs": runs,
+        "warmup": warmup,
+        "pause": pause,
+        "interval": interval,
+        "monitor": monitor,
+        "shuffle_mode": shuffle_mode,
+        "cpus": cpus,
+        "cpuset": cpuset,
+        "all_images": all_images,
+        "all_workloads": all_workloads,
+        "help_mode": help_mode,
+    }
+    return arguments
 
 
 def main(argv):
@@ -390,21 +421,23 @@ def main(argv):
         help()
         return
 
-    date = datetime.now().strftime("%Y%m%dT%H%M%S")
-
-    # If no workload is specified, do not monitor
+    # If no specific workload is selected, monitor all available workloads
     if len(arguments["workloads"]) == 0 and not arguments["all_workloads"]:
         print("No workload provided, all workloads will be used")
         arguments["all_workloads"] = True
 
+    # If no specific image is selected, monitor all available images for the selected workloads
     if len(arguments["images"]) == 0 and not arguments["all_images"]:
         print("No base images provided, all images will be used")
         arguments["all_images"] = True
 
     workloads = get_workloads("workloads")
 
+    # If specific workloads are selected, monitor only those workloads if they are available
     if not arguments["all_workloads"]:
         workloads = set(workloads).intersection(arguments["workloads"])
+    
+    date = datetime.now().strftime("%Y%m%dT%H%M%S")
 
     for workload in workloads:
         config = get_workload_config(workload)
@@ -457,7 +490,7 @@ def main(argv):
                 continue
 
         # Create the queue of images for the workload
-        queue = init_queue(images, arguments["number"], arguments["shuffle_mode"])
+        queue = init_queue(images, arguments["runs"], arguments["shuffle_mode"])
 
         # Create the workload
         current_workload = Workload(

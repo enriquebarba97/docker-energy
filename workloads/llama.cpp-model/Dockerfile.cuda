@@ -4,6 +4,9 @@ ARG DIGEST=nvidia/cuda@sha256:f34756d897b3a25e4a83137eb65dbb7c69da6f92a13f51b7ad
 
 FROM ${DIGEST} as build
 
-COPY linux-binaries .
+COPY --from=binary . .
+
+COPY --from=model /7B/ggml-model-q4_0.bin ./models/7B/ggml-model-q4_0.bin
 
 ENTRYPOINT [ "/main" ]
+
