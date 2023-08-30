@@ -12,9 +12,7 @@ set_monitoring() {
 EXPID=-1
 WORKLOAD="llama.cpp"
 BASE="ubuntu"
-PAUSE=15
-# OPTIONS=()
-# COMMAND=()
+PAUSE=20
 DOCKER=true
 COMMAND=""
 ISOLATE=""
@@ -29,12 +27,6 @@ while getopts "x:l:b:p:d:c:i:j:r:s:t:v:m:" arg; do
     l) WORKLOAD=$OPTARG;;
     b) BASE=$OPTARG;;
     p) PAUSE=$OPTARG;;
-    # o)
-    #   IFS=' ' read -r FLAG ARG <<< "${OPTARG}"
-    #   OPTIONS+=("${FLAG}" "${ARG}");;
-    # c)
-    #   IFS=' ' read -r FLAG ARG <<< "${OPTARG}"
-    #   COMMAND+=("${FLAG}" "${ARG}");;
     d) 
       if [ "$OPTARG" = "False" ] ; then
         DOCKER=false

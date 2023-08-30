@@ -1,7 +1,7 @@
 services:
     llama.cpp-model:
         image: llama.cpp-model-${NAME}
-        container_name: llama.cpp-model-${NAME}
+        container_name: llama.cpp-model
         cpuset: ${ISOLATE_CPU}
         build:
             context: .
@@ -11,4 +11,4 @@ services:
             dockerfile: '$PWD/workloads/llama.cpp-model/${FILE}'
             args:
                 - BASE=${IMAGE}
-        entrypoint: ["sleep", "120"]
+        entrypoint: ['sleep', '120']

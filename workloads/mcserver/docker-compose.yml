@@ -10,7 +10,7 @@ services:
         network_mode: host
     mcserver:
         image: mcserver-${NAME}
-        container_name: mcserver-${NAME}
+        container_name: mcserver
         cpuset: ${ISOLATE_CPU}
         build:
             context: .

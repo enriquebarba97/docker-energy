@@ -5,7 +5,7 @@ services:
         cpuset: ${ISOLATE_CPU}
         build:
             context: '${PWD}/llama.cpp/'
-            dockerfile: '$PWD/workloads/llama.cpp/${FILE}'
+            dockerfile: '$PWD/workloads/llama.cpp-gpu/${FILE}'
             args:
                 - BASE=${IMAGE}
         volumes:

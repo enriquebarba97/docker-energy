@@ -1,7 +1,7 @@
 services:
     base-docker:
         image: base-docker-${NAME}
-        container_name: base-docker-${NAME}
+        container_name: base-docker
         cpuset: ${ISOLATE_CPU}
         build:
             context: '${PWD}/workloads/base-docker'

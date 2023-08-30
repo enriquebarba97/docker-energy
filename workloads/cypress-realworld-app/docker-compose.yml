@@ -26,7 +26,7 @@ services:
         network_mode: host
     backend:
         image: cypress-realworld-app-${NAME}
-        container_name: cypress-realworld-app-${NAME}
+        container_name: cypress-realworld-app-backend
         cpuset: ${ISOLATE_CPU}
         ports:
             - '3001:3001'

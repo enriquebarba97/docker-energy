@@ -20,8 +20,6 @@ EXPID=-1
 WORKLOAD="llama.cpp"
 BASE=()
 WARMUP=10
-# OPTIONS=()
-# COMMAND=()
 DOCKER=true
 COMMAND=""
 ISOLATE=""
@@ -35,12 +33,6 @@ while getopts "x:l:b:w:d:c:i:j:t:" arg; do
     l) WORKLOAD=$OPTARG;;
     b) BASE+=("$OPTARG");;
     w) WARMUP=$OPTARG;;
-    # o)
-    #   IFS=' ' read -r FLAG ARG <<< "${OPTARG}"
-    #   OPTIONS+=("${FLAG}" "${ARG}");;
-    # c)
-    #   IFS=' ' read -r FLAG ARG <<< "${OPTARG}"
-    #   COMMAND+=("${FLAG}" "${ARG}");;
     d) 
       if [ "$OPTARG" = "False" ] ; then
         DOCKER=false

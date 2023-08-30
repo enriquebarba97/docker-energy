@@ -24,7 +24,7 @@ services:
             tests/integration/channels/autocomplete/database/users_in_message_input_box_spec.js"
     mattermost:
         image: mattermost-${NAME}
-        container_name: mattermost-${NAME}
+        container_name: mattermost
         cpuset: ${ISOLATE_CPU}
         build:
             context: .

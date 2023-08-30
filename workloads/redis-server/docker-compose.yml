@@ -1,7 +1,7 @@
 services:
     redis-server:
         image: redis-server-${NAME}
-        container_name: redis-server-${NAME}
+        container_name: redis-server
         cpuset: ${ISOLATE_CPU}
         build:
             context: '${PWD}/workloads/redis-server'

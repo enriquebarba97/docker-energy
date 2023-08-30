@@ -1,7 +1,7 @@
 name: 'base-docker-model'
 description: 'Baseline workload with Docker containers with bloat'
 development: false
-cpus: 2
+cpus: 1
 docker: true
 images:
     - 'ubuntu@sha256:b060fffe8e1561c9c3e6dea6db487b900100fc26830b9ea2ec966c151ab4c020'

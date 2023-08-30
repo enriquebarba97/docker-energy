@@ -109,12 +109,12 @@ class Workload:
         subprocess.call(command)
 
 
-def init_queue(images, number, shuffle_mode):
+def init_queue(images, runs, shuffle_mode):
     """Initializes the queue based on the images, the number of runs, and order.
 
     Args:
         images: The images to monitor for this workload.
-        number: The number of runs per image.
+        runs: The number of runs per image.
         shuffle_mode: Whether to shuffle the order of the images.
 
     Returns:
@@ -122,7 +122,7 @@ def init_queue(images, number, shuffle_mode):
     """
     queue = list()
     for image in images:
-        queue += [image] * int(number)
+        queue += [image] * int(runs)
     if shuffle_mode:
         random.shuffle(queue)
     return queue
@@ -514,12 +514,8 @@ def main(argv):
         current_workload.prepare()
         current_workload.run()
         # current_workload.remove()
-        time.sleep(15)
+        time.sleep(arguments["pause"])
 
-    # Parse the results
-    # directory = f"results/{arguments['workload']}-{arguments['exp_id']}"
-    # files, files_samples = parse.get_files(directory, "*.txt")
-    # parse.parse_files(files, files_samples, directory)
 
 
 if __name__ == "__main__":

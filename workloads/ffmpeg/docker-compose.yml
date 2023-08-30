@@ -1,7 +1,7 @@
 services:
     ffmpeg:
         image: ffmpeg-${NAME}
-        container_name: ffmpeg-${NAME}
+        container_name: ffmpeg
         cpuset: ${ISOLATE_CPU}
         build:
             context: '${PWD}/workloads/ffmpeg'
@@ -10,5 +10,4 @@ services:
                 - BASE=${IMAGE}
         volumes:
             - '${PWD}/workloads/ffmpeg/videos/:/videos'
-        # command: -f rawvideo -pix_fmt yuv420p -video_size 1920x1080 -framerate 120 -i videos/ReadySteadyGo_1920x1080_120fps_420_8bit_YUV.yuv -f mp4 out.mp4
         command: -i "videos/video1080p60fps.mp4"  -vcodec h264 -s 1280x720 -r 24 -acodec aac "video720p24fps.mp4"

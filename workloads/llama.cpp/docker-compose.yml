@@ -1,7 +1,7 @@
 services:
     llama.cpp:
         image: llama.cpp-${NAME}
-        container_name: llama.cpp-${NAME}
+        container_name: llama.cpp
         cpuset: ${ISOLATE_CPU}
         build:
             context: '$PWD/workloads/llama.cpp/'
