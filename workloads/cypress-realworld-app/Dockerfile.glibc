@@ -1,0 +1,46 @@
+ARG BASE=alpine@sha256:25fad2a32ad1f6f510e528448ae1ec69a28ef81916a004d3629874104f8a7f70
+
+FROM ${BASE}
+
+ENV NODE_VERSION 16.20.0
+ENV GLIBC_VERSION 2.34-r0
+
+RUN apk update && apk add --no-cache strace curl ca-certificates wget libstdc++
+
+RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub \
+    && wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.34-r0/glibc-2.34-r0.apk \
+    && wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.34-r0/glibc-bin-2.34-r0.apk \
+    && wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.34-r0/glibc-i18n-2.34-r0.apk \
+    && apk add --force-overwrite glibc-2.34-r0.apk glibc-bin-2.34-r0.apk glibc-i18n-2.34-r0.apk \
+    && /usr/glibc-compat/sbin/ldconfig /lib /usr/glibc-compat/lib \
+    && /usr/glibc-compat/bin/localedef -i en_US -f UTF-8 en_US.UTF-8
+
+RUN ARCH= && alpineArch="$(apk --print-arch)" \
+    && case "${alpineArch##*-}" in \
+      x86_64) ARCH='x64' ;; \
+      *) echo "unsupported architecture"; exit 1 ;; \
+    esac \
+    && set -eu \
+    && curl -fsSLO --compressed "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-$ARCH.tar.xz" \
+    && tar -xJf "node-v$NODE_VERSION-linux-$ARCH.tar.xz" -C /usr/local --strip-components=1 --no-same-owner \
+    && ln -s /usr/local/bin/node /usr/local/bin/nodejs; rm "node-v$NODE_VERSION-linux-$ARCH.tar.xz"
+
+RUN npm install -g yarn && npm cache clean --force;
+
+WORKDIR /app
+
+COPY package.json yarn.lock ./
+
+RUN yarn install && yarn cache clean;
+
+COPY . .
+
+ENV NODE_ENV=development
+
+RUN yarn db:seed:dev && \
+    yarn predev:cognito:ci
+
+EXPOSE 3001
+
+CMD ["strace", "-Tfe", "trace=openat,open,read,write", "-o", "/logs/trace-alpine.txt", "yarn", "start:api:watch" ]
+
