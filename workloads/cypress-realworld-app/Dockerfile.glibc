@@ -42,5 +42,6 @@ RUN yarn db:seed:dev && \
 
 EXPOSE 3001
 
-CMD ["strace", "-Tfe", "trace=openat,open,read,write", "-o", "/logs/trace-alpine.txt", "yarn", "start:api:watch" ]
+# CMD ["strace", "-Tfe", "trace=openat,open,read,write", "-o", "/logs/trace-alpine.txt", "yarn", "start:api:watch" ]
 
+CMD ["yarn", "start:api:watch" ]

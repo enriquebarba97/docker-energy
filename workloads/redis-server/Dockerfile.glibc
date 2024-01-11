@@ -28,4 +28,6 @@ RUN cd /redis-stable \
 
 EXPOSE 6379
 
-CMD ["strace", "-Tfe", "trace=openat,open,read,write", "-o", "/logs/trace-alpine.txt", "redis-server", "--protected-mode no"]
+# CMD ["strace", "-Tfe", "trace=openat,open,read,write", "-o", "/logs/trace-alpine.txt", "redis-server", "--protected-mode no"]
+
+CMD ["redis-server", "--protected-mode no"]
