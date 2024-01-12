@@ -11,5 +11,7 @@ RUN yarn install && yarn cache clean;
 
 COPY . .
 
+RUN yarn db:seed:dev && \
+    yarn predev:cognito:ci
 
 CMD [ "yarn", "cypress", "run"]
