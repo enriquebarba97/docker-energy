@@ -8,6 +8,8 @@ services:
             dockerfile: '$PWD/workloads/redis-server/${FILE}'
             args:
                 - BASE=${IMAGE}
+        volumes:
+            - '${PWD}/workloads/redis-server/logs:/logs'
         ports:
             - '6379:6379'
         healthcheck:

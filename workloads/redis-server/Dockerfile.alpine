@@ -2,7 +2,7 @@ ARG BASE=alpine@sha256:25fad2a32ad1f6f510e528448ae1ec69a28ef81916a004d3629874104
 
 FROM ${BASE} as build
 
-RUN apk update && apk add --no-cache wget make build-base \
+RUN apk update && apk add --no-cache wget make build-base ltrace \
     && wget https://download.redis.io/redis-stable.tar.gz \
     && tar -xvzf redis-stable.tar.gz \
     && cd redis-stable \
@@ -11,4 +11,6 @@ RUN apk update && apk add --no-cache wget make build-base \
 
 EXPOSE 6379
 
-CMD ["redis-server", "--protected-mode no"]
+COPY entrypoint.sh /entrypoint.sh
+
+CMD ["entrypoint.sh"]
