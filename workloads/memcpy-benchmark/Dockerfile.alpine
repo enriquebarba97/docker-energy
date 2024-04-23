@@ -1,0 +1,13 @@
+ARG BASE=alpine@sha256:25fad2a32ad1f6f510e528448ae1ec69a28ef81916a004d3629874104f8a7f70
+
+FROM ${BASE} as build
+
+RUN apk update && apk add --no-cache make build-base cmake bash git \
+    && git clone https://github.com/enriquebarba97/memcpy-benchmark.git
+
+
+WORKDIR /memcpy-benchmark
+
+RUN cmake . && make
+
+ENTRYPOINT ["./test_memcpy"]
