@@ -11,4 +11,4 @@ RUN chmod +x entrypoint.sh
 
 RUN gcc -o client client.c
 
-ENTRYPOINT sleep 5 && ./entrypoint.sh
+ENTRYPOINT sleep 5 && timeout -k 10 300 ./entrypoint.sh
