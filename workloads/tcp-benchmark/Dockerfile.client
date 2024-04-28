@@ -6,6 +6,9 @@ WORKDIR /app
 
 COPY client.c client.c
 
+COPY entrypoint.sh entrypoint.sh
+RUN chmod +x entrypoint.sh
+
 RUN gcc -o client client.c
 
-ENTRYPOINT [ "./client" ]
+ENTRYPOINT sleep 5 && ./entrypoint.sh

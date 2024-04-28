@@ -6,7 +6,7 @@
 #include <pthread.h>
 
 #define MAX 5000
-#define TOTAL_REQUESTS 1000000
+#define TOTAL_REQUESTS 500000
 #define CLIENTS 1
 #define DATA "VKX,"
 
@@ -86,11 +86,8 @@ void benchmark(int connfd, int client_id)
 
 }
 
-void *run(void *vargp)
+void run(int myid)
 {
-
-    int myid = *((int *)vargp);
-
     char *ip = "127.0.0.1";
     int port = 5569;
 
@@ -126,26 +123,17 @@ void *run(void *vargp)
     close(sock);
     printf("[%d] Connection closed\n", myid);
 
-    pthread_exit(NULL);
+    return;
 }
 
-int main(){
+int main(int argc, char *argv[] ){
 
-    sleep(2);
+    // Parse id from command line
+    int myid = atoi(argv[1]);
 
-    pthread_t tid[CLIENTS];
-    int taskids[CLIENTS];
-    for (int i = 0; i < CLIENTS; i++)
-    {
-        taskids[i] = i;
-        pthread_create(&tid[i], NULL, run, (void *) &taskids[i]);
-        printf("Client %d started\n", i);
-    }
+    printf("[%d] Client started\n", myid);
 
-    for (int i = 0; i < CLIENTS; i++)
-    {
-        pthread_join(tid[i], NULL);
-    }
+    run(myid);
 
     return 0;
 }

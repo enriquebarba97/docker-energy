@@ -20,6 +20,20 @@ services:
             dockerfile: '${PWD}/workloads/tcp-benchmark/Dockerfile.client'
             network: host
         network_mode: host
+        environment:
+            - ID=0
         depends_on:
             - tcp-server
+    # client2:
+    #     image: tcp-client
+    #     cpuset: ${BACKGROUND_CPU}
+    #     build:
+    #         context: '${PWD}/workloads/tcp-benchmark'
+    #         dockerfile: '${PWD}/workloads/tcp-benchmark/Dockerfile.client'
+    #         network: host
+    #     network_mode: host
+    #     environment:
+    #         - ID=1
+    #     depends_on:
+    #         - tcp-server
 
