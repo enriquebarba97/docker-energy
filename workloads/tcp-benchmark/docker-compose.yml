@@ -1,0 +1,25 @@
+services:
+    tcp-server:
+        image: tcp-benchmark-${NAME}
+        container_name: tcp-benchmark
+        cpuset: ${ISOLATE_CPU}
+        build:
+            context: '${PWD}/workloads/tcp-benchmark'
+            dockerfile: '$PWD/workloads/tcp-benchmark/${FILE}'
+            args:
+                - BASE=${IMAGE}
+            network: host
+        ports:
+          - 5569:5569   
+        # network_mode: host
+    client:
+        image: tcp-client
+        cpuset: ${BACKGROUND_CPU}
+        build:
+            context: '${PWD}/workloads/tcp-benchmark'
+            dockerfile: '${PWD}/workloads/tcp-benchmark/Dockerfile.client'
+            network: host
+        network_mode: host
+        depends_on:
+            - tcp-server
+
