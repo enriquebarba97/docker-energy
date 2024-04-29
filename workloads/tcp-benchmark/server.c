@@ -144,16 +144,15 @@ void server_run()
 					if (n <= 0 /* || errno == EAGAIN */ ) {
 						break;
                     } else if (n < INPUT_LENGTH) {
-                        // Send the buffer to client - BLOCKING
                         printf("Stopped reading earlier than expected\n");
                         break;
 					} else {
 					    // Parse integer from buffer
                         size = atoi(buf);
 
-                        for (int i = 0; i < size*4; i++)
+                        for (int i = 0; i < size*4; i+=4)
                         {
-                        buf[i] = DATA[i % 4];
+							memcpy(buf+i, DATA, 4);
                         }
         
                         // Send the buffer to client - BLOCKING
