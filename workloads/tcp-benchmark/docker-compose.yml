@@ -6,8 +6,6 @@ services:
         build:
             context: '${PWD}/workloads/tcp-benchmark'
             dockerfile: '$PWD/workloads/tcp-benchmark/${FILE}'
-            args:
-                - BASE=${IMAGE}
             network: host
         ports:
           - 5569:5569   
