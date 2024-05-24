@@ -87,6 +87,7 @@ static int setnonblocking(int sockfd)
  */
 void server_run()
 {
+	int connections;
     int size;
 	int i;
 	int n;
@@ -112,29 +113,31 @@ void server_run()
 	epoll_ctl_add(epfd, listen_sock, EPOLLIN | EPOLLOUT | EPOLLET);
 
 	socklen = sizeof(cli_addr);
-    printf("Listening...\n");
+    fprintf(stdout, "Listening...\n");
 	for (;;) {
 		nfds = epoll_wait(epfd, events, MAX_EVENTS, -1);
 		for (i = 0; i < nfds; i++) {
 			if (events[i].data.fd == listen_sock) {
 				/* handle new connection */
-				printf("New connection\n");
+				fprintf(stdout, "New connection\n");
 				conn_sock =
 				    accept(listen_sock,
 					   (struct sockaddr *)&cli_addr,
 					   &socklen);
 				
-				printf("Accepted connection\n");
+				fprintf(stdout, "Accepted connection\n");
 
 				inet_ntop(AF_INET, (char *)&(cli_addr.sin_addr),
 					  buf, sizeof(cli_addr));
-				printf("[+] connected with %s:%d\n", buf,
+				fprintf(stdout,"[+] connected with %s:%d\n", buf,
 				       ntohs(cli_addr.sin_port));
 
 				setnonblocking(conn_sock);
 				epoll_ctl_add(epfd, conn_sock,
 					      EPOLLIN | EPOLLET | EPOLLRDHUP |
 					      EPOLLHUP);
+				
+				connections++;
 			} else if (events[i].events & EPOLLIN) {
 				/* handle EPOLLIN event */
 				for (;;) {
@@ -144,7 +147,7 @@ void server_run()
 					if (n <= 0 /* || errno == EAGAIN */ ) {
 						break;
                     } else if (n < INPUT_LENGTH) {
-                        printf("Stopped reading earlier than expected\n");
+                        fprintf(stdout, "Stopped reading earlier than expected\n");
                         break;
 					} else {
 					    // Parse integer from buffer
@@ -160,16 +163,21 @@ void server_run()
 					}
 				}
 			} else {
-				printf("[+] unexpected\n");
+				fprintf(stderr, "[+] unexpected\n");
 			}
 			/* check if the connection is closing */
 			if (events[i].events & (EPOLLRDHUP | EPOLLHUP)) {
-				printf("[+] connection closed\n");
+				fprintf(stdout, "[+] connection closed\n");
 				epoll_ctl(epfd, EPOLL_CTL_DEL,
 					  events[i].data.fd, NULL);
 				close(events[i].data.fd);
+				connections--;
 				continue;
 			}
+		}
+
+		if(connections==0){
+			break;
 		}
 	}
 }
