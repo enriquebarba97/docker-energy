@@ -9,6 +9,10 @@ WORKDIR /app
 
 COPY server.c server.c
 
-RUN gcc -pg -o server server.c
+RUN gcc -o server server.c
 
 ENTRYPOINT ["./server"]
+# ENTRYPOINT ["uftrace","record","-P",".","./server"]
+# ENTRYPOINT ["uftrace","record","./server"]
+# ENTRYPOINT ["perf","record","./server"]
+# ENTRYPOINT ["strace", "-o", "trace.log", "-C", "-T", "./server"]

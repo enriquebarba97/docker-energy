@@ -97,9 +97,17 @@ void server_run()
 	int conn_sock;
 	int socklen;
 	char buf[MAX];
+	char input[10];
 	struct sockaddr_in srv_addr;
 	struct sockaddr_in cli_addr;
 	struct epoll_event events[MAX_EVENTS];
+
+	// Initialize buffer
+	size = 600;
+	for (int i = 0; i < size*4; i+=4)
+    {
+		memcpy(buf+i, DATA, 4);
+	}
 
 	listen_sock = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -141,9 +149,9 @@ void server_run()
 			} else if (events[i].events & EPOLLIN) {
 				/* handle EPOLLIN event */
 				for (;;) {
-					bzero(buf, sizeof(buf));
-					n = read(events[i].data.fd, buf,
-						 sizeof(buf));
+					bzero(input, sizeof(input));
+					n = read(events[i].data.fd, input,
+						 sizeof(input));
 					if (n <= 0 /* || errno == EAGAIN */ ) {
 						break;
                     } else if (n < INPUT_LENGTH) {
@@ -151,15 +159,11 @@ void server_run()
                         break;
 					} else {
 					    // Parse integer from buffer
-                        size = atoi(buf);
-
-                        for (int i = 0; i < size*4; i+=4)
-                        {
-							memcpy(buf+i, DATA, 4);
-                        }
+                        size = atoi(input);
         
                         // Send the buffer to client - BLOCKING
                         write(events[i].data.fd, buf, size*4);
+						break;
 					}
 				}
 			} else {

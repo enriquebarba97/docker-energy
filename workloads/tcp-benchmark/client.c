@@ -6,7 +6,7 @@
 #include <pthread.h>
 
 #define MAX 5000
-#define TOTAL_REQUESTS 10000
+#define TOTAL_REQUESTS 500000
 #define CLIENTS 1
 #define DATA "VKX,"
 

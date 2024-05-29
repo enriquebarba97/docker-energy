@@ -6,6 +6,4 @@ services:
         build:
             context: '${PWD}/workloads/memcpy-benchmark'
             dockerfile: '$PWD/workloads/memcpy-benchmark/${FILE}'
-            args:
-                - BASE=${IMAGE}
             network: host
