@@ -1,4 +1,4 @@
-name: 'memcpy-benchmark'
+name: 'memcpy-benchmark-12'
 description: 'Benchmark for the memcpy function from libc'
 development: false
 cpus: 1

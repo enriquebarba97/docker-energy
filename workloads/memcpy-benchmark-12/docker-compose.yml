@@ -1,0 +1,9 @@
+services:
+    redis-server:
+        image: memcpy-benchmark-12-${NAME}
+        container_name: memcpy-benchmark-12
+        cpuset: ${ISOLATE_CPU}
+        build:
+            context: '${PWD}/workloads/memcpy-benchmark-12'
+            dockerfile: '$PWD/workloads/memcpy-benchmark-12/${FILE}'
+            network: host
