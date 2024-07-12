@@ -74,10 +74,12 @@ echo -e "\n# total order\n" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/info.txt
 
 # run the workload once for each base image as warm-up
 
+TIMESTAMPS="| ts %.s"
+
 for i in "${BASE[@]}"; do
   if [ "$DOCKER" = true ] ; then
     ENVI="NAME=${i%%@*} FILE=${DOCKERFILE} IMAGE=${i} ISOLATE_CPU=${ISOLATE} BACKGROUND_CPU=${BACKGROUND} THREADS_CPU=${THREADS}"
-    eval "$ENVI docker compose -f workloads/${WORKLOAD}/docker-compose.yml up --abort-on-container-exit  2>&1 | tee -a logs/experiment-${EXPID}/warmup.txt"
+    eval "$ENVI docker compose -f workloads/${WORKLOAD}/docker-compose.yml up --abort-on-container-exit 2>&1 $TIMESTAMPS | tee -a logs/experiment-${EXPID}/warmup.txt"
     eval "$ENVI docker compose -f workloads/${WORKLOAD}/docker-compose.yml down"
   else
     eval "taskset -c $ISOLATE $COMMAND 2>&1 | tee -a logs/experiment-${EXPID}/warmup.txt"

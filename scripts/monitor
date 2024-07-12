@@ -59,11 +59,12 @@ else
   CMD="taskset -c ${ISOLATE} ${COMMAND}"
 fi
 
+TIMESTAMPS="| ts %.s"
 
 echo -e "Started at `date -R`" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/"${BASE/:/}"/run-"${RUN}".txt
 echo -e "CMD: $ENVI $MONITOR $CMD \n\n" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/"${BASE/:/}"/run-"${RUN}".txt
 
-eval "$ENVI $MONITOR $CMD" 2>&1 | tee -a logs/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.txt
+eval "$ENVI $MONITOR $CMD 2>&1 $TIMESTAMPS" | tee -a logs/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.txt
 
 if [ "$DOCKER" = true ] ; then
   # Remove the containers

@@ -19,7 +19,7 @@
 #define MAX_EVENTS      100000
 #define BUF_SIZE        16
 #define MAX_LINE        256
-#define MAX 3000
+#define MAX 5000
 #define DATA "VKX,"
 #define INPUT_LENGTH 4
 
@@ -97,13 +97,14 @@ void server_run()
 	int conn_sock;
 	int socklen;
 	char buf[MAX];
+	char buf2[MAX];
 	char input[10];
 	struct sockaddr_in srv_addr;
 	struct sockaddr_in cli_addr;
 	struct epoll_event events[MAX_EVENTS];
 
 	// Initialize buffer
-	size = 600;
+	size = 1000;
 	for (int i = 0; i < size*4; i+=4)
     {
 		memcpy(buf+i, DATA, 4);
@@ -122,23 +123,27 @@ void server_run()
 
 	socklen = sizeof(cli_addr);
     fprintf(stdout, "Listening...\n");
+	fflush(stdout);
 	for (;;) {
 		nfds = epoll_wait(epfd, events, MAX_EVENTS, -1);
 		for (i = 0; i < nfds; i++) {
 			if (events[i].data.fd == listen_sock) {
 				/* handle new connection */
 				fprintf(stdout, "New connection\n");
+				fflush(stdout);
 				conn_sock =
 				    accept(listen_sock,
 					   (struct sockaddr *)&cli_addr,
 					   &socklen);
 				
 				fprintf(stdout, "Accepted connection\n");
+				fflush(stdout);
 
 				inet_ntop(AF_INET, (char *)&(cli_addr.sin_addr),
-					  buf, sizeof(cli_addr));
-				fprintf(stdout,"[+] connected with %s:%d\n", buf,
+					  buf2, sizeof(cli_addr));
+				fprintf(stdout,"[+] connected with %s:%d\n", buf2,
 				       ntohs(cli_addr.sin_port));
+				fflush(stdout);
 
 				setnonblocking(conn_sock);
 				epoll_ctl_add(epfd, conn_sock,
@@ -156,6 +161,7 @@ void server_run()
 						break;
                     } else if (n < INPUT_LENGTH) {
                         fprintf(stdout, "Stopped reading earlier than expected\n");
+						fflush(stdout);
                         break;
 					} else {
 					    // Parse integer from buffer
@@ -168,10 +174,12 @@ void server_run()
 				}
 			} else {
 				fprintf(stderr, "[+] unexpected\n");
+				fflush(stdout);
 			}
 			/* check if the connection is closing */
 			if (events[i].events & (EPOLLRDHUP | EPOLLHUP)) {
 				fprintf(stdout, "[+] connection closed\n");
+				fflush(stdout);
 				epoll_ctl(epfd, EPOLL_CTL_DEL,
 					  events[i].data.fd, NULL);
 				close(events[i].data.fd);

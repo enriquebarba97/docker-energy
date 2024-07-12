@@ -8,8 +8,11 @@ services:
             dockerfile: '$PWD/workloads/redis-server/${FILE}'
             args:
                 - BASE=${IMAGE}
+            network: host
+        environment:
+            - LTRACE=false
         volumes:
-            - '${PWD}/workloads/redis-server/logs:/logs'
+            - '${PWD}/traces:/logs'
         ports:
             - '6379:6379'
         healthcheck:
@@ -25,8 +28,9 @@ services:
             context: '${PWD}/workloads/redis-server'
             dockerfile: '${PWD}/workloads/redis-server/Dockerfile.client'
             args:
-                - REQUESTS=1000000
-                - KEYSPACE=100000
+                - REQUESTS=25000
+                - KEYSPACE=1000
+            network: host
         network_mode: host
         depends_on:
             redis-server:

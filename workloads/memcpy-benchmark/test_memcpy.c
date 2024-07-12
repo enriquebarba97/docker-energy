@@ -60,16 +60,19 @@ void cached(int elements){
 
 void from_memory(int elements){
     char buf[MAX];
-    char source[4];
+    char source[MAX];
 
-    memcpy(source, DATA, 4);
+    for (int i = 0; i < elements*4; i+=4)
+    {
+        memcpy(source+i, DATA, 4);
+    }
 
     memset(buf, '\0', MAX);
 
     for(int r=0;r<TOTAL_COPIES;r++){
         for (int i = 0; i < elements*4; i+=4)
         {
-            memcpy(buf+i, source, 4);
+            memcpy(buf+i, source+i, 4);
         }
     }
 }

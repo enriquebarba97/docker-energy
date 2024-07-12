@@ -21,7 +21,7 @@ int communication(int connfd, int requests, int list_size, int client_id)
         check_buffer[i] = DATA[i % 4];
     }
 
-    fprintf(stdout, "[%d] Sending list size %d\n", client_id, list_size);
+    //fprintf(stdout, "[%d] Sending list size %d\n", client_id, list_size);
 
     for(int i=0;i<requests;i++){
         // Reset buffer
@@ -45,12 +45,14 @@ int communication(int connfd, int requests, int list_size, int client_id)
 
             if (n == -1){
                 fprintf(stderr, "Error reading");
+                fflush(stdout);
             }
 
             if (n == 0)
             {
                 fprintf(stdout, "Stopped reading earlier than expected\n");
                 fprintf(stdout, buffer);
+                fflush(stdout);
                 break;
             }
             to_read -= n;
@@ -60,11 +62,13 @@ int communication(int connfd, int requests, int list_size, int client_id)
         if (strncmp(check_buffer, buffer, list_size*4) != 0)
         {
             fprintf(stderr, "Data mismatch\n");
+            fflush(stdout);
             return 0;
         }
 
         if (strncmp("exit", buffer, 4) == 0){
             fprintf(stdout, "Server stopping...\n");
+            fflush(stdout);
             return 0;
         }
     }
@@ -73,18 +77,21 @@ int communication(int connfd, int requests, int list_size, int client_id)
 
 void benchmark(int connfd, int client_id)
 {
-    int sizes[] = {100, 300, 500, 600};
+    int sizes[] = {100, 300, 500, 600, 1000};
 
     for (int i = 0; i < 4; i++)
     {
         fprintf(stdout, "[%d] Benchmarking with list size %d\n", client_id, sizes[i]);
+        fflush(stdout);
         int result = communication(connfd, TOTAL_REQUESTS/CLIENTS, sizes[i], client_id);
         if (result == 0)
         {
             fprintf(stdout, "Server stopped\n");
+            fflush(stdout);
             return;
         }
         fprintf(stdout, "[%d] Benchmarking with list size %d done\n", client_id, sizes[i]);
+        fflush(stdout);
     }
 
     return;
@@ -108,6 +115,7 @@ void run(int myid)
         exit(1);
     }
     fprintf(stdout, "[%d] Server socket created\n", myid);
+    fflush(stdout);
 
     memset(&addr, '\0', sizeof(addr));
     addr.sin_family = AF_INET;
@@ -120,6 +128,7 @@ void run(int myid)
     }
 
     fprintf(stdout, "[%d] Connected to server\n", myid);
+    fflush(stdout);
     
     benchmark(sock, myid);
 
@@ -127,6 +136,7 @@ void run(int myid)
     
     close(sock);
     fprintf(stdout, "[%d] Connection closed\n", myid);
+    fflush(stdout);
 
     return;
 }
@@ -137,6 +147,7 @@ int main(int argc, char *argv[] ){
     int myid = atoi(argv[1]);
 
     fprintf(stdout, "[%d] Client started\n", myid);
+    fflush(stdout);
 
     run(myid);
 
