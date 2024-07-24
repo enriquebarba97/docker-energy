@@ -1,0 +1,21 @@
+ARG BASE=alpine@sha256:25fad2a32ad1f6f510e528448ae1ec69a28ef81916a004d3629874104f8a7f70
+
+FROM ${BASE} as build
+
+RUN apk update && apk add --no-cache build-base
+
+# RUN git clone https://github.com/namhyung/uftrace.git \
+#     && cd uftrace \
+#     && misc/install-deps.sh \
+#     && ./configure \
+#     && make \
+#     && make install
+
+WORKDIR /app
+
+COPY test_memcpy.c test_memcpy.c
+    
+RUN gcc -o test_memcpy test_memcpy.c
+    
+ENTRYPOINT ["./test_memcpy"]
+# ENTRYPOINT ["uftrace","-P",".","record","./test_memcpy"]

@@ -1,0 +1,11 @@
+services:
+    epoll-wait:
+        image: epoll-wait-${NAME}
+        container_name: epoll-wait
+        cpuset: ${ISOLATE_CPU}
+        build:
+            context: '${PWD}/workloads/epoll-wait'
+            dockerfile: '$PWD/workloads/epoll-wait/${FILE}'
+            args:
+                - BASE=${IMAGE}
+            network: host

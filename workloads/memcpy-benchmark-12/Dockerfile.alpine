@@ -1,0 +1,19 @@
+ARG BASE=alpine@sha256:25fad2a32ad1f6f510e528448ae1ec69a28ef81916a004d3629874104f8a7f70
+
+FROM ${BASE} as build
+
+RUN apk update && apk add --no-cache build-base
+
+WORKDIR /app
+
+COPY memcpy_12.c memcpy_12.c
+
+RUN gcc -o test_memcpy memcpy_12.c
+
+FROM ${BASE}
+
+WORKDIR /app
+
+COPY --from=build /app/test_memcpy .
+    
+ENTRYPOINT ["./test_memcpy"]

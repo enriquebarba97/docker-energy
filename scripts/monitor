@@ -4,7 +4,7 @@ set_monitoring() {
   if [ "$1" == "perf" ]; then
     MONITOR="perf stat -I ${INTERVAL} -x \"\t\" -o results/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.tsv --append -C ${ISOLATE} -e power/energy-pkg/"
   else
-    MONITOR="/home/tdurieux/git/greenserver/resource_usage/monitor -i ${INTERVAL} -o results/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.tsv --"
+    MONITOR="/home/tdurieux/git/EnergiBridge/target/release/energibridge -i ${INTERVAL} -o results/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.tsv --"
   fi
 }
 
@@ -59,11 +59,12 @@ else
   CMD="taskset -c ${ISOLATE} ${COMMAND}"
 fi
 
+TIMESTAMPS="| ts %.s"
 
 echo -e "Started at `date -R`" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/"${BASE/:/}"/run-"${RUN}".txt
 echo -e "CMD: $ENVI $MONITOR $CMD \n\n" >> logs/experiment-"${EXPID}"/"${WORKLOAD}"/"${BASE/:/}"/run-"${RUN}".txt
 
-eval "$ENVI $MONITOR $CMD" 2>&1 | tee -a logs/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.txt
+eval "$ENVI $MONITOR $CMD 2>&1 $TIMESTAMPS" | tee -a logs/experiment-${EXPID}/${WORKLOAD}/${BASE/:/}/run-${RUN}.txt
 
 if [ "$DOCKER" = true ] ; then
   # Remove the containers

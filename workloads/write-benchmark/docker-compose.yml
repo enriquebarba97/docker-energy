@@ -1,0 +1,11 @@
+services:
+    redis-server:
+        image: write-benchmark-${NAME}
+        container_name: write-benchmark
+        cpuset: ${ISOLATE_CPU}
+        build:
+            context: '${PWD}/workloads/write-benchmark'
+            dockerfile: '$PWD/workloads/write-benchmark/${FILE}'
+            args:
+                - BASE=${IMAGE}
+            network: host

@@ -1,0 +1,33 @@
+ARG BASE=alpine@sha256:25fad2a32ad1f6f510e528448ae1ec69a28ef81916a004d3629874104f8a7f70
+
+FROM ubuntu:20.04 as build
+
+RUN apt-get update && apt-get install -y wget make build-essential \
+    && wget https://download.redis.io/redis-stable.tar.gz \
+    && tar -xvzf redis-stable.tar.gz \
+    && cd redis-stable \
+    && make
+
+FROM ${BASE}
+
+RUN apk update && apk add --no-cache strace ca-certificates wget libstdc++
+
+RUN wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub \
+    && wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.34-r0/glibc-2.34-r0.apk \
+    && wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.34-r0/glibc-bin-2.34-r0.apk \
+    && wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.34-r0/glibc-i18n-2.34-r0.apk \
+    && apk add --force-overwrite glibc-2.34-r0.apk glibc-bin-2.34-r0.apk glibc-i18n-2.34-r0.apk \
+    && /usr/glibc-compat/sbin/ldconfig /lib /usr/glibc-compat/lib \
+    && /usr/glibc-compat/bin/localedef -i en_US -f UTF-8 en_US.UTF-8
+
+COPY --from=build /redis-stable /redis-stable
+
+RUN cd /redis-stable \
+    && cp src/redis-server /usr/local/bin/ \
+    && cp src/redis-cli /usr/local/bin/
+
+EXPOSE 6379
+
+# CMD ["strace", "-Tfe", "trace=openat,open,read,write", "-o", "/logs/trace-alpine.txt", "redis-server", "--protected-mode no"]
+
+CMD ["redis-server", "--protected-mode no"]

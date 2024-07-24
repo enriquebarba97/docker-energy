@@ -1,0 +1,14 @@
+FROM ubuntu@sha256:b060fffe8e1561c9c3e6dea6db487b900100fc26830b9ea2ec966c151ab4c020
+
+RUN apt-get update && apt-get install -y build-essential
+
+WORKDIR /app
+
+COPY client.c client.c
+
+COPY entrypoint.sh entrypoint.sh
+RUN chmod +x entrypoint.sh
+
+RUN gcc -o client client.c
+
+ENTRYPOINT sleep 5 && timeout -k 10 300 ./entrypoint.sh

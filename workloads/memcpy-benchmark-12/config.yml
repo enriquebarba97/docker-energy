@@ -1,0 +1,9 @@
+name: 'memcpy-benchmark-12'
+description: 'Benchmark for the memcpy function from libc'
+development: false
+cpus: 1
+docker: true
+images:
+    - 'ubuntu@sha256:565d62d2283a7cc4b3d759d9a97a5bfcebeb341166f9076a4df504f8f106cd54'
+    - 'alpine@sha256:25fad2a32ad1f6f510e528448ae1ec69a28ef81916a004d3629874104f8a7f70'
+    - 'glibc:latest'

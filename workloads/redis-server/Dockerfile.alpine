@@ -2,8 +2,21 @@ ARG BASE=alpine@sha256:25fad2a32ad1f6f510e528448ae1ec69a28ef81916a004d3629874104
 
 FROM ${BASE} as build
 
-RUN apk update && apk add --no-cache redis
+ENV REDIS_VERSION 6.0.16
+ENV MALLOC=libc
+
+RUN apk update && apk add --no-cache wget make build-base bash
+
+RUN wget "https://download.redis.io/releases/redis-$REDIS_VERSION.tar.gz" \
+    && tar -xvzf "redis-$REDIS_VERSION.tar.gz" \
+    && cd "redis-$REDIS_VERSION" \
+    && make "MALLOC=$MALLOC" \
+    && make install
 
 EXPOSE 6379
 
-CMD ["redis-server", "--protected-mode no"]
+COPY entrypoint.sh /entrypoint.sh
+
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
